@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SO-Arena · Benchmarking System One Models</title>
-<meta name="description" content="SO-Arena benchmarks the capability spectrum and decision reliability of System One models: 2,919 tasks in 11 domains, 21 models, an interactive leaderboard and two reliability tests.">
-<meta name="theme-color" content="#fbfaf6">
+<title>SO-Arena — Benchmarking System One Models</title>
+<meta name="description" content="SO-Arena benchmarks the capability spectrum and decision reliability of System One models: 2,919 tasks in 11 domains, 21 models, with an interactive leaderboard and two reliability tests.">
+<meta name="theme-color" content="#ffffff">
 <link rel="canonical" href="https://lichenlillc.github.io/SO-Arena/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SO-Arena: Benchmarking the Capability Spectrum and Reliability of System One Models">
-<meta property="og:description" content="2,919 tasks in 11 domains, 21 models. Interactive leaderboard, per-domain rankings and two reliability tests.">
+<meta property="og:description" content="2,919 tasks in 11 domains, 21 models. Leaderboard, per-domain rankings and two reliability tests.">
 <meta property="og:url" content="https://lichenlillc.github.io/SO-Arena/">
 <meta property="og:image" content="https://lichenlillc.github.io/SO-Arena/assets/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="assets/fonts/pagella-bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/site.css">
 <script defer src="assets/js/data.js"></script>
 <script defer src="assets/js/app.js"></script>
@@ -22,257 +23,221 @@
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
 
-<header class="topbar" id="top">
-  <div class="topbar-inner">
-    <a class="brand" href="#top" aria-label="SO-Arena, back to top">
-      <span class="brand-mark" aria-hidden="true"></span><span class="brand-name">SO-Arena</span>
-    </a>
-    <nav class="nav" aria-label="Sections">
-      <a href="#leaderboard">Leaderboard</a>
-      <a href="#explore">Explore</a>
-      <a href="#reliability">Reliability</a>
-      <a href="#findings">Findings</a>
-      <a href="#benchmark">Benchmark</a>
-      <a href="#cite">Cite</a>
+<header class="nav" id="top">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="SO-Arena, back to top"><span class="mark" aria-hidden="true"></span>SO-Arena</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#reliability">Reliability</a>
+      <a href="#findings">Findings</a><a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
     </nav>
-    <div class="top-links">
-      <a class="icon-link" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener" aria-label="Code on GitHub" title="Code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
-      <a class="icon-link" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener" aria-label="Dataset on Hugging Face" title="Dataset on Hugging Face"><span class="hf" aria-hidden="true">🤗</span></a>
-      <button class="menu-btn" type="button" aria-label="Open the section menu" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    <div class="nav-end">
+      <a class="ext" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="t">GitHub</span></a>
+      <a class="ext" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M4 6.5C4 5.1 7.6 4 12 4s8 1.1 8 2.5S16.4 9 12 9 4 7.9 4 6.5z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M4 6.5v11C4 18.9 7.6 20 12 20s8-1.1 8-2.5v-11M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg><span class="t">Dataset</span></a>
+      <button class="burger" type="button" aria-label="Open the section menu" aria-expanded="false" aria-controls="sheet-nav"><span></span><span></span><span></span></button>
     </div>
   </div>
-  <nav class="mobile-nav" id="mobile-nav" aria-label="Sections" hidden>
-    <a href="#leaderboard">Leaderboard</a><a href="#explore">Explore</a><a href="#reliability">Reliability</a>
-    <a href="#findings">Findings</a><a href="#benchmark">Benchmark</a><a href="#cite">Cite</a>
+  <nav class="wrap sheet-nav" id="sheet-nav" aria-label="Sections">
+    <a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#reliability">Reliability</a>
+    <a href="#findings">Findings</a><a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
   </nav>
 </header>
 
 <main>
-  <!-- Hero ---------------------------------------------------------------------------------------------------- -->
-  <section class="hero" aria-labelledby="title">
-    <div class="hero-bg" aria-hidden="true"></div>
-    <div class="wrap hero-inner">
-      <p class="eyebrow-pill"><span class="dot"></span> A benchmark for System One decision models</p>
-      <h1 id="title" class="wordmark-title"><span class="sr-only">SO-Arena</span><span id="wordmark" aria-hidden="true"></span></h1>
-      <p class="subtitle">Benchmarking the Capability Spectrum and Reliability of System One Models</p>
-      <p class="authors">Lichen Li<sup>*</sup>, Ziping Dong<sup>*</sup>, Sicheng Feng, Qi Li, Xinchao Wang<sup>†</sup></p>
-      <p class="author-notes"><sup>*</sup> Equal contribution &nbsp;·&nbsp; <sup>†</sup> Corresponding author</p>
-      <div class="cta-row">
-        <span class="btn btn-ghost is-disabled" aria-disabled="true" title="The paper link will appear here">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 2v5h5M9 12h8M9 16h8" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
-          Paper <em>coming soon</em></span>
-        <a class="btn btn-ghost" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          Code</a>
-        <a class="btn btn-ghost" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener"><span class="hf" aria-hidden="true">🤗</span> Dataset</a>
-        <a class="btn btn-solid" href="#leaderboard">See the leaderboard <span aria-hidden="true">↓</span></a>
-      </div>
-      <p class="lead">System One models promise fast, general-purpose decision-making without lengthy token generation. SO-Arena characterizes their <strong>capability spectrum</strong> and <strong>decision reliability</strong> across 11 domains and five capability families, with verified labels, difficulty tiers, interactive sandboxes and two reliability tests.</p>
-      <ul class="stats" id="hero-stats" aria-label="SO-Arena at a glance"></ul>
-      <div class="hero-board card" id="hero-board" aria-label="Leaderboard preview"></div>
-    </div>
-  </section>
-
-  <!-- Highlights ---------------------------------------------------------------------------------------------- -->
-  <section class="section" id="overview" aria-labelledby="overview-h">
+  <!-- Hero -->
+  <section class="hero">
     <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Why SO-Arena</p>
-        <h2 id="overview-h">More than an aggregate score</h2>
-        <p class="section-lead">Understanding System One models needs more than aggregate accuracy on existing benchmarks. Four design choices let SO-Arena show where a model is strong, where it breaks down, and whether its decisions can be relied on.</p>
-      </header>
-      <div class="highlights" id="highlights"></div>
-    </div>
-  </section>
-
-  <!-- Leaderboard --------------------------------------------------------------------------------------------- -->
-  <section class="section section-tint" id="leaderboard" aria-labelledby="lb-h">
-    <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Leaderboard</p>
-        <h2 id="lb-h">The Arena</h2>
-        <p class="section-lead">The 18 System One models, ranked overall and in each of the 11 domains. The overall score averages the domains equally, each on its hardest tier. The two System Two models are shown as references. Select a domain for its full ranking and its difficulty tiers.</p>
-      </header>
-      <div class="tabs" role="tablist" aria-label="Leaderboard views" data-tabs="lb">
-        <button role="tab" id="tab-arena" aria-controls="panel-arena" aria-selected="true">Arena</button>
-        <button role="tab" id="tab-table" aria-controls="panel-table" aria-selected="false" tabindex="-1">Full table</button>
-        <button role="tab" id="tab-ladder" aria-controls="panel-ladder" aria-selected="false" tabindex="-1">Ladder</button>
-      </div>
-      <div role="tabpanel" id="panel-arena" aria-labelledby="tab-arena" class="tabpanel">
-        <div class="arena" id="arena"></div>
-        <p class="fineprint" id="arena-note"></p>
-      </div>
-      <div role="tabpanel" id="panel-table" aria-labelledby="tab-table" class="tabpanel" hidden>
-        <div class="table-tools">
-          <div class="chips" id="table-filters" role="group" aria-label="Show models"></div>
-          <label class="search"><span class="sr-only">Find a model</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input id="table-search" type="search" placeholder="Find a model" autocomplete="off"></label>
-        </div>
-        <div class="table-scroll" tabindex="0" aria-label="Leaderboard table, scrolls sideways">
-          <table class="lb-table" id="lb-table"></table>
-        </div>
-        <p class="fineprint">Scores are on a 0–100 scale; darker cells are higher. # ranks the 18 System One models. Domain columns use each domain's leaderboard tier. Reliability <i>R</i> is shown for the 18 System One models; latency is the mean per task (open weights on one H100, APIs end to end). Select a row for the model's profile. <a href="data/arena.json" download>Download all results (JSON)</a></p>
-      </div>
-      <div role="tabpanel" id="panel-ladder" aria-labelledby="tab-ladder" class="tabpanel" hidden>
-        <div class="chart-card card">
-          <div class="chart-head"><h3>All 21 models on one scale</h3><p>Each badge sits at its leaderboard score, in three lanes by size and access. Select a badge for the model's profile.</p></div>
-          <div class="chart" id="chart-ladder"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Explore ------------------------------------------------------------------------------------------------- -->
-  <section class="section" id="explore" aria-labelledby="ex-h">
-    <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Explore</p>
-        <h2 id="ex-h">Capability, speed, reliability and difficulty</h2>
-        <p class="section-lead">Hover or tap any point or line for details. Open-weight models are colored by size, closed APIs are diamonds.</p>
-      </header>
-      <div class="tabs" role="tablist" aria-label="Charts" data-tabs="ex">
-        <button role="tab" id="tab-speed" aria-controls="panel-speed" aria-selected="true">Speed</button>
-        <button role="tab" id="tab-rel" aria-controls="panel-rel" aria-selected="false" tabindex="-1">Reliability</button>
-        <button role="tab" id="tab-tiers" aria-controls="panel-tiers" aria-selected="false" tabindex="-1">Difficulty</button>
-      </div>
-      <div role="tabpanel" id="panel-speed" aria-labelledby="tab-speed" class="tabpanel">
-        <div class="chart-card card">
-          <div class="chart-head"><h3>Performance against latency</h3><p>The line is the Pareto frontier of System One models: the best score at each latency.</p></div>
-          <div class="chart" id="chart-speed"></div>
-          <div class="legend" id="legend-speed"></div>
-          <p class="fineprint">Mean latency per task on a log scale. Open-weight models run on one H100 GPU each, one task at a time; closed APIs are timed end to end over the network. StartLux Auto switches between System One and System Two.</p>
-        </div>
-      </div>
-      <div role="tabpanel" id="panel-rel" aria-labelledby="tab-rel" class="tabpanel" hidden>
-        <div class="chart-card card">
-          <div class="chart-head"><h3 id="rel-chart-title">Reliability against performance</h3>
-            <div class="seg" role="group" aria-label="Reliability chart" id="rel-mode">
-              <button type="button" aria-pressed="true" data-mode="perf">R vs. performance</button>
-              <button type="button" aria-pressed="false" data-mode="sn">Components S and N</button>
-            </div></div>
-          <div class="chart" id="chart-rel"></div>
-          <div class="legend" id="legend-rel"></div>
-          <p class="fineprint" id="rel-note"></p>
-        </div>
-      </div>
-      <div role="tabpanel" id="panel-tiers" aria-labelledby="tab-tiers" class="tabpanel" hidden>
-        <div class="chart-card card">
-          <div class="chart-head"><h3>Scores by difficulty tier</h3><p>Select a domain. Highlighted: the strongest System One model in the domain, a strong 4B model and GPT-6 Luna.</p></div>
-          <div class="chips" id="tier-domains" role="group" aria-label="Domain"></div>
-          <div class="chart" id="chart-tiers"></div>
-          <div class="legend" id="legend-tiers"></div>
-          <p class="fineprint">E, M, H and V are the easy, medium, hard and very hard tiers. Tiers are defined within each domain and are not calibrated across domains.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Reliability --------------------------------------------------------------------------------------------- -->
-  <section class="section section-tint" id="reliability" aria-labelledby="rel-h">
-    <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Decision reliability</p>
-        <h2 id="rel-h">Does the decision hold when the options change?</h2>
-        <p class="section-lead">Accuracy on one fixed option set overlooks whether a decision holds when the options change. SO-Arena changes the options in two controlled ways and combines both tests into one reliability score.</p>
-      </header>
-      <div class="rel-grid">
-        <div class="demo card" id="rel-demo" aria-label="Animated example of the two reliability tests"></div>
-        <div class="metrics">
-          <article class="metric reveal">
-            <h3><span class="sym">S</span> Order stability</h3>
-            <p>Each item is shown in its original order and in 12 reorderings. <i>S</i> is the share of reorderings in which the model keeps its answer, identified by content, rescaled so that random picks score 0 and full agreement scores 1.</p>
-          </article>
-          <article class="metric reveal">
-            <h3><span class="sym">N</span> Null discrimination</h3>
-            <p>Each item is shown as it is and with its correct option removed. <i>N</i> = 2·AUC − 1 measures how well the model's probability that no option is correct separates the two: 0 is chance, 1 is perfect.</p>
-          </article>
-          <article class="metric reveal">
-            <h3><span class="sym">R</span> Reliability</h3>
-            <p>The geometric mean <i>R</i> = √(<i>S</i>·<i>N</i>), positive only when both exceed chance, reported as a percentage next to the capability score.</p>
-          </article>
-        </div>
-      </div>
-      <div class="facts" id="rel-facts"></div>
-    </div>
-  </section>
-
-  <!-- Findings ------------------------------------------------------------------------------------------------ -->
-  <section class="section" id="findings" aria-labelledby="fi-h">
-    <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Findings</p>
-        <h2 id="fi-h">What 21 models tell us</h2>
-      </header>
-      <div class="findings" id="findings-cards"></div>
-      <div class="chart-card card gap-card">
-        <div class="chart-head"><h3>Where System One models match System Two, and what closes the gap</h3>
-          <p>Score difference from GPT-6 Luna on the medium and hard tiers, with 95% confidence intervals; the gain from a larger, newer backbone; and the gain of StartLux Auto from always thinking over never thinking.</p></div>
-        <div class="gap" id="gap-chart"></div>
-        <p class="fineprint">Backbone gain: the average gain from the smaller to the 27B model of the four families released in both sizes (every smaller model builds on Qwen3.5, every larger one on Qwen3.8-27B).</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Benchmark ----------------------------------------------------------------------------------------------- -->
-  <section class="section section-tint" id="benchmark" aria-labelledby="bm-h">
-    <div class="wrap">
-      <header class="section-head">
-        <p class="eyebrow">Inside the benchmark</p>
-        <h2 id="bm-h">2,919 tasks, 11 domains, five capability families</h2>
-        <p class="section-lead">Tasks are built from 40 established sources, checked by people, organized into domains and difficulty tiers, and posed as one decision interface: static questions and environment-based tasks in web and tool sandboxes.</p>
-      </header>
-      <ol class="pipeline" id="pipeline" aria-label="How SO-Arena is built"></ol>
-      <div class="families" id="families"></div>
-      <div class="scoring card">
+      <div class="hero-grid">
         <div>
-          <h3>How the leaderboard is scored</h3>
-          <p>The original task is the unit of scoring, and domains are weighted equally, so that larger domains do not dominate. Each domain contributes its hardest tier (Math: hard and very hard; untiered domains: all tasks), which makes the score more sensitive to differences on demanding tasks: 1,232 tasks in all.</p>
+          <div class="kicker"><span class="dot" aria-hidden="true"></span><span class="label">SO-Arena · A benchmark for System One models</span></div>
+          <h1>Benchmarking the <em>capability</em> spectrum and <em class="r">reliability</em> of System One models</h1>
+          <p class="hero-text">System One models decide in a single forward pass, without generating reasoning tokens. SO-Arena measures how well they decide across 11 domains and five capability families, and whether their decisions hold when the options change.</p>
+          <p class="authors">Lichen Li<sup>*</sup>, Ziping Dong<sup>*</sup>, Sicheng Feng, Qi Li, Xinchao Wang<sup>†</sup></p>
+          <p class="authors-note">* Equal contribution · † Corresponding author</p>
+          <div class="cta">
+            <a class="btn btn-dark" href="#leaderboard">View the leaderboard <span aria-hidden="true">→</span></a>
+            <a class="btn" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>
+            <a class="btn" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Dataset <span aria-hidden="true">↗</span></a>
+            <span class="btn" aria-disabled="true">Paper <span class="tagsoon">soon</span></span>
+          </div>
         </div>
-        <div class="formula" aria-label="C of m equals 100 over D times the sum over domains of the mean credit on the domain's leaderboard tasks">
-          <math display="block"><mrow><mi>C</mi><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>100</mn><mi>D</mi></mfrac><munderover><mo>∑</mo><mrow><mi>d</mi><mo>=</mo><mn>1</mn></mrow><mi>D</mi></munderover><mfrac><mn>1</mn><mrow><mo>|</mo><msub><mi>𝒯</mi><mi>d</mi></msub><mo>|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>𝒯</mi><mi>d</mi></msub></mrow></munder><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></math>
-          <p class="fineprint"><i>c<sub>i</sub>(m)</i> ∈ [0, 1] is model <i>m</i>'s credit on task <i>i</i>; <i>𝒯<sub>d</sub></i> holds domain <i>d</i>'s leaderboard tasks; <i>D</i> = 11.</p>
+        <div class="board" id="board" data-anim="0" aria-label="Top System One models"></div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+
+  <!-- 01 Leaderboard -->
+  <section class="sec" id="leaderboard" aria-labelledby="lb-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">01 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
+        <p class="sec-lead">The overall score averages the 11 domains equally, each on its hardest tier. Ranks count the 18 System One models; the two System Two models are references. Select a row for a model's full profile.</p>
+      </div>
+      <div class="toolbar">
+        <div class="tools-l">
+          <div class="seg" role="tablist" aria-label="Leaderboard view" id="lb-view">
+            <button role="tab" aria-selected="true" aria-controls="v-table" id="t-table">Overall</button>
+            <button role="tab" aria-selected="false" aria-controls="v-domains" id="t-domains" tabindex="-1">By domain</button>
+          </div>
+          <div class="tools-filters" id="filters" role="group" aria-label="Show models" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <div class="tools-r">
+          <label class="switch"><input type="checkbox" id="show-refs" checked> System Two references</label>
+          <label class="search"><span class="sr-only">Find a model</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Find a model" autocomplete="off"></label>
+        </div>
+      </div>
+      <div id="v-table" role="tabpanel" aria-labelledby="t-table">
+        <div class="tbl-wrap" tabindex="0" aria-label="Leaderboard table; scrolls sideways"><table class="lb" id="lb"></table></div>
+        <p class="note">Scores are 0–100. Domain columns use each domain's leaderboard tier; the best System One score in each column is shaded, the next two lightly. Reliability <i>R</i> is measured for the 18 System One models. Latency is the mean per task: open weights on one H100 GPU, APIs end to end. <a href="data/arena.json" download>Download all results (JSON)</a></p>
+      </div>
+      <div id="v-domains" role="tabpanel" aria-labelledby="t-domains" hidden>
+        <div class="dgrid" id="dgrid"></div>
+        <p class="note">Top three System One models per domain, on the domain's leaderboard tier. GPT-6 Luna is shown for reference.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Insights -->
+  <section class="sec" id="insights" aria-labelledby="in-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">02 — Insights</span><h2 id="in-h">Capability against speed, reliability and difficulty</h2></div>
+        <p class="sec-lead">Hover or tap a point or a line for details; select it for the model's profile. Open-weight models are coloured by size, closed APIs are diamonds.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3 id="ins-title">Performance against latency</h3><p id="ins-sub"></p></div>
+          <div class="seg" role="tablist" aria-label="Chart" id="ins-tabs">
+            <button role="tab" aria-selected="true" data-k="speed" id="k-speed">Speed</button>
+            <button role="tab" aria-selected="false" data-k="rel" id="k-rel" tabindex="-1">Reliability</button>
+            <button role="tab" aria-selected="false" data-k="sn" id="k-sn" tabindex="-1">S and N</button>
+            <button role="tab" aria-selected="false" data-k="tier" id="k-tier" tabindex="-1">Difficulty</button>
+          </div>
+        </div>
+        <div class="insights">
+          <div class="chart-col">
+            <div class="dchips" id="tier-chips" hidden></div>
+            <div class="chart" id="chart" role="img"></div>
+            <div class="legend" id="legend"></div>
+            <p class="note" id="ins-note"></p>
+          </div>
+          <aside class="side" id="side" aria-label="Ranking for the selected chart"></aside>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Citation ------------------------------------------------------------------------------------------------ -->
-  <section class="section" id="cite" aria-labelledby="cite-h">
-    <div class="wrap narrow">
-      <header class="section-head">
-        <p class="eyebrow">Citation</p>
-        <h2 id="cite-h">Cite SO-Arena</h2>
-      </header>
-      <div class="bibtex card">
-        <button type="button" class="copy" id="copy-bib">Copy</button>
-<pre id="bib"><code>@misc{li2026soarena,
+  <!-- 03 Reliability -->
+  <section class="sec" id="reliability" aria-labelledby="rl-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">03 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
+        <p class="sec-lead">Accuracy on one fixed option set overlooks whether a decision holds when the options change. SO-Arena changes them in two controlled ways and combines both tests into one reliability score.</p>
+      </div>
+      <div class="rel rv">
+        <div class="defs">
+          <div class="def"><span class="sym" aria-hidden="true">S</span><div><h3>Order stability</h3><p>Each item is shown in its original order and in 12 reorderings. <i>S</i> is the share of reorderings in which the model keeps its answer, identified by content, rescaled so that random picks score 0 and full agreement scores 1.</p></div></div>
+          <div class="def"><span class="sym" aria-hidden="true">N</span><div><h3>Null discrimination</h3><p>Each item is shown as it is and with its correct option removed. <i>N</i> = 2·AUC − 1 measures how well the model's probability that no option is correct separates the two copies: 0 is chance, 1 is perfect.</p></div></div>
+          <div class="def"><span class="sym" aria-hidden="true">R</span><div><h3>Reliability</h3><p>The geometric mean <i>R</i> = √(<i>S</i>·<i>N</i>), positive only when both exceed chance, reported as a percentage next to the capability score.</p></div></div>
+        </div>
+        <div class="demo" id="demo"></div>
+      </div>
+      <div class="facts" id="facts"></div>
+    </div>
+  </section>
+
+  <!-- 04 Findings -->
+  <section class="sec" id="findings" aria-labelledby="fi-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">04 — Findings</span><h2 id="fi-h">What 21 models tell us</h2></div>
+        <p class="sec-lead">System Two still leads overall, but the gap depends on the domain, and what closes it differs between domains.</p>
+      </div>
+      <div class="kfacts rv" id="kfacts"></div>
+      <div class="panel rv">
+        <div class="panel-head"><div><h3>Where System One models match System Two, and what closes the gap</h3>
+          <p>Score difference from GPT-6 Luna on the medium and hard tiers, with 95% confidence intervals; the gain from a larger, newer backbone; and the gain of StartLux Auto from always thinking over never thinking.</p></div></div>
+        <div class="gap" id="gap"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 Benchmark -->
+  <section class="sec" id="benchmark" aria-labelledby="bm-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">05 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
+        <p class="sec-lead">Tasks are built from established sources, checked by people, organized into domains and difficulty tiers, and posed through one decision interface: static questions and environment-based tasks in web and tool sandboxes.</p>
+      </div>
+      <div class="steps rv" id="steps"></div>
+      <table class="dtable rv" id="dtable"></table>
+      <div class="score-box rv">
+        <div><h3>How the leaderboard is scored</h3>
+          <p>The original task is the unit of scoring, and domains are weighted equally so that larger domains do not dominate. Each domain contributes its hardest tier (Math: hard and very hard; untiered domains: all tasks), which makes the score more sensitive to differences on demanding tasks: 1,232 tasks in all.</p></div>
+        <div class="formula" aria-label="C of m equals 100 over D times the sum over domains of the mean credit on the domain's leaderboard tasks">
+          <math display="block"><mrow><mi>C</mi><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>100</mn><mi>D</mi></mfrac><munderover><mo>∑</mo><mrow><mi>d</mi><mo>=</mo><mn>1</mn></mrow><mi>D</mi></munderover><mfrac><mn>1</mn><mrow><mo>|</mo><msub><mi>T</mi><mi>d</mi></msub><mo>|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>T</mi><mi>d</mi></msub></mrow></munder><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></math>
+          <p class="note"><i>c<sub>i</sub>(m)</i> ∈ [0, 1] is model <i>m</i>'s credit on task <i>i</i>; <i>T<sub>d</sub></i> holds domain <i>d</i>'s leaderboard tasks; <i>D</i> = 11.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 Evaluate -->
+  <section class="sec" id="evaluate" aria-labelledby="ev-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">06 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
+        <p class="sec-lead">The evaluator reaches any model through an adapter, runs the static, tool and web tasks, and scores them with the leaderboard's rules. It needs Linux x86-64 and Python 3.12; the adapter protocol is documented in the repository.</p>
+      </div>
+      <div class="runs rv">
+        <div class="run"><span class="label">Step 01 · Get the data</span>
+          <pre><code>./jev fetch-data --output /path/to/so-arena-data
+export SO_ARENA_DATA=/path/to/so-arena-data
+./jev verify
+./jev setup</code></pre><p>The release pins the dataset commit, the archive's SHA-256 and every data file; <span class="mono">verify</span> checks them.</p></div>
+        <div class="run"><span class="label">Step 02 · Run your model</span>
+          <pre><code>export JEV_ENDPOINT=http://localhost:8000
+./jev run --adapter adapters:http \
+  --model your-model --out /path/to/new-run</code></pre><p>Resume an interrupted run with the same arguments plus <span class="mono">--resume</span>; use <span class="mono">--domain</span>, <span class="mono">--tier</span> and <span class="mono">--limit</span> for a quick check.</p></div>
+        <div class="run"><span class="label">Step 03 · Score</span>
+          <pre><code>./jev score --run /path/to/new-run \
+  --output /path/to/report.json</code></pre><p>The report gives the leaderboard score and its domain and tier components for the run.</p></div>
+      </div>
+      <p class="note">Model inputs are public; answers, checker state and reference trajectories stay with the evaluator. Full instructions: <a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">the SO-Arena repository</a>.</p>
+    </div>
+  </section>
+
+  <!-- 07 Cite -->
+  <section class="sec" id="cite" aria-labelledby="ci-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">07 — Citation</span><h2 id="ci-h">Cite SO-Arena</h2></div>
+        <p class="sec-lead">Correspondence: <a href="mailto:xinchao@nus.edu.sg" style="text-decoration:underline;text-underline-offset:3px">xinchao@nus.edu.sg</a></p>
+      </div>
+      <div class="bib"><button class="copy" type="button" id="copy">Copy</button>
+<pre id="bibtex">@misc{li2026soarena,
   title  = {{SO-Arena}: Benchmarking the Capability Spectrum and Reliability of System One Models},
   author = {Li, Lichen and Dong, Ziping and Feng, Sicheng and Li, Qi and Wang, Xinchao},
   year   = {2026},
   url    = {https://lichenlillc.github.io/SO-Arena/}
-}</code></pre>
-      </div>
-      <p class="contact">Correspondence: <a href="mailto:xinchao@nus.edu.sg">xinchao@nus.edu.sg</a></p>
+}</pre></div>
     </div>
   </section>
 </main>
 
-<footer class="footer">
-  <div class="wrap footer-inner">
-    <div class="brand small"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">SO-Arena</span></div>
-    <p>Results as reported in the paper. Model names and logos belong to their developers. Headings are set in TeX Gyre Pagella (GUST Font License).</p>
-    <a href="#top" class="totop">Back to top ↑</a>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>SO-Arena</a>
+      <p>Results as reported in the paper. Model names and logos belong to their developers. The page shows results only and contains no benchmark items.</p></div>
+    <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#benchmark">Benchmark</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Hugging Face ↗</a></nav>
   </div>
 </footer>
 
-<div class="tooltip" id="tooltip" role="tooltip" hidden></div>
-<dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
-  <div class="sheet-inner">
-    <button class="sheet-close" type="button" aria-label="Close">×</button>
-    <div id="sheet-body"></div>
-  </div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<dialog class="drawer" id="drawer" aria-labelledby="dr-title">
+  <div class="dr-head"><span class="label" id="dr-kicker"></span><button class="dr-close" type="button" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+  <div class="dr-body" id="dr-body"></div>
 </dialog>
-<noscript><p class="noscript">The interactive leaderboard needs JavaScript. All results are also in <a href="data/arena.json">data/arena.json</a>.</p></noscript>
+<noscript><p style="text-align:center;padding:20px">The leaderboard needs JavaScript. All results are in <a href="data/arena.json">data/arena.json</a>.</p></noscript>
 </body>
 </html>

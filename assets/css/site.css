@@ -77,8 +77,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hero::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 560px; z-index: -1; pointer-events: none;
   background: radial-gradient(600px 300px at 12% 0%, rgba(168, 58, 82, .07), transparent 70%), radial-gradient(700px 320px at 92% 8%, rgba(44, 106, 168, .07), transparent 70%); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 56px; align-items: start; }
-.kicker { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
-.kicker .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(47, 125, 87, .14); }
+.hero-logo { margin: 0 0 30px; }
+.hero-logo img { display: block; width: min(100%, 452px); height: auto; }
 h1 { font: 400 clamp(42px, 4.7vw, 64px)/1.02 var(--display); letter-spacing: -.015em; margin: 0; color: var(--ink); }
 h1 em { font-style: italic; color: var(--cap); }
 h1 em.r { color: var(--rel); }

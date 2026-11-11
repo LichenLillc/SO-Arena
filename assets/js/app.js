@@ -53,7 +53,7 @@
   const logo = (m, s = 26) => m.logo ? `<span class="lg" style="--s:${s}px"><img src="${m.logo}" alt="" width="${s}" height="${s}" loading="lazy" decoding="async"></span>`
     : `<span class="lg mono" style="--s:${s}px;background:${colorOf(m)}" aria-hidden="true">${esc(initials(m))}</span>`;
   const tag = m => m.group === "s2" ? '<span class="tag s2">System Two</span>' : m.group === "api" ? '<span class="tag api">API</span>' : m.group === "auto" ? '<span class="tag auto">Auto</span>' : "";
-  const meta = m => `${esc(m.developer)}${m.size ? " · " + m.size : ""}`;
+  const meta = m => `${esc(m.developer)}${m.size ? " · " + m.size : ""}${m.group === "api" ? " · API" : m.group === "auto" ? " · hybrid" : ""}`;
 
   // ---- tooltip ---------------------------------------------------------------------------------------------------
   const tipEl = $("#tip");
@@ -95,6 +95,7 @@
 
   // ---- hero board and stats ------------------------------------------------------------------------------------------
   let boardMode = "cap";
+  const LATMAX = Math.max(...S1.map(m => m.latency.mean_ms));     // thin latency bars: linear, slowest System One model = full
   function board() {
     const host = $("#board"), cap = boardMode === "cap";
     const val = cap ? m => m.score : R_, rk = cap ? RANK : RANK_R, list = top(S1, val, 8);
@@ -103,8 +104,9 @@
         <div class="seg" role="group" aria-label="Ranking"><button type="button" data-bm="cap" aria-pressed="${cap}">Capability</button><button type="button" data-bm="rel" aria-pressed="${!cap}">Reliability</button></div></div>
       <ol class="board-list">${list.map(m => `<li><span class="rk">${rk.get(m.key)}</span>${logo(m, 26)}
         <button type="button" class="who" data-model="${slug(m)}"><b>${esc(m.name)}</b><span>${meta(m)}</span></button>
-        <span class="meter" aria-hidden="true"><i style="--w:${val(m).toFixed(1)}%;--c:${c}"></i></span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span></li>`).join("")}</ol>
-      <div class="board-foot"><span>${cap ? `System Two reference: GPT-6 Sol ${f1(REFS[0].score)}, Luna ${f1(REFS[1].score)}` : "R = √(S·N), as a percentage"}</span><a href="#leaderboard">Full leaderboard →</a></div>`;
+        <span class="mx"><span class="meter" aria-hidden="true"><i style="--w:${val(m).toFixed(1)}%;--c:${c}"></i></span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span>
+          <span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span></span></li>`).join("")}</ol>
+      <div class="board-foot"><span>${cap ? `System Two: GPT-6 Sol ${f1(REFS[0].score)} · ${ms(REFS[0].latency.mean_ms)}, Luna ${f1(REFS[1].score)} · ${ms(REFS[1].latency.mean_ms)}` : "R = √(S·N), as a percentage"}</span><a href="#leaderboard">Full leaderboard →</a></div>`;
     host.dataset.anim = "0";
     requestAnimationFrame(() => setTimeout(() => { host.dataset.anim = "1"; }, 60));
   }
@@ -125,57 +127,55 @@
   }
 
   // ---- leaderboard -------------------------------------------------------------------------------------------------
-  const T = { sort: "score", dir: -1, filter: "all", q: "", refs: true };
+  const T = { sort: "score", dir: -1, filter: "all", q: "" };
   const FILTERS = [["all", "All"], ["small", "Open ≤ 4B"], ["large", "Open ≥ 9B"], ["api", "APIs"]];
   const pass = m => {
+    const q = T.q.trim().toLowerCase(), hit = !q || (m.name + " " + m.developer).toLowerCase().includes(q);
+    if (m.group === "s2") return hit;                         // the System Two references stay in every filter
     const sz = parseFloat(m.size), f = T.filter;
-    if (m.group === "s2" && !T.refs) return false;
     if (f === "small" && !((m.group === "open" || m.group === "auto") && sz <= 4)) return false;
     if (f === "large" && !(m.group === "open" && sz >= 9)) return false;
-    if (f === "api" && !closed(m)) return false;
-    const q = T.q.trim().toLowerCase();
-    return !q || (m.name + " " + m.developer).toLowerCase().includes(q);
+    if (f === "api" && m.group !== "api") return false;
+    return hit;
   };
-  const ABBR = { sentiment: "Sent.", intent: "Intent", math: "Math", code: "Code", science: "Sci.", knowledge: "Know.", safety: "Safety",
-    retrieval: "Retr.", verification: "Verif.", tools: "Tools", web: "Web" };
   const COLS = [
     { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true },
     { id: "model", label: "Model", cls: "c-m l", val: m => m.name, asc: true },
-    { id: "score", label: "Score", cls: "c-score", val: m => m.score },
-    { id: "R", label: "R", cls: "c-n", val: R_, title: "Reliability R" },
+    { id: "score", label: "Score", cls: "c-score", val: m => m.score, title: "Mean of the 11 domain scores" },
+    { id: "R", label: "Reliability", cls: "c-n", val: R_, title: "Reliability R = √(S·N)" },
     { id: "lat", label: "Latency", cls: "c-n", val: m => m.latency ? m.latency.mean_ms : null, asc: true, title: "Mean latency per task" },
-    ...D.domains.map(d => ({ id: d.id, label: ABBR[d.id], cls: "c-d", val: m => m.domains[d.id], fam: d.family, title: d.name })),
+    { id: "prof", label: "Domains", cls: "c-prof l", title: "Score in each of the 11 domains, grouped by family" },
   ];
-  // per-domain shading: best and next two System One scores
-  const TOPD = Object.fromEntries(D.domains.map(d => {
-    const r = ranksOf(S1, m => m.domains[d.id]);
-    return [d.id, r];
-  }));
+  // per-domain System One ranks (domain cards, drawers and the profile tooltips)
+  const TOPD = Object.fromEntries(D.domains.map(d => [d.id, ranksOf(S1, m => m.domains[d.id])]));
+  const FAMS = D.families.map(f => ({ f, ds: D.domains.filter(d => d.family === f.id) }));
+  const prof = m => `<div class="prof" role="img" aria-label="${esc(D.domains.map(d => `${d.short || d.name} ${f1(m.domains[d.id])}`).join(", "))}">${FAMS.map(({ f, ds }) =>
+    `<span class="pg">${ds.map(d => `<span class="pb" data-d="${d.id}" style="--h:${m.domains[d.id].toFixed(1)}%;--fc:${f.color}"></span>`).join("")}</span>`).join("")}</div>`;
+  const row = m => {
+    const ref = m.group === "s2";
+    return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
+      <td class="c-rk">${RANK.get(m.key) ?? (ref ? "" : "–")}</td>
+      <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}</small></div></div></td>
+      <td class="c-score"><div class="scell"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span>${f2(m.score)}</span></div></td>
+      <td class="c-n">${R_(m) != null ? f1(R_(m)) : '<span class="dim">—</span>'}</td>
+      <td class="c-n">${m.latency ? ms(m.latency.mean_ms) : '<span class="dim">—</span>'}</td>
+      <td class="c-prof">${prof(m)}</td></tr>`;
+  };
   function table() {
-    const host = $("#lb");
-    const spans = []; let prev = null;
-    for (const d of D.domains) { if (d.family !== prev) { spans.push({ f: d.family, n: 0 }); prev = d.family; } spans[spans.length - 1].n++; }
-    const head = `<thead><tr class="fam"><th colspan="5" class="l"></th>${spans.map(s => `<th colspan="${s.n}" style="--fc:${FAM[s.f].color}"><span><i></i>${esc(FAM[s.f].name.split(" ")[0])}</span></th>`).join("")}</tr>
-      <tr>${COLS.map(c => `<th class="${c.cls}" scope="col"${T.sort === c.id ? ` aria-sort="${T.dir > 0 ? "ascending" : "descending"}"` : ""}><button type="button" data-sort="${c.id}" title="${esc(c.title || "Sort by " + c.label)}">${esc(c.label)}</button></th>`).join("")}</tr></thead>`;
+    const head = `<thead><tr>${COLS.map(c => c.id === "prof" ? `<th class="${c.cls}" scope="col"><span class="th" title="${esc(c.title)}">${c.label}</span></th>`
+      : `<th class="${c.cls}" scope="col"${T.sort === c.id ? ` aria-sort="${T.dir > 0 ? "ascending" : "descending"}"` : ""}><button type="button" data-sort="${c.id}" title="${esc(c.title || "Sort by " + c.label)}">${esc(c.label)}</button></th>`).join("")}</tr></thead>`;
     const col = COLS.find(c => c.id === T.sort);
-    const rows = M.filter(pass).sort((a, b) => {
+    const order = list => list.sort((a, b) => {
       const va = col.val(a), vb = col.val(b);
       if (va == null && vb == null) return b.score - a.score;
       if (va == null) return 1; if (vb == null) return -1;
       if (typeof va === "string") return T.dir * va.localeCompare(vb);
       return T.dir * (va - vb) || b.score - a.score;
     });
-    const body = rows.map(m => {
-      const r = RANK.get(m.key), ref = m.group === "s2";
-      return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
-        <td class="c-rk">${r ?? (ref ? "ref" : "–")}</td>
-        <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b>${tag(m)}<small>${meta(m)}</small></div></div></td>
-        <td class="c-score${T.sort === "score" ? " sorted" : ""}"><div class="scell"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span>${f2(m.score)}</span></div></td>
-        <td class="c-n${T.sort === "R" ? " sorted" : ""}">${R_(m) != null ? f1(R_(m)) : '<span class="dim">—</span>'}</td>
-        <td class="c-n${T.sort === "lat" ? " sorted" : ""}">${m.latency ? ms(m.latency.mean_ms) : '<span class="dim">—</span>'}</td>
-        ${D.domains.map(d => { const k = isS1(m) ? TOPD[d.id].get(m.key) : 0; return `<td class="c-d${k === 1 ? " top1" : k && k <= 3 ? " top3" : ""}${T.sort === d.id ? " sorted" : ""}">${f1(m.domains[d.id])}</td>`; }).join("")}</tr>`;
-    }).join("");
-    host.innerHTML = head + `<tbody>${body || `<tr><td colspan="${COLS.length}" class="l" style="color:var(--muted)">No model matches.</td></tr>`}</tbody>`;
+    const refs = order(M.filter(m => m.group === "s2" && pass(m))), s1 = order(M.filter(m => m.group !== "s2" && pass(m)));
+    const grp = (label, list) => list.length ? `<tbody><tr class="grp"><th colspan="${COLS.length}" scope="rowgroup">${label}</th></tr>${list.map(row).join("")}</tbody>` : "";
+    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) +
+      (refs.length + s1.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`);
   }
   function dgrid() {
     const ids = [...D.domains.map(d => d.id), "R"];
@@ -199,7 +199,16 @@
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
-    $("#show-refs").addEventListener("change", e => { T.refs = e.target.checked; table(); });
+    let onBar = false;                                          // profile bars: domain, score and System One rank
+    $("#lb").addEventListener("pointermove", e => {
+      const b = e.target.closest(".pb");
+      if (!b) { if (onBar) { untip(); onBar = false; } return; }
+      const m = BY[b.closest("tr").dataset.model], d = DOM[b.dataset.d], k = isS1(m) ? TOPD[d.id].get(m.key) : null;
+      tip(`<b>${esc(d.name)}</b><br><span class="m">${f1(m.domains[d.id])}</span> <span class="s">${k ? `#${k} of ${S1.length}` : m.group === "s2" ? "System Two" : "not ranked"}</span>`, e.clientX, e.clientY);
+      onBar = true;
+    });
+    $("#lb").addEventListener("pointerleave", () => { if (onBar) { untip(); onBar = false; } });
+    $("#fam-key").innerHTML = FAMS.map(({ f }) => `<span><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("");
     $("#lb").addEventListener("click", e => {
       const s = e.target.closest("[data-sort]");
       if (s) { const c = COLS.find(o => o.id === s.dataset.sort); if (T.sort === c.id) T.dir = -T.dir; else { T.sort = c.id; T.dir = c.asc ? 1 : -1; } table(); const nb = $(`[data-sort="${c.id}"]`); if (nb) nb.focus(); return; }
@@ -343,11 +352,11 @@
       <span class="meter"><i style="--w:${Math.max(2, Math.min(100, scale(val(m)))).toFixed(1)}%;--c:${m.group === "s2" ? "var(--s2)" : c}"></i></span><span class="v">${fmt(val(m))}</span></li>`).join("")}</ol>`;
 
   const INS = {
-    speed: { title: "Performance against latency", sub: "The line is the Pareto frontier of System One models: the best score at each latency.",
-      note: "Mean latency per task on a log scale. Open weights run on one H100 GPU each, one task at a time; closed APIs are timed end to end over the network. StartLux Auto switches between System One and System Two. SII-4B's latency was measured with flash-linear-attention." },
-    rel: { title: "Reliability against performance", sub: "Higher performance does not always mean higher reliability.", note: "The 18 System One models. R combines order stability and null discrimination." },
-    sn: { title: "Order stability and null discrimination", sub: "0 is chance level for both components; dashed curves mark constant R.", note: "Jeva-4B's order stability is 1 by construction (its option cache)." },
-    tier: { title: "Scores by difficulty tier", sub: "Select a domain. Tiers are defined within each domain and are not calibrated across domains.", note: "E, M, H and V are the easy, medium, hard and very hard tiers. Highlighted: the strongest System One model in the domain, StartLux Instant (4B) and GPT-6 Luna." },
+    speed: { title: "Performance against latency", sub: "The line is the Pareto frontier of System One models.",
+      note: "Mean latency per task: open weights on one H100 GPU, APIs end to end." },
+    rel: { title: "Reliability against performance", sub: "Higher performance does not always mean higher reliability.", note: "" },
+    sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
+    tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
   };
   let insKey = "speed", tierDom = "math";
   function insights() {
@@ -370,7 +379,7 @@
       $("#legend").innerHTML = sizeLegend(true, `<span><i class="ln" style="background:var(--cap)"></i>Pareto frontier</span>`);
       const fset = new Set(fr.map(o => o.key));
       side.innerHTML = sideList("Mean latency, fastest first", [...M].sort((a, b) => a.latency.mean_ms - b.latency.mean_ms), o => o.latency.mean_ms, ms, fset, "var(--ink)",
-        v => 100 * Math.log10(v / 3) / Math.log10(5000 / 3)) + `<p class="note">Bars on a log scale. Bold: on the Pareto frontier.</p>`;
+        v => 100 * Math.log10(v / 3) / Math.log10(5000 / 3)) + `<p class="note">Log scale. Bold: on the frontier.</p>`;
     } else if (insKey === "rel" || insKey === "sn") {
       const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
       const RL = S1.filter(o => o.reliability);
@@ -482,19 +491,19 @@
     const RL = S1.filter(o => o.reliability), n = RL.length, s8 = RL.filter(o => o.reliability.S > .8).length;
     const Ns = RL.map(o => o.reliability.N), two = top(RL, R_, 2), best = top(S1, o => o.score, 1)[0];
     $("#facts").innerHTML = `
-      <div class="fact rv"><b>${s8} of ${n}</b><p>System One models keep their answer under reordering, with order stability <i>S</i> above 0.8.</p></div>
-      <div class="fact rv"><b>${Math.min(...Ns).toFixed(2)}–${Math.max(...Ns).toFixed(2)}</b><p>The range of null discrimination <i>N</i>: from near chance to about 0.8. Size alone does not decide it.</p></div>
-      <div class="fact rv"><b>${ord(RANK.get(two[0].key))} &amp; ${ord(RANK.get(two[1].key))}</b><p>The performance ranks of the two most reliable models, ${esc(two[0].name)} and ${esc(two[1].name)}. The best-performing model, ${esc(best.name)}, ranks ${ord(RANK_R.get(best.key))} of ${n} in reliability.</p></div>`;
+      <div class="fact rv"><b>${s8} of ${n}</b><p>System One models with order stability <i>S</i> above 0.8.</p></div>
+      <div class="fact rv"><b>${Math.min(...Ns).toFixed(2)}–${Math.max(...Ns).toFixed(2)}</b><p>The range of null discrimination <i>N</i>.</p></div>
+      <div class="fact rv"><b>${ord(RANK.get(two[0].key))} &amp; ${ord(RANK.get(two[1].key))}</b><p>Performance ranks of the two most reliable models; ${esc(best.name)}, the top performer, is ${ord(RANK_R.get(best.key))} in reliability.</p></div>`;
   }
 
   // ---- findings ----------------------------------------------------------------------------------------------------
   function findings() {
     const s1 = top(S1, o => o.score, 2), math = D.analysis.find(a => a.domain === "math");
     const k = [
-      [`${f1(REFS[0].score)}<small> / ${f1(REFS[1].score)}</small>`, "System Two still leads overall", `GPT-6 Sol and Luna outperform every System One model. The strongest System One models, ${esc(s1[0].name)} and ${esc(s1[1].name)} (${f1(s1[0].score)}), trail Luna by about ten points.`],
-      ["&lt;&thinsp;0.3<small> s</small>", "System One models are fast", "Every open-weight System One model answers within 0.3 seconds per task on one H100 GPU, tens of times faster than GPT-6 Sol and Luna."],
-      ["3<small> categories</small>", "The gap depends on the domain", "System One models match GPT-6 Luna on direct semantic judgment, come close on fine-grained grounded decisions only with a larger backbone, and fall far behind on multi-step derivation."],
-      [`${f1(math.thinking_never)}<small> → ${f1(math.thinking_always)}</small>`, "Thinking helps where derivation is needed", "In Math, thinking lifts StartLux Auto from 50.8 to 92.5, close to Luna. In grounded-decision domains, a larger and newer backbone adds far more than thinking."],
+      [`${f1(REFS[0].score)}<small> / ${f1(REFS[1].score)}</small>`, "System Two still leads overall", `GPT-6 Sol and Luna; the best System One models reach ${f1(s1[0].score)}.`],
+      ["&lt;&thinsp;0.3<small> s</small>", "System One models are fast", "Every open-weight model, per task on one H100 GPU: tens of times faster than GPT-6."],
+      ["3<small> categories</small>", "The gap depends on the domain", "On par in direct semantic judgment, close in grounded decisions only with a larger backbone, far behind in multi-step derivation."],
+      [`${f1(math.thinking_never)}<small> → ${f1(math.thinking_always)}</small>`, "Thinking helps where derivation is needed", "StartLux Auto in Math. In grounded decisions, a larger backbone helps far more."],
     ];
     $("#kfacts").innerHTML = k.map(([b, h, p]) => `<div class="kf"><div class="big">${b}</div><h3>${h}</h3><p>${p}</p></div>`).join("");
   }
@@ -517,10 +526,10 @@
         <div><span class="cl">Thinking gain</span><svg role="img" aria-label="Thinking gain ${sg(a.thinking_gain)}"><line x1="${tx(0)}%" x2="${tx(0)}%" y1="6" y2="28" stroke="#c9c7bd"/>${rect(tx(0), tx(a.thinking_gain), 11, 12, "#7a69a8")}<text x="${tx(Math.max(0, a.thinking_gain)) + 1.5}%" y="21">${sg(a.thinking_gain)}</text></svg></div></div>`;
     };
     $("#gap").innerHTML = `<div class="legend" style="padding:14px 0 4px"><span><i style="background:var(--cap)"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span>
-        <span><i class="ln" style="background:#5f9668"></i>Backbone gain: smaller → 27B model, mean of four families</span><span><i class="ln" style="background:#7a69a8"></i>Thinking gain: StartLux Auto, always vs. never</span></div>
+        <span><i class="ln" style="background:#5f9668"></i>Backbone gain: smaller → 27B, mean of four families</span><span><i class="ln" style="background:#7a69a8"></i>Thinking gain: StartLux Auto, always vs. never</span></div>
       <div class="gap-h label"><span>Domain</span><span>Difference from GPT-6 Luna</span><span>Backbone gain</span><span>Thinking gain</span></div>` +
       CATS.map(([id, h, s]) => `<div class="gap-c"><h4>${h}</h4><span>${s}</span></div>` + D.analysis.filter(a => a.category === id).map(row).join("")).join("") +
-      `<p class="note">Every smaller model builds on Qwen3.5, every larger one on the newer Qwen3.8-27B. Lines show 95% confidence intervals.</p>`;
+      `<p class="note">Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B.</p>`;
   }
 
   // ---- benchmark ---------------------------------------------------------------------------------------------------
@@ -528,13 +537,13 @@
     const t = D.totals;
     const steps = [
       ["Sources and quality control", "40", "established sources",
-        "Tasks are drawn from public datasets and environments with traceable origins. A task stays only if its reference label is supported by the information the model sees.",
+        "Public datasets and environments. A task stays only if its label is supported by what the model sees.",
         '<span>review: people + LLM</span>→<span class="ok">kept</span>or<span class="no">dropped</span>'],
       ["Organization and formulation", "11", "domains in five families",
-        `${t.static.toLocaleString("en-US")} static tasks with <span class="mono">choice</span>, <span class="mono">noul</span> and <span class="mono">score</span> formats, and ${(t.tools + t.web).toLocaleString("en-US")} environment-based tasks: web single step, web multi-step and interactive tool use.`,
+        `${t.static.toLocaleString("en-US")} static tasks (<span class="mono">choice</span>, <span class="mono">noul</span>, <span class="mono">score</span>) and ${(t.tools + t.web).toLocaleString("en-US")} web and tool sandbox tasks.`,
         "<span>Easy</span>→<span>Medium</span>→<span>Hard</span>"],
       ["Evaluation", "C · R", "capability and reliability",
-        "The model receives a state and a question; its decision is scored against the verified label, domain by domain. The same items are then shown with reordered options and with the correct option removed.",
+        "Each decision is scored against its verified label, then retested with reordered options and with the correct option removed.",
         "<span>A B C → C A B</span><span>A ▢ C → Null</span>"],
     ];
     $("#steps").innerHTML = steps.map(([h, big, cap, p, flow], i) => `<div class="step"><span class="n">STEP 0${i + 1}</span><div class="big">${big}</div><div class="big-cap">${cap}</div><h3>${h}</h3><p>${p}</p><div class="flow">${flow}</div></div>`).join("");

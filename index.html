@@ -50,7 +50,7 @@
         <div>
           <p class="hero-logo"><img src="assets/img/logo.svg" alt="SysOne-Arena (SO-Arena)" width="984" height="190"></p>
           <h1>Benchmarking the <em>capability</em> spectrum and <em class="r">reliability</em> of System One models</h1>
-          <p class="hero-text">System One models decide in a single forward pass, without generating reasoning tokens. SO-Arena measures how well they decide across 11 domains and five capability families, and whether their decisions hold when the options change.</p>
+          <p class="hero-text">System One models decide in one forward pass, without reasoning tokens. SO-Arena measures how well and how fast they decide across 11 domains, and whether their decisions hold when the options change.</p>
           <p class="authors">Lichen Li<sup>*</sup>, Ziping Dong<sup>*</sup>, Sicheng Feng, Qi Li, Xinchao Wang<sup>†</sup></p>
           <p class="authors-note">* Equal contribution · † Corresponding author</p>
           <div class="cta">
@@ -71,7 +71,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">01 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
-        <p class="sec-lead">The overall score averages the 11 domains equally, each on its hardest tier. Ranks count the 18 System One models; the two System Two models are references. Select a row for a model's full profile.</p>
+        <p class="sec-lead">The score is the mean of 11 domains, each on its hardest tier.</p>
       </div>
       <div class="toolbar">
         <div class="tools-l">
@@ -82,17 +82,16 @@
           <div class="tools-filters" id="filters" role="group" aria-label="Show models" style="display:flex;gap:6px;flex-wrap:wrap"></div>
         </div>
         <div class="tools-r">
-          <label class="switch"><input type="checkbox" id="show-refs" checked> System Two references</label>
           <label class="search"><span class="sr-only">Find a model</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Find a model" autocomplete="off"></label>
         </div>
       </div>
       <div id="v-table" role="tabpanel" aria-labelledby="t-table">
         <div class="tbl-wrap" tabindex="0" aria-label="Leaderboard table; scrolls sideways"><table class="lb" id="lb"></table></div>
-        <p class="note">Scores are 0–100. Domain columns use each domain's leaderboard tier; the best System One score in each column is shaded, the next two lightly. Reliability <i>R</i> is measured for the 18 System One models. Latency is the mean per task: open weights on one H100 GPU, APIs end to end. <a href="data/arena.json" download>Download all results (JSON)</a></p>
+        <div class="lb-foot"><span class="fam-key" id="fam-key" aria-label="Domain families"></span><p class="note">Latency: mean per task, one H100 GPU; APIs end to end. <a href="data/arena.json" download>All results (JSON)</a></p></div>
       </div>
       <div id="v-domains" role="tabpanel" aria-labelledby="t-domains" hidden>
         <div class="dgrid" id="dgrid"></div>
-        <p class="note">Top three System One models per domain, on the domain's leaderboard tier. GPT-6 Luna is shown for reference.</p>
+        <p class="note">Top three System One models per domain; GPT-6 Luna for reference.</p>
       </div>
     </div>
   </section>
@@ -102,7 +101,6 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">02 — Insights</span><h2 id="in-h">Capability against speed, reliability and difficulty</h2></div>
-        <p class="sec-lead">Hover or tap a point or a line for details; select it for the model's profile. Open-weight models are coloured by size, closed APIs are diamonds.</p>
       </div>
       <div class="panel">
         <div class="panel-head">
@@ -132,13 +130,13 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">03 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
-        <p class="sec-lead">Accuracy on one fixed option set overlooks whether a decision holds when the options change. SO-Arena changes them in two controlled ways and combines both tests into one reliability score.</p>
+        <p class="sec-lead">Two tests, combined into one reliability score.</p>
       </div>
       <div class="rel rv">
         <div class="defs">
-          <div class="def"><span class="sym" aria-hidden="true">S</span><div><h3>Order stability</h3><p>Each item is shown in its original order and in 12 reorderings. <i>S</i> is the share of reorderings in which the model keeps its answer, identified by content, rescaled so that random picks score 0 and full agreement scores 1.</p></div></div>
-          <div class="def"><span class="sym" aria-hidden="true">N</span><div><h3>Null discrimination</h3><p>Each item is shown as it is and with its correct option removed. <i>N</i> = 2·AUC − 1 measures how well the model's probability that no option is correct separates the two copies: 0 is chance, 1 is perfect.</p></div></div>
-          <div class="def"><span class="sym" aria-hidden="true">R</span><div><h3>Reliability</h3><p>The geometric mean <i>R</i> = √(<i>S</i>·<i>N</i>), positive only when both exceed chance, reported as a percentage next to the capability score.</p></div></div>
+          <div class="def"><span class="sym" aria-hidden="true">S</span><div><h3>Order stability</h3><p>How often the model keeps its answer across 12 reorderings of the options; 0 is chance, 1 always.</p></div></div>
+          <div class="def"><span class="sym" aria-hidden="true">N</span><div><h3>Null discrimination</h3><p>How well the model's “no option is correct” probability flags items whose correct option was removed: 2·AUC − 1; 0 is chance, 1 perfect.</p></div></div>
+          <div class="def"><span class="sym" aria-hidden="true">R</span><div><h3>Reliability</h3><p><i>R</i> = √(<i>S</i>·<i>N</i>), as a percentage.</p></div></div>
         </div>
         <div class="demo" id="demo"></div>
       </div>
@@ -151,12 +149,12 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">04 — Findings</span><h2 id="fi-h">What 21 models tell us</h2></div>
-        <p class="sec-lead">System Two still leads overall, but the gap depends on the domain, and what closes it differs between domains.</p>
+        <p class="sec-lead">System Two still leads overall; the gap depends on the domain.</p>
       </div>
       <div class="kfacts rv" id="kfacts"></div>
       <div class="panel rv">
         <div class="panel-head"><div><h3>Where System One models match System Two, and what closes the gap</h3>
-          <p>Score difference from GPT-6 Luna on the medium and hard tiers, with 95% confidence intervals; the gain from a larger, newer backbone; and the gain of StartLux Auto from always thinking over never thinking.</p></div></div>
+          <p>Difference from GPT-6 Luna on the medium and hard tiers (95% confidence intervals), and the gains from a larger backbone and from thinking.</p></div></div>
         <div class="gap" id="gap"></div>
       </div>
     </div>
@@ -167,13 +165,13 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">05 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
-        <p class="sec-lead">Tasks are built from established sources, checked by people, organized into domains and difficulty tiers, and posed through one decision interface: static questions and environment-based tasks in web and tool sandboxes.</p>
+        <p class="sec-lead">Static questions and web and tool sandboxes, posed through one decision interface.</p>
       </div>
       <div class="steps rv" id="steps"></div>
       <table class="dtable rv" id="dtable"></table>
       <div class="score-box rv">
         <div><h3>How the leaderboard is scored</h3>
-          <p>The original task is the unit of scoring, and domains are weighted equally so that larger domains do not dominate. Each domain contributes its hardest tier (Math: hard and very hard; untiered domains: all tasks), which makes the score more sensitive to differences on demanding tasks: 1,232 tasks in all.</p></div>
+          <p>Domains count equally, each on its hardest tier (Math: hard and very hard; untiered domains: all tasks): 1,232 tasks.</p></div>
         <div class="formula" aria-label="C of m equals 100 over D times the sum over domains of the mean credit on the domain's leaderboard tasks">
           <math display="block"><mrow><mi>C</mi><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>100</mn><mi>D</mi></mfrac><munderover><mo>∑</mo><mrow><mi>d</mi><mo>=</mo><mn>1</mn></mrow><mi>D</mi></munderover><mfrac><mn>1</mn><mrow><mo>|</mo><msub><mi>T</mi><mi>d</mi></msub><mo>|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>T</mi><mi>d</mi></msub></mrow></munder><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></math>
           <p class="note"><i>c<sub>i</sub>(m)</i> ∈ [0, 1] is model <i>m</i>'s credit on task <i>i</i>; <i>T<sub>d</sub></i> holds domain <i>d</i>'s leaderboard tasks; <i>D</i> = 11.</p>
@@ -187,23 +185,23 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">06 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
-        <p class="sec-lead">The evaluator reaches any model through an adapter, runs the static, tool and web tasks, and scores them with the leaderboard's rules. It needs Linux x86-64 and Python 3.12; the adapter protocol is documented in the repository.</p>
+        <p class="sec-lead">Any model, through an adapter. Linux x86-64, Python 3.12.</p>
       </div>
       <div class="runs rv">
         <div class="run"><span class="label">Step 01 · Get the data</span>
           <pre><code>./jev fetch-data --output /path/to/so-arena-data
 export SO_ARENA_DATA=/path/to/so-arena-data
 ./jev verify
-./jev setup</code></pre><p>The release pins the dataset commit, the archive's SHA-256 and every data file; <span class="mono">verify</span> checks them.</p></div>
+./jev setup</code></pre><p><span class="mono">verify</span> checks every data file against the release.</p></div>
         <div class="run"><span class="label">Step 02 · Run your model</span>
           <pre><code>export JEV_ENDPOINT=http://localhost:8000
 ./jev run --adapter adapters:http \
-  --model your-model --out /path/to/new-run</code></pre><p>Resume an interrupted run with the same arguments plus <span class="mono">--resume</span>; use <span class="mono">--domain</span>, <span class="mono">--tier</span> and <span class="mono">--limit</span> for a quick check.</p></div>
+  --model your-model --out /path/to/new-run</code></pre><p><span class="mono">--resume</span> continues a run; <span class="mono">--limit</span> makes a quick check.</p></div>
         <div class="run"><span class="label">Step 03 · Score</span>
           <pre><code>./jev score --run /path/to/new-run \
-  --output /path/to/report.json</code></pre><p>The report gives the leaderboard score and its domain and tier components for the run.</p></div>
+  --output /path/to/report.json</code></pre><p>The leaderboard score, by domain and tier.</p></div>
       </div>
-      <p class="note">Model inputs are public; answers, checker state and reference trajectories stay with the evaluator. Full instructions: <a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">the SO-Arena repository</a>.</p>
+      <p class="note">Full instructions: <a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">the SO-Arena repository</a>.</p>
     </div>
   </section>
 
@@ -228,7 +226,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand" href="#top"><span class="mark" aria-hidden="true"></span>SO-Arena</a>
-      <p>Results as reported in the paper. Model names and logos belong to their developers. The page shows results only and contains no benchmark items.</p></div>
+      <p>Results as reported in the paper; no benchmark items. Model names and logos belong to their developers.</p></div>
     <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#benchmark">Benchmark</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Hugging Face ↗</a></nav>
   </div>
 </footer>

@@ -46,7 +46,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .nav.scrolled { border-bottom-color: var(--line); }
 .nav-in { height: 60px; display: flex; align-items: center; gap: 28px; }
 .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 650; font-size: 16px; letter-spacing: -.01em; }
-.mark { width: 22px; height: 22px; flex: none; background: url(../img/favicon.svg) center / contain no-repeat; }  /* the logo's ring */
+.mark { width: 22px; height: 22px; flex: none; display: block; }  /* the logo's ring, inline (assets/img/favicon.svg) */
 .nav-links { display: flex; gap: 2px; margin-left: 8px; }
 .nav-links a { font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 9px 10px; border-radius: 6px; transition: color .15s, background .15s; }
 .nav-links a:hover { color: var(--ink); background: var(--soft); }

@@ -1,0 +1,3 @@
+TeX Gyre Pagella (regular, bold, italic), subset to Latin and converted to WOFF2 for this site.
+Copyright 2006-2009 B. Jackowski, J. M. Nowacki (GUST e-foundry), based on URW Palladio L.
+Distributed under the GUST Font License: http://www.gust.org.pl/projects/e-foundry/licenses

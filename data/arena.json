@@ -1,0 +1,2388 @@
+{
+ "title": "SO-Arena: Benchmarking the Capability Spectrum and Reliability of System One Models",
+ "families": [
+  {
+   "id": "semantic",
+   "name": "Semantic understanding",
+   "color": "#4b79a5"
+  },
+  {
+   "id": "knowledge",
+   "name": "Knowledge and reasoning",
+   "color": "#5f9668"
+  },
+  {
+   "id": "safety",
+   "name": "Safety and policy compliance",
+   "color": "#ad5563"
+  },
+  {
+   "id": "evidence",
+   "name": "Evidence assessment",
+   "color": "#c0904a"
+  },
+  {
+   "id": "agent",
+   "name": "Agent task completion",
+   "color": "#7a69a8"
+  }
+ ],
+ "domains": [
+  {
+   "id": "sentiment",
+   "name": "Sentiment & Emotion Understanding",
+   "short": "Sentiment",
+   "family": "semantic",
+   "tasks": 200,
+   "tiers": null,
+   "leaderboard_tier": "All tasks",
+   "leaderboard_tasks": 200,
+   "formats": "choice, score",
+   "sources": [
+    "Amazon Reviews 2023",
+    "GoEmotions",
+    "SST-5",
+    "DynaSent",
+    "ARTS"
+   ],
+   "sources_by_tier": false
+  },
+  {
+   "id": "intent",
+   "name": "Intent & Routing",
+   "short": "Intent",
+   "family": "semantic",
+   "tasks": 300,
+   "tiers": {
+    "E": 100,
+    "M": 100,
+    "H": 100
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 100,
+   "formats": "choice, noul",
+   "sources": [
+    "CLINC150, BANKING77, SGD",
+    "NatCS",
+    "NLU++"
+   ],
+   "sources_by_tier": true
+  },
+  {
+   "id": "math",
+   "name": "Math",
+   "short": "Math",
+   "family": "knowledge",
+   "tasks": 200,
+   "tiers": {
+    "E": 50,
+    "M": 50,
+    "H": 70,
+    "V": 30
+   },
+   "leaderboard_tier": "Hard + Very hard",
+   "leaderboard_tasks": 100,
+   "formats": "choice",
+   "sources": [
+    "GSM8K-Platinum",
+    "MATH500",
+    "AIME 2025-2026"
+   ],
+   "sources_by_tier": false
+  },
+  {
+   "id": "code",
+   "name": "Code Understanding",
+   "short": "Code",
+   "family": "knowledge",
+   "tasks": 200,
+   "tiers": {
+    "E": 60,
+    "M": 70,
+    "H": 70
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 70,
+   "formats": "noul",
+   "sources": [
+    "CodeJudgeBench",
+    "LiveCodeBench",
+    "LeetCodeDataset"
+   ],
+   "sources_by_tier": false
+  },
+  {
+   "id": "science",
+   "name": "Scientific Reasoning",
+   "short": "Science",
+   "family": "knowledge",
+   "tasks": 200,
+   "tiers": {
+    "E": 50,
+    "M": 70,
+    "H": 80
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 80,
+   "formats": "choice",
+   "sources": [
+    "ARC-Challenge",
+    "MMLU-Redux",
+    "GPQA Diamond"
+   ],
+   "sources_by_tier": true
+  },
+  {
+   "id": "knowledge",
+   "name": "Knowledge & Commonsense",
+   "short": "Knowledge",
+   "family": "knowledge",
+   "tasks": 200,
+   "tiers": null,
+   "leaderboard_tier": "All tasks",
+   "leaderboard_tasks": 200,
+   "formats": "choice",
+   "sources": [
+    "MMLU-Redux",
+    "HellaSwag",
+    "CommonsenseQA"
+   ],
+   "sources_by_tier": false
+  },
+  {
+   "id": "safety",
+   "name": "Safety",
+   "short": "Safety",
+   "family": "safety",
+   "tasks": 500,
+   "tiers": {
+    "E": 177,
+    "M": 165,
+    "H": 158
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 158,
+   "formats": "choice, noul",
+   "sources": [
+    "RAGTruth",
+    "ReasoningShield",
+    "HarmThoughts",
+    "DynaBench",
+    "Aegis 2.0",
+    "OR-Bench"
+   ],
+   "sources_by_tier": false
+  },
+  {
+   "id": "retrieval",
+   "name": "Retrieval & Reranking",
+   "short": "Retrieval",
+   "family": "evidence",
+   "tasks": 300,
+   "tiers": {
+    "E": 100,
+    "M": 100,
+    "H": 100
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 100,
+   "formats": "noul, score",
+   "sources": [
+    "TREC DL",
+    "BRIGHT, Touché 2020",
+    "ACORD"
+   ],
+   "sources_by_tier": true
+  },
+  {
+   "id": "verification",
+   "name": "Task Completion Verification",
+   "short": "Verification",
+   "family": "evidence",
+   "tasks": 200,
+   "tiers": {
+    "E": 91,
+    "M": 89,
+    "H": 20
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 20,
+   "formats": "choice, noul",
+   "sources": [
+    "BrowseComp-Plus",
+    "CALVIN",
+    "τ-bench",
+    "MiniGrid",
+    "EAI-VirtualHome"
+   ],
+   "sources_by_tier": false
+  },
+  {
+   "id": "tools",
+   "name": "Tool & API Use",
+   "short": "Tools",
+   "family": "agent",
+   "tasks": 282,
+   "tiers": {
+    "E": 100,
+    "M": 78,
+    "H": 104
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 104,
+   "formats": "live sequence",
+   "sources": [
+    "BFCL",
+    "ToolSandbox",
+    "BFCL"
+   ],
+   "sources_by_tier": true
+  },
+  {
+   "id": "web",
+   "name": "Text-based Web Interaction",
+   "short": "Web",
+   "family": "agent",
+   "tasks": 337,
+   "tiers": {
+    "E": 100,
+    "M": 137,
+    "H": 100
+   },
+   "leaderboard_tier": "Hard",
+   "leaderboard_tasks": 100,
+   "formats": "choice, noul; sequence",
+   "sources": [
+    "Mind2Web",
+    "BreakingWeb"
+   ],
+   "sources_by_tier": true
+  }
+ ],
+ "models": [
+  {
+   "key": "GLiDE",
+   "name": "GLiDE",
+   "developer": "Fastino",
+   "size": "27B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "fastino/GLiDE",
+   "release_url": "https://huggingface.co/fastino/GLiDE",
+   "logo": "assets/logos/glide.png",
+   "score": 70.212,
+   "domains": {
+    "sentiment": 89.5,
+    "intent": 75.6651,
+    "math": 54.0,
+    "code": 57.1429,
+    "science": 55.0,
+    "knowledge": 95.0,
+    "safety": 74.6835,
+    "retrieval": 57.0,
+    "verification": 100.0,
+    "tools": 65.3846,
+    "web": 48.9559
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 90
+    },
+    "intent": {
+     "E": 100,
+     "M": 84,
+     "H": 76
+    },
+    "math": {
+     "E": 98,
+     "M": 86,
+     "H": 64,
+     "V": 30
+    },
+    "code": {
+     "E": 93,
+     "M": 69,
+     "H": 57
+    },
+    "science": {
+     "E": 96,
+     "M": 87,
+     "H": 55
+    },
+    "knowledge": {
+     "All": 95
+    },
+    "safety": {
+     "E": 87,
+     "M": 84,
+     "H": 75
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 84,
+     "H": 57
+    },
+    "verification": {
+     "E": 100,
+     "M": 99,
+     "H": 100
+    },
+    "tools": {
+     "E": 97,
+     "M": 81,
+     "H": 65
+    },
+    "web": {
+     "E": 99,
+     "M": 81,
+     "H": 49
+    }
+   },
+   "reliability": {
+    "R": 77.57,
+    "S": 0.9424,
+    "N": 0.6384
+   },
+   "latency": {
+    "mean_ms": 113.0,
+    "timing": "one H100",
+    "p90_ms": 214.0,
+    "p99_ms": 774.0
+   },
+   "note": null
+  },
+  {
+   "key": "KnowLine-31B-Gen1",
+   "name": "KnowLine-31B",
+   "developer": "PelaAI",
+   "size": "31B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "PelaAI/KnowLine-31B-Gen1",
+   "release_url": "https://huggingface.co/PelaAI/KnowLine-31B-Gen1",
+   "logo": null,
+   "score": 70.1908,
+   "domains": {
+    "sentiment": 88.25,
+    "intent": 78.1869,
+    "math": 62.0,
+    "code": 67.1429,
+    "science": 52.5,
+    "knowledge": 93.0,
+    "safety": 77.2152,
+    "retrieval": 64.0,
+    "verification": 90.0,
+    "tools": 55.7692,
+    "web": 44.0341
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 88
+    },
+    "intent": {
+     "E": 100,
+     "M": 83,
+     "H": 78
+    },
+    "math": {
+     "E": 98,
+     "M": 98,
+     "H": 71,
+     "V": 40
+    },
+    "code": {
+     "E": 92,
+     "M": 79,
+     "H": 67
+    },
+    "science": {
+     "E": 98,
+     "M": 94,
+     "H": 52
+    },
+    "knowledge": {
+     "All": 93
+    },
+    "safety": {
+     "E": 86,
+     "M": 83,
+     "H": 77
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 89,
+     "H": 64
+    },
+    "verification": {
+     "E": 97,
+     "M": 96,
+     "H": 90
+    },
+    "tools": {
+     "E": 97,
+     "M": 84,
+     "H": 56
+    },
+    "web": {
+     "E": 100,
+     "M": 74,
+     "H": 44
+    }
+   },
+   "reliability": {
+    "R": 81.01,
+    "S": 0.9237,
+    "N": 0.7104
+   },
+   "latency": {
+    "mean_ms": 177.0,
+    "timing": "one H100",
+    "p90_ms": 515.0,
+    "p99_ms": 959.0
+   },
+   "note": null
+  },
+  {
+   "key": "Sieve-31B-v3",
+   "name": "Sieve-31B-v3",
+   "developer": "Sthanika AI",
+   "size": "31B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "sthanika-ai/Sieve-31B-v3",
+   "release_url": "https://huggingface.co/sthanika-ai/Sieve-31B-v3",
+   "logo": null,
+   "score": 67.6503,
+   "domains": {
+    "sentiment": 88.0,
+    "intent": 68.0214,
+    "math": 60.0,
+    "code": 65.7143,
+    "science": 55.0,
+    "knowledge": 93.0,
+    "safety": 78.481,
+    "retrieval": 63.5,
+    "verification": 70.0,
+    "tools": 59.6154,
+    "web": 42.8211
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 88
+    },
+    "intent": {
+     "E": 99,
+     "M": 81,
+     "H": 68
+    },
+    "math": {
+     "E": 100,
+     "M": 94,
+     "H": 66,
+     "V": 47
+    },
+    "code": {
+     "E": 93,
+     "M": 77,
+     "H": 66
+    },
+    "science": {
+     "E": 98,
+     "M": 93,
+     "H": 55
+    },
+    "knowledge": {
+     "All": 93
+    },
+    "safety": {
+     "E": 86,
+     "M": 82,
+     "H": 78
+    },
+    "retrieval": {
+     "E": 98,
+     "M": 84,
+     "H": 64
+    },
+    "verification": {
+     "E": 97,
+     "M": 98,
+     "H": 70
+    },
+    "tools": {
+     "E": 96,
+     "M": 86,
+     "H": 60
+    },
+    "web": {
+     "E": 99,
+     "M": 60,
+     "H": 43
+    }
+   },
+   "reliability": {
+    "R": 81.31,
+    "S": 0.9353,
+    "N": 0.7069
+   },
+   "latency": {
+    "mean_ms": 265.0,
+    "timing": "one H100",
+    "p90_ms": 668.0,
+    "p99_ms": 2475.0
+   },
+   "note": null
+  },
+  {
+   "key": "pplx-decider-27B",
+   "name": "Decider-27B",
+   "developer": "Perplexity",
+   "size": "27B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "perplexity-ai/pplx-decider-v1.2",
+   "release_url": "https://huggingface.co/perplexity-ai/pplx-decider-v1.2",
+   "logo": "assets/logos/pplx-decider-27b.png",
+   "score": 66.7044,
+   "domains": {
+    "sentiment": 88.75,
+    "intent": 69.8437,
+    "math": 53.0,
+    "code": 61.4286,
+    "science": 52.5,
+    "knowledge": 95.0,
+    "safety": 74.6835,
+    "retrieval": 56.0,
+    "verification": 65.0,
+    "tools": 67.3077,
+    "web": 50.2353
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 89
+    },
+    "intent": {
+     "E": 98,
+     "M": 83,
+     "H": 70
+    },
+    "math": {
+     "E": 96,
+     "M": 90,
+     "H": 61,
+     "V": 33
+    },
+    "code": {
+     "E": 87,
+     "M": 73,
+     "H": 61
+    },
+    "science": {
+     "E": 100,
+     "M": 90,
+     "H": 52
+    },
+    "knowledge": {
+     "All": 95
+    },
+    "safety": {
+     "E": 86,
+     "M": 81,
+     "H": 75
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 88,
+     "H": 56
+    },
+    "verification": {
+     "E": 99,
+     "M": 97,
+     "H": 65
+    },
+    "tools": {
+     "E": 97,
+     "M": 84,
+     "H": 67
+    },
+    "web": {
+     "E": 99,
+     "M": 79,
+     "H": 50
+    }
+   },
+   "reliability": {
+    "R": 75.29,
+    "S": 0.9242,
+    "N": 0.6134
+   },
+   "latency": {
+    "mean_ms": 153.0,
+    "timing": "one H100",
+    "p90_ms": 145.0,
+    "p99_ms": 584.0
+   },
+   "note": null
+  },
+  {
+   "key": "Kev-27B",
+   "name": "Kev-27B",
+   "developer": "J. Palmer",
+   "size": "27B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "jaredpalmer/kev-27b",
+   "release_url": "https://huggingface.co/jaredpalmer/kev-27b",
+   "logo": null,
+   "score": 61.3923,
+   "domains": {
+    "sentiment": 84.25,
+    "intent": 68.1329,
+    "math": 48.0,
+    "code": 54.2857,
+    "science": 53.75,
+    "knowledge": 92.0,
+    "safety": 63.9241,
+    "retrieval": 59.0,
+    "verification": 45.0,
+    "tools": 61.5385,
+    "web": 45.4341
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 84
+    },
+    "intent": {
+     "E": 97,
+     "M": 82,
+     "H": 68
+    },
+    "math": {
+     "E": 100,
+     "M": 78,
+     "H": 56,
+     "V": 30
+    },
+    "code": {
+     "E": 87,
+     "M": 71,
+     "H": 54
+    },
+    "science": {
+     "E": 98,
+     "M": 87,
+     "H": 54
+    },
+    "knowledge": {
+     "All": 92
+    },
+    "safety": {
+     "E": 79,
+     "M": 73,
+     "H": 64
+    },
+    "retrieval": {
+     "E": 98,
+     "M": 87,
+     "H": 59
+    },
+    "verification": {
+     "E": 89,
+     "M": 89,
+     "H": 45
+    },
+    "tools": {
+     "E": 97,
+     "M": 81,
+     "H": 62
+    },
+    "web": {
+     "E": 100,
+     "M": 78,
+     "H": 45
+    }
+   },
+   "reliability": {
+    "R": 80.78,
+    "S": 0.8541,
+    "N": 0.764
+   },
+   "latency": {
+    "mean_ms": 90.3,
+    "timing": "one H100",
+    "p90_ms": 181.0,
+    "p99_ms": 598.0
+   },
+   "note": null
+  },
+  {
+   "key": "JevAny-27B",
+   "name": "JevAny-27B",
+   "developer": "SimpleJev",
+   "size": "27B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "SimpleJev/JevAny-Qwen3.8-27B-LoRA",
+   "release_url": "https://huggingface.co/SimpleJev/JevAny-Qwen3.8-27B-LoRA",
+   "logo": "assets/logos/jevany-27b.png",
+   "score": 58.3695,
+   "domains": {
+    "sentiment": 84.25,
+    "intent": 52.1333,
+    "math": 45.0,
+    "code": 50.0,
+    "science": 60.0,
+    "knowledge": 94.5,
+    "safety": 65.1899,
+    "retrieval": 57.0,
+    "verification": 35.0,
+    "tools": 57.6923,
+    "web": 41.2986
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 84
+    },
+    "intent": {
+     "E": 98,
+     "M": 81,
+     "H": 52
+    },
+    "math": {
+     "E": 100,
+     "M": 82,
+     "H": 53,
+     "V": 27
+    },
+    "code": {
+     "E": 87,
+     "M": 73,
+     "H": 50
+    },
+    "science": {
+     "E": 100,
+     "M": 87,
+     "H": 60
+    },
+    "knowledge": {
+     "All": 94
+    },
+    "safety": {
+     "E": 81,
+     "M": 75,
+     "H": 65
+    },
+    "retrieval": {
+     "E": 92,
+     "M": 70,
+     "H": 57
+    },
+    "verification": {
+     "E": 93,
+     "M": 90,
+     "H": 35
+    },
+    "tools": {
+     "E": 98,
+     "M": 84,
+     "H": 58
+    },
+    "web": {
+     "E": 99,
+     "M": 71,
+     "H": 41
+    }
+   },
+   "reliability": {
+    "R": 84.11,
+    "S": 0.8917,
+    "N": 0.7934
+   },
+   "latency": {
+    "mean_ms": 93.9,
+    "timing": "one H100",
+    "p90_ms": 233.0,
+    "p99_ms": 697.0
+   },
+   "note": null
+  },
+  {
+   "key": "StartLux-4B-AutoThink",
+   "name": "StartLux Auto",
+   "developer": "StartLux",
+   "size": "4B",
+   "group": "auto",
+   "reasoning": "Auto",
+   "release": "startlux-models/StartLux-Decision-v1.1-4B-AutoThink",
+   "release_url": "https://huggingface.co/startlux-models/StartLux-Decision-v1.1-4B-AutoThink",
+   "logo": "assets/logos/startlux-auto.png",
+   "score": 58.629,
+   "domains": {
+    "sentiment": 83.75,
+    "intent": 69.8468,
+    "math": 71.0,
+    "code": 54.2857,
+    "science": 51.25,
+    "knowledge": 85.0,
+    "safety": 62.0253,
+    "retrieval": 56.0,
+    "verification": 35.0,
+    "tools": 46.1538,
+    "web": 30.6075
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 84
+    },
+    "intent": {
+     "E": 96,
+     "M": 71,
+     "H": 70
+    },
+    "math": {
+     "E": 98,
+     "M": 90,
+     "H": 81,
+     "V": 47
+    },
+    "code": {
+     "E": 80,
+     "M": 63,
+     "H": 54
+    },
+    "science": {
+     "E": 90,
+     "M": 86,
+     "H": 51
+    },
+    "knowledge": {
+     "All": 85
+    },
+    "safety": {
+     "E": 74,
+     "M": 66,
+     "H": 62
+    },
+    "retrieval": {
+     "E": 98,
+     "M": 82,
+     "H": 56
+    },
+    "verification": {
+     "E": 88,
+     "M": 76,
+     "H": 35
+    },
+    "tools": {
+     "E": 92,
+     "M": 76,
+     "H": 46
+    },
+    "web": {
+     "E": 92,
+     "M": 50,
+     "H": 31
+    }
+   },
+   "reliability": null,
+   "latency": {
+    "mean_ms": 3084.0,
+    "timing": "one H100",
+    "p90_ms": 10032.0,
+    "p99_ms": 21870.0
+   },
+   "note": "Switches automatically between System One and System Two; not in the reliability set."
+  },
+  {
+   "key": "StartLux-4B-Instant",
+   "name": "StartLux Instant",
+   "developer": "StartLux",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "startlux-models/StartLux-Decision-v1.1-4B-Instant",
+   "release_url": "https://huggingface.co/startlux-models/StartLux-Decision-v1.1-4B-Instant",
+   "logo": "assets/logos/startlux-instant.png",
+   "score": 58.9563,
+   "domains": {
+    "sentiment": 87.75,
+    "intent": 70.1976,
+    "math": 42.0,
+    "code": 55.7143,
+    "science": 46.25,
+    "knowledge": 88.5,
+    "safety": 63.2911,
+    "retrieval": 54.5,
+    "verification": 55.0,
+    "tools": 53.8462,
+    "web": 31.4698
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 88
+    },
+    "intent": {
+     "E": 94,
+     "M": 71,
+     "H": 70
+    },
+    "math": {
+     "E": 98,
+     "M": 88,
+     "H": 43,
+     "V": 40
+    },
+    "code": {
+     "E": 80,
+     "M": 69,
+     "H": 56
+    },
+    "science": {
+     "E": 96,
+     "M": 84,
+     "H": 46
+    },
+    "knowledge": {
+     "All": 88
+    },
+    "safety": {
+     "E": 82,
+     "M": 73,
+     "H": 63
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 82,
+     "H": 54
+    },
+    "verification": {
+     "E": 86,
+     "M": 80,
+     "H": 55
+    },
+    "tools": {
+     "E": 96,
+     "M": 79,
+     "H": 54
+    },
+    "web": {
+     "E": 98,
+     "M": 39,
+     "H": 31
+    }
+   },
+   "reliability": {
+    "R": 78.9,
+    "S": 0.8904,
+    "N": 0.6991
+   },
+   "latency": {
+    "mean_ms": 35.1,
+    "timing": "one H100",
+    "p90_ms": 63.2,
+    "p99_ms": 138.0
+   },
+   "note": "Null discrimination uses the model's own null output."
+  },
+  {
+   "key": "Clef-27B",
+   "name": "Clef-27B",
+   "developer": "Cloudflare",
+   "size": "27B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "Cloudflare/clef",
+   "release_url": "https://huggingface.co/Cloudflare/clef",
+   "logo": "assets/logos/clef-27b.png",
+   "score": 56.8675,
+   "domains": {
+    "sentiment": 85.0,
+    "intent": 63.9179,
+    "math": 38.0,
+    "code": 60.0,
+    "science": 51.25,
+    "knowledge": 94.5,
+    "safety": 59.4937,
+    "retrieval": 61.0,
+    "verification": 15.0,
+    "tools": 54.8077,
+    "web": 42.573
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 85
+    },
+    "intent": {
+     "E": 97,
+     "M": 79,
+     "H": 64
+    },
+    "math": {
+     "E": 96,
+     "M": 74,
+     "H": 47,
+     "V": 17
+    },
+    "code": {
+     "E": 92,
+     "M": 70,
+     "H": 60
+    },
+    "science": {
+     "E": 98,
+     "M": 91,
+     "H": 51
+    },
+    "knowledge": {
+     "All": 94
+    },
+    "safety": {
+     "E": 78,
+     "M": 75,
+     "H": 59
+    },
+    "retrieval": {
+     "E": 97,
+     "M": 88,
+     "H": 61
+    },
+    "verification": {
+     "E": 88,
+     "M": 83,
+     "H": 15
+    },
+    "tools": {
+     "E": 92,
+     "M": 86,
+     "H": 55
+    },
+    "web": {
+     "E": 98,
+     "M": 73,
+     "H": 43
+    }
+   },
+   "reliability": {
+    "R": 73.21,
+    "S": 0.8482,
+    "N": 0.6319
+   },
+   "latency": {
+    "mean_ms": 108.0,
+    "timing": "one H100",
+    "p90_ms": 184.0,
+    "p99_ms": 533.0
+   },
+   "note": null
+  },
+  {
+   "key": "H2O-Lightning-4B",
+   "name": "H2O Lightning",
+   "developer": "H2O.ai",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "h2oai/h2o-lightning-4b",
+   "release_url": "https://huggingface.co/h2oai/h2o-lightning-4b",
+   "logo": "assets/logos/h2o-lightning.png",
+   "score": 54.8581,
+   "domains": {
+    "sentiment": 85.25,
+    "intent": 63.0468,
+    "math": 44.0,
+    "code": 45.7143,
+    "science": 43.75,
+    "knowledge": 91.0,
+    "safety": 63.9241,
+    "retrieval": 61.0,
+    "verification": 40.0,
+    "tools": 37.5,
+    "web": 28.2538
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 85
+    },
+    "intent": {
+     "E": 94,
+     "M": 66,
+     "H": 63
+    },
+    "math": {
+     "E": 98,
+     "M": 72,
+     "H": 44,
+     "V": 43
+    },
+    "code": {
+     "E": 70,
+     "M": 54,
+     "H": 46
+    },
+    "science": {
+     "E": 92,
+     "M": 80,
+     "H": 44
+    },
+    "knowledge": {
+     "All": 91
+    },
+    "safety": {
+     "E": 82,
+     "M": 68,
+     "H": 64
+    },
+    "retrieval": {
+     "E": 98,
+     "M": 87,
+     "H": 61
+    },
+    "verification": {
+     "E": 85,
+     "M": 80,
+     "H": 40
+    },
+    "tools": {
+     "E": 96,
+     "M": 66,
+     "H": 38
+    },
+    "web": {
+     "E": 94,
+     "M": 36,
+     "H": 28
+    }
+   },
+   "reliability": {
+    "R": 60.91,
+    "S": 0.8897,
+    "N": 0.417
+   },
+   "latency": {
+    "mean_ms": 26.5,
+    "timing": "one H100",
+    "p90_ms": 48.4,
+    "p99_ms": 155.0
+   },
+   "note": null
+  },
+  {
+   "key": "Clef-flash-9B",
+   "name": "Clef-Flash-9B",
+   "developer": "Cloudflare",
+   "size": "9B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "Cloudflare/clef-flash",
+   "release_url": "https://huggingface.co/Cloudflare/clef-flash",
+   "logo": "assets/logos/clef-flash-9b.png",
+   "score": 51.6132,
+   "domains": {
+    "sentiment": 83.0,
+    "intent": 64.3333,
+    "math": 41.0,
+    "code": 41.4286,
+    "science": 47.5,
+    "knowledge": 95.5,
+    "safety": 45.5696,
+    "retrieval": 57.5,
+    "verification": 35.0,
+    "tools": 31.7308,
+    "web": 25.1827
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 83
+    },
+    "intent": {
+     "E": 99,
+     "M": 42,
+     "H": 64
+    },
+    "math": {
+     "E": 94,
+     "M": 68,
+     "H": 51,
+     "V": 17
+    },
+    "code": {
+     "E": 70,
+     "M": 59,
+     "H": 41
+    },
+    "science": {
+     "E": 98,
+     "M": 94,
+     "H": 48
+    },
+    "knowledge": {
+     "All": 96
+    },
+    "safety": {
+     "E": 70,
+     "M": 66,
+     "H": 46
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 83,
+     "H": 58
+    },
+    "verification": {
+     "E": 76,
+     "M": 58,
+     "H": 35
+    },
+    "tools": {
+     "E": 91,
+     "M": 50,
+     "H": 32
+    },
+    "web": {
+     "E": 90,
+     "M": 55,
+     "H": 25
+    }
+   },
+   "reliability": {
+    "R": 71.0,
+    "S": 0.8525,
+    "N": 0.5913
+   },
+   "latency": {
+    "mean_ms": 53.5,
+    "timing": "one H100",
+    "p90_ms": 69.7,
+    "p99_ms": 230.0
+   },
+   "note": null
+  },
+  {
+   "key": "pplx-decider-flash-4B",
+   "name": "Decider Flash",
+   "developer": "Perplexity",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "perplexity-ai/pplx-decider-flash-v1.2",
+   "release_url": "https://huggingface.co/perplexity-ai/pplx-decider-flash-v1.2",
+   "logo": "assets/logos/pplx-flash-4b.png",
+   "score": 52.0001,
+   "domains": {
+    "sentiment": 88.0,
+    "intent": 59.3889,
+    "math": 34.0,
+    "code": 52.8571,
+    "science": 40.0,
+    "knowledge": 91.0,
+    "safety": 60.7595,
+    "retrieval": 56.0,
+    "verification": 15.0,
+    "tools": 41.3462,
+    "web": 33.6492
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 88
+    },
+    "intent": {
+     "E": 98,
+     "M": 75,
+     "H": 59
+    },
+    "math": {
+     "E": 96,
+     "M": 76,
+     "H": 40,
+     "V": 20
+    },
+    "code": {
+     "E": 77,
+     "M": 64,
+     "H": 53
+    },
+    "science": {
+     "E": 92,
+     "M": 83,
+     "H": 40
+    },
+    "knowledge": {
+     "All": 91
+    },
+    "safety": {
+     "E": 79,
+     "M": 65,
+     "H": 61
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 80,
+     "H": 56
+    },
+    "verification": {
+     "E": 88,
+     "M": 83,
+     "H": 15
+    },
+    "tools": {
+     "E": 95,
+     "M": 68,
+     "H": 41
+    },
+    "web": {
+     "E": 94,
+     "M": 56,
+     "H": 34
+    }
+   },
+   "reliability": {
+    "R": 67.92,
+    "S": 0.908,
+    "N": 0.508
+   },
+   "latency": {
+    "mean_ms": 39.8,
+    "timing": "one H100",
+    "p90_ms": 39.2,
+    "p99_ms": 149.0
+   },
+   "note": null
+  },
+  {
+   "key": "JevAny-4B",
+   "name": "JevAny-4B",
+   "developer": "SimpleJev",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "SimpleJev/JevAny-Qwen3.5-4B-LoRA",
+   "release_url": "https://huggingface.co/SimpleJev/JevAny-Qwen3.5-4B-LoRA",
+   "logo": "assets/logos/jevany-4b.png",
+   "score": 50.9202,
+   "domains": {
+    "sentiment": 83.25,
+    "intent": 60.8667,
+    "math": 33.0,
+    "code": 47.1429,
+    "science": 43.75,
+    "knowledge": 89.5,
+    "safety": 45.5696,
+    "retrieval": 52.0,
+    "verification": 45.0,
+    "tools": 41.3462,
+    "web": 18.6973
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 83
+    },
+    "intent": {
+     "E": 97,
+     "M": 67,
+     "H": 61
+    },
+    "math": {
+     "E": 92,
+     "M": 60,
+     "H": 39,
+     "V": 20
+    },
+    "code": {
+     "E": 73,
+     "M": 66,
+     "H": 47
+    },
+    "science": {
+     "E": 96,
+     "M": 84,
+     "H": 44
+    },
+    "knowledge": {
+     "All": 90
+    },
+    "safety": {
+     "E": 69,
+     "M": 63,
+     "H": 46
+    },
+    "retrieval": {
+     "E": 91,
+     "M": 72,
+     "H": 52
+    },
+    "verification": {
+     "E": 71,
+     "M": 63,
+     "H": 45
+    },
+    "tools": {
+     "E": 93,
+     "M": 72,
+     "H": 41
+    },
+    "web": {
+     "E": 94,
+     "M": 48,
+     "H": 19
+    }
+   },
+   "reliability": {
+    "R": 70.54,
+    "S": 0.8261,
+    "N": 0.6024
+   },
+   "latency": {
+    "mean_ms": 25.2,
+    "timing": "one H100",
+    "p90_ms": 56.2,
+    "p99_ms": 173.0
+   },
+   "note": null
+  },
+  {
+   "key": "SII-Decision-4B",
+   "name": "SII-4B",
+   "developer": "SII",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "jylin001206/SII-Decision-4B-LoRA",
+   "release_url": "https://huggingface.co/jylin001206/SII-Decision-4B-LoRA",
+   "logo": "assets/logos/sii-decision-4b.png",
+   "score": 47.978,
+   "domains": {
+    "sentiment": 77.5,
+    "intent": 40.3513,
+    "math": 35.0,
+    "code": 51.4286,
+    "science": 45.0,
+    "knowledge": 83.5,
+    "safety": 44.9367,
+    "retrieval": 54.5,
+    "verification": 60.0,
+    "tools": 20.1923,
+    "web": 15.3491
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 78
+    },
+    "intent": {
+     "E": 91,
+     "M": 64,
+     "H": 40
+    },
+    "math": {
+     "E": 62,
+     "M": 42,
+     "H": 39,
+     "V": 27
+    },
+    "code": {
+     "E": 70,
+     "M": 59,
+     "H": 51
+    },
+    "science": {
+     "E": 90,
+     "M": 81,
+     "H": 45
+    },
+    "knowledge": {
+     "All": 84
+    },
+    "safety": {
+     "E": 71,
+     "M": 60,
+     "H": 45
+    },
+    "retrieval": {
+     "E": 95,
+     "M": 84,
+     "H": 54
+    },
+    "verification": {
+     "E": 82,
+     "M": 71,
+     "H": 60
+    },
+    "tools": {
+     "E": 84,
+     "M": 43,
+     "H": 20
+    },
+    "web": {
+     "E": 91,
+     "M": 49,
+     "H": 15
+    }
+   },
+   "reliability": {
+    "R": 36.17,
+    "S": 0.7201,
+    "N": 0.1817
+   },
+   "latency": {
+    "mean_ms": 40.6,
+    "timing": "one H100",
+    "p90_ms": 48.5,
+    "p99_ms": 157.0
+   },
+   "note": "Latency measured with flash-linear-attention added (SII-4B + fla)."
+  },
+  {
+   "key": "Kev-4B",
+   "name": "Kev-4B",
+   "developer": "J. Palmer",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "jaredpalmer/kev-4b",
+   "release_url": "https://huggingface.co/jaredpalmer/kev-4b",
+   "logo": null,
+   "score": 46.0843,
+   "domains": {
+    "sentiment": 74.25,
+    "intent": 49.8618,
+    "math": 29.0,
+    "code": 55.7143,
+    "science": 41.25,
+    "knowledge": 82.5,
+    "safety": 32.2785,
+    "retrieval": 54.0,
+    "verification": 50.0,
+    "tools": 22.1154,
+    "web": 15.9575
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 74
+    },
+    "intent": {
+     "E": 92,
+     "M": 64,
+     "H": 50
+    },
+    "math": {
+     "E": 90,
+     "M": 58,
+     "H": 33,
+     "V": 20
+    },
+    "code": {
+     "E": 67,
+     "M": 66,
+     "H": 56
+    },
+    "science": {
+     "E": 88,
+     "M": 74,
+     "H": 41
+    },
+    "knowledge": {
+     "All": 82
+    },
+    "safety": {
+     "E": 66,
+     "M": 58,
+     "H": 32
+    },
+    "retrieval": {
+     "E": 93,
+     "M": 80,
+     "H": 54
+    },
+    "verification": {
+     "E": 76,
+     "M": 72,
+     "H": 50
+    },
+    "tools": {
+     "E": 81,
+     "M": 46,
+     "H": 22
+    },
+    "web": {
+     "E": 83,
+     "M": 39,
+     "H": 16
+    }
+   },
+   "reliability": {
+    "R": 60.34,
+    "S": 0.7231,
+    "N": 0.5036
+   },
+   "latency": {
+    "mean_ms": 25.2,
+    "timing": "one H100",
+    "p90_ms": 61.0,
+    "p99_ms": 157.0
+   },
+   "note": null
+  },
+  {
+   "key": "Jeva-4B",
+   "name": "Jeva-4B",
+   "developer": "NUS",
+   "size": "4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "LIQIIIII/Jeva-4B",
+   "release_url": "https://huggingface.co/LIQIIIII/Jeva-4B",
+   "logo": "assets/logos/jeva-4b.png",
+   "score": 51.5717,
+   "domains": {
+    "sentiment": 81.25,
+    "intent": 61.571,
+    "math": 44.0,
+    "code": 50.0,
+    "science": 60.0,
+    "knowledge": 76.0,
+    "safety": 50.6329,
+    "retrieval": 64.0,
+    "verification": 45.0,
+    "tools": 17.3077,
+    "web": 17.527
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 81
+    },
+    "intent": {
+     "E": 87,
+     "M": 61,
+     "H": 62
+    },
+    "math": {
+     "E": 84,
+     "M": 62,
+     "H": 53,
+     "V": 23
+    },
+    "code": {
+     "E": 82,
+     "M": 64,
+     "H": 50
+    },
+    "science": {
+     "E": 82,
+     "M": 73,
+     "H": 60
+    },
+    "knowledge": {
+     "All": 76
+    },
+    "safety": {
+     "E": 68,
+     "M": 64,
+     "H": 51
+    },
+    "retrieval": {
+     "E": 96,
+     "M": 85,
+     "H": 64
+    },
+    "verification": {
+     "E": 85,
+     "M": 79,
+     "H": 45
+    },
+    "tools": {
+     "E": 73,
+     "M": 32,
+     "H": 17
+    },
+    "web": {
+     "E": 85,
+     "M": 61,
+     "H": 18
+    }
+   },
+   "reliability": {
+    "R": 45.78,
+    "S": 1.0,
+    "N": 0.2096
+   },
+   "latency": {
+    "mean_ms": 60.9,
+    "timing": "one H100",
+    "p90_ms": 72.9,
+    "p99_ms": 142.0
+   },
+   "note": "Order stability is 1 by construction (option cache); latency with a warm option cache."
+  },
+  {
+   "key": "Laya",
+   "name": "Laya",
+   "developer": "ConvAI Innovations",
+   "size": "0.4B",
+   "group": "open",
+   "reasoning": "No",
+   "release": "convaiinnovations/laya",
+   "release_url": "https://huggingface.co/convaiinnovations/laya",
+   "logo": "assets/logos/laya.png",
+   "score": 30.888,
+   "domains": {
+    "sentiment": 65.0,
+    "intent": 29.7202,
+    "math": 22.0,
+    "code": 51.4286,
+    "science": 23.75,
+    "knowledge": 43.0,
+    "safety": 34.8101,
+    "retrieval": 38.0,
+    "verification": 30.0,
+    "tools": 0.0,
+    "web": 2.0595
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 65
+    },
+    "intent": {
+     "E": 82,
+     "M": 7,
+     "H": 30
+    },
+    "math": {
+     "E": 42,
+     "M": 42,
+     "H": 23,
+     "V": 20
+    },
+    "code": {
+     "E": 58,
+     "M": 51,
+     "H": 51
+    },
+    "science": {
+     "E": 26,
+     "M": 29,
+     "H": 24
+    },
+    "knowledge": {
+     "All": 43
+    },
+    "safety": {
+     "E": 49,
+     "M": 39,
+     "H": 35
+    },
+    "retrieval": {
+     "E": 86,
+     "M": 62,
+     "H": 38
+    },
+    "verification": {
+     "E": 52,
+     "M": 44,
+     "H": 30
+    },
+    "tools": {
+     "E": 1,
+     "M": 1,
+     "H": 0
+    },
+    "web": {
+     "E": 44,
+     "M": 6,
+     "H": 2
+    }
+   },
+   "reliability": {
+    "R": 7.02,
+    "S": 0.354,
+    "N": 0.0139
+   },
+   "latency": {
+    "mean_ms": 6.0,
+    "timing": "one H100",
+    "p90_ms": 10.2,
+    "p99_ms": 37.2
+   },
+   "note": "Every option is read in full, without the package's default cut at 48 tokens."
+  },
+  {
+   "key": "GPT-6 Sol Responses · medium",
+   "name": "GPT-6 Sol",
+   "developer": "OpenAI",
+   "size": null,
+   "group": "s2",
+   "reasoning": "Medium effort",
+   "release": "gpt-6-sol",
+   "release_url": null,
+   "logo": "assets/logos/gpt-6-sol.png",
+   "score": 82.3207,
+   "domains": {
+    "sentiment": 87.75,
+    "intent": 82.2861,
+    "math": 100.0,
+    "code": 92.8571,
+    "science": 91.25,
+    "knowledge": 94.0,
+    "safety": 75.3165,
+    "retrieval": 62.5,
+    "verification": 100.0,
+    "tools": 66.3462,
+    "web": 53.2215
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 88
+    },
+    "intent": {
+     "E": 100,
+     "M": 78,
+     "H": 82
+    },
+    "math": {
+     "E": 100,
+     "M": 100,
+     "H": 100,
+     "V": 100
+    },
+    "code": {
+     "E": 98,
+     "M": 96,
+     "H": 93
+    },
+    "science": {
+     "E": 98,
+     "M": 96,
+     "H": 91
+    },
+    "knowledge": {
+     "All": 94
+    },
+    "safety": {
+     "E": 84,
+     "M": 82,
+     "H": 75
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 91,
+     "H": 62
+    },
+    "verification": {
+     "E": 100,
+     "M": 99,
+     "H": 100
+    },
+    "tools": {
+     "E": 99,
+     "M": 88,
+     "H": 66
+    },
+    "web": {
+     "E": 98,
+     "M": 76,
+     "H": 53
+    }
+   },
+   "reliability": null,
+   "latency": {
+    "mean_ms": 2835.9,
+    "timing": "end-to-end API"
+   },
+   "note": null
+  },
+  {
+   "key": "GPT-6 Luna Responses · medium",
+   "name": "GPT-6 Luna",
+   "developer": "OpenAI",
+   "size": null,
+   "group": "s2",
+   "reasoning": "Medium effort",
+   "release": "gpt-6-luna",
+   "release_url": null,
+   "logo": "assets/logos/gpt-6-luna.png",
+   "score": 79.6796,
+   "domains": {
+    "sentiment": 84.75,
+    "intent": 81.4849,
+    "math": 99.0,
+    "code": 85.7143,
+    "science": 87.5,
+    "knowledge": 90.0,
+    "safety": 70.2532,
+    "retrieval": 62.0,
+    "verification": 100.0,
+    "tools": 68.2692,
+    "web": 47.5039
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 85
+    },
+    "intent": {
+     "E": 99,
+     "M": 77,
+     "H": 81
+    },
+    "math": {
+     "E": 100,
+     "M": 100,
+     "H": 100,
+     "V": 97
+    },
+    "code": {
+     "E": 98,
+     "M": 91,
+     "H": 86
+    },
+    "science": {
+     "E": 98,
+     "M": 96,
+     "H": 88
+    },
+    "knowledge": {
+     "All": 90
+    },
+    "safety": {
+     "E": 82,
+     "M": 80,
+     "H": 70
+    },
+    "retrieval": {
+     "E": 98,
+     "M": 91,
+     "H": 62
+    },
+    "verification": {
+     "E": 100,
+     "M": 98,
+     "H": 100
+    },
+    "tools": {
+     "E": 96,
+     "M": 86,
+     "H": 68
+    },
+    "web": {
+     "E": 99,
+     "M": 77,
+     "H": 48
+    }
+   },
+   "reliability": null,
+   "latency": {
+    "mean_ms": 2697.9,
+    "timing": "end-to-end API"
+   },
+   "note": null
+  },
+  {
+   "key": "Jev 1.14 API",
+   "name": "Jev API 1.14",
+   "developer": "TypeSafe",
+   "size": null,
+   "group": "api",
+   "reasoning": "Not disclosed",
+   "release": "jev-1.14.0",
+   "release_url": null,
+   "logo": "assets/logos/jev-api.png",
+   "score": 60.4287,
+   "domains": {
+    "sentiment": 85.5,
+    "intent": 56.0934,
+    "math": 53.0,
+    "code": 58.5714,
+    "science": 71.25,
+    "knowledge": 92.5,
+    "safety": 68.9873,
+    "retrieval": 59.5,
+    "verification": 20.0,
+    "tools": 58.6538,
+    "web": 40.6598
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 86
+    },
+    "intent": {
+     "E": 99,
+     "M": 78,
+     "H": 56
+    },
+    "math": {
+     "E": 100,
+     "M": 84,
+     "H": 63,
+     "V": 30
+    },
+    "code": {
+     "E": 83,
+     "M": 70,
+     "H": 59
+    },
+    "science": {
+     "E": 96,
+     "M": 94,
+     "H": 71
+    },
+    "knowledge": {
+     "All": 92
+    },
+    "safety": {
+     "E": 83,
+     "M": 73,
+     "H": 69
+    },
+    "retrieval": {
+     "E": 99,
+     "M": 83,
+     "H": 60
+    },
+    "verification": {
+     "E": 88,
+     "M": 88,
+     "H": 20
+    },
+    "tools": {
+     "E": 97,
+     "M": 75,
+     "H": 59
+    },
+    "web": {
+     "E": 99,
+     "M": 73,
+     "H": 41
+    }
+   },
+   "reliability": {
+    "R": 83.45,
+    "S": 0.8936,
+    "N": 0.7794
+   },
+   "latency": {
+    "mean_ms": 248.6,
+    "timing": "end-to-end API"
+   },
+   "note": null
+  },
+  {
+   "key": "OpenAI Decisions",
+   "name": "OpenAI Decisions",
+   "developer": "OpenAI",
+   "size": null,
+   "group": "api",
+   "reasoning": "Not disclosed",
+   "release": "gpt-6-luna",
+   "release_url": null,
+   "logo": "assets/logos/openai-decisions.png",
+   "score": 53.5854,
+   "domains": {
+    "sentiment": 73.75,
+    "intent": 57.5199,
+    "math": 33.0,
+    "code": 65.7143,
+    "science": 46.25,
+    "knowledge": 86.0,
+    "safety": 63.2911,
+    "retrieval": 55.0,
+    "verification": 40.0,
+    "tools": 37.5,
+    "web": 31.4139
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 74
+    },
+    "intent": {
+     "E": 99,
+     "M": 77,
+     "H": 58
+    },
+    "math": {
+     "E": 74,
+     "M": 46,
+     "H": 34,
+     "V": 30
+    },
+    "code": {
+     "E": 88,
+     "M": 71,
+     "H": 66
+    },
+    "science": {
+     "E": 94,
+     "M": 81,
+     "H": 46
+    },
+    "knowledge": {
+     "All": 86
+    },
+    "safety": {
+     "E": 71,
+     "M": 67,
+     "H": 63
+    },
+    "retrieval": {
+     "E": 98,
+     "M": 84,
+     "H": 55
+    },
+    "verification": {
+     "E": 79,
+     "M": 75,
+     "H": 40
+    },
+    "tools": {
+     "E": 86,
+     "M": 61,
+     "H": 38
+    },
+    "web": {
+     "E": 98,
+     "M": 68,
+     "H": 31
+    }
+   },
+   "reliability": {
+    "R": 61.05,
+    "S": 0.6777,
+    "N": 0.55
+   },
+   "latency": {
+    "mean_ms": 301.7,
+    "timing": "end-to-end API"
+   },
+   "note": null
+  }
+ ],
+ "analysis": [
+  {
+   "domain": "knowledge",
+   "category": "direct",
+   "tasks": 200,
+   "gap_glide": 5.0,
+   "gap_glide_ci": [
+    1.5,
+    9.0
+   ],
+   "gap_startlux": -1.5,
+   "gap_startlux_ci": [
+    -6.0,
+    3.0
+   ],
+   "backbone_gain": 4.38,
+   "thinking_never": 85.0,
+   "thinking_always": 88.0,
+   "thinking_gain": 3.0
+  },
+  {
+   "domain": "sentiment",
+   "category": "direct",
+   "tasks": 200,
+   "gap_glide": 4.75,
+   "gap_glide_ci": [
+    1.2,
+    8.5
+   ],
+   "gap_startlux": 3.0,
+   "gap_startlux_ci": [
+    -2.0,
+    8.0
+   ],
+   "backbone_gain": 3.44,
+   "thinking_never": 88.0,
+   "thinking_always": 85.8,
+   "thinking_gain": -2.2
+  },
+  {
+   "domain": "retrieval",
+   "category": "direct",
+   "tasks": 200,
+   "gap_glide": -5.75,
+   "gap_glide_ci": [
+    -11.2,
+    -0.2
+   ],
+   "gap_startlux": -8.25,
+   "gap_startlux_ci": [
+    -14.5,
+    -1.8
+   ],
+   "backbone_gain": 3.88,
+   "thinking_never": 69.0,
+   "thinking_always": 70.8,
+   "thinking_gain": 1.8
+  },
+  {
+   "domain": "intent",
+   "category": "grounded",
+   "tasks": 200,
+   "gap_glide": 0.13,
+   "gap_glide_ci": [
+    -2.4,
+    2.9
+   ],
+   "gap_startlux": -8.89,
+   "gap_startlux_ci": [
+    -12.0,
+    -5.8
+   ],
+   "backbone_gain": 12.05,
+   "thinking_never": 68.8,
+   "thinking_always": 70.8,
+   "thinking_gain": 2.0
+  },
+  {
+   "domain": "safety",
+   "category": "grounded",
+   "tasks": 323,
+   "gap_glide": 4.02,
+   "gap_glide_ci": [
+    -1.2,
+    9.0
+   ],
+   "gap_startlux": -7.12,
+   "gap_startlux_ci": [
+    -12.7,
+    -1.5
+   ],
+   "backbone_gain": 16.18,
+   "thinking_never": 60.4,
+   "thinking_always": 63.8,
+   "thinking_gain": 3.4
+  },
+  {
+   "domain": "verification",
+   "category": "grounded",
+   "tasks": 109,
+   "gap_glide": 0.92,
+   "gap_glide_ci": [
+    0.0,
+    2.8
+   ],
+   "gap_startlux": -22.94,
+   "gap_startlux_ci": [
+    -31.2,
+    -15.6
+   ],
+   "backbone_gain": 17.43,
+   "thinking_never": 58.7,
+   "thinking_always": 66.1,
+   "thinking_gain": 7.3
+  },
+  {
+   "domain": "tools",
+   "category": "grounded",
+   "tasks": 182,
+   "gap_glide": -3.59,
+   "gap_glide_ci": [
+    -9.1,
+    1.8
+   ],
+   "gap_startlux": -11.19,
+   "gap_startlux_ci": [
+    -17.1,
+    -5.2
+   ],
+   "backbone_gain": 25.56,
+   "thinking_never": 61.9,
+   "thinking_always": 64.5,
+   "thinking_gain": 2.6
+  },
+  {
+   "domain": "web",
+   "category": "grounded",
+   "tasks": 237,
+   "gap_glide": 3.07,
+   "gap_glide_ci": [
+    -0.4,
+    6.5
+   ],
+   "gap_startlux": -28.85,
+   "gap_startlux_ci": [
+    -33.8,
+    -23.8
+   ],
+   "backbone_gain": 23.92,
+   "thinking_never": 40.8,
+   "thinking_always": 42.6,
+   "thinking_gain": 1.8
+  },
+  {
+   "domain": "math",
+   "category": "derivation",
+   "tasks": 120,
+   "gap_glide": -26.67,
+   "gap_glide_ci": [
+    -34.2,
+    -19.2
+   ],
+   "gap_startlux": -38.33,
+   "gap_startlux_ci": [
+    -47.5,
+    -30.0
+   ],
+   "backbone_gain": 14.37,
+   "thinking_never": 50.8,
+   "thinking_always": 92.5,
+   "thinking_gain": 41.7
+  },
+  {
+   "domain": "science",
+   "category": "derivation",
+   "tasks": 150,
+   "gap_glide": -21.33,
+   "gap_glide_ci": [
+    -28.7,
+    -14.7
+   ],
+   "gap_startlux": -27.33,
+   "gap_startlux_ci": [
+    -35.3,
+    -19.3
+   ],
+   "backbone_gain": 8.33,
+   "thinking_never": 58.7,
+   "thinking_always": 70.7,
+   "thinking_gain": 12.0
+  },
+  {
+   "domain": "code",
+   "category": "derivation",
+   "tasks": 140,
+   "gap_glide": -25.71,
+   "gap_glide_ci": [
+    -34.285714285714285,
+    -17.142857142857142
+   ],
+   "gap_startlux": -26.43,
+   "gap_startlux_ci": [
+    -35.714285714285715,
+    -17.142857142857142
+   ],
+   "backbone_gain": 7.68,
+   "thinking_never": 55.7,
+   "thinking_always": 61.4,
+   "thinking_gain": 5.7
+  }
+ ],
+ "jeva_cold_cache_ms": {
+  "mean": 79.0,
+  "p90": 88.2,
+  "p99": 180.0
+ },
+ "totals": {
+  "tasks": 2919,
+  "static": 2300,
+  "tools": 282,
+  "web": 337,
+  "leaderboard_tasks": 1232,
+  "domains": 11,
+  "families": 5,
+  "models": 21
+ },
+ "provenance": {
+  "ranking": {
+   "policy": "highest-domain-math-hard-plus-ungraded-v2",
+   "sha256": "c42a45117d9ce81bf0bd244a96e453441b37d4ca0f5c6be49e96251ea5cbbcc3"
+  },
+  "paper_overleaf_commit": null
+ }
+}

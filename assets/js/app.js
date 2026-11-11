@@ -96,6 +96,8 @@
   // ---- hero board and stats ------------------------------------------------------------------------------------------
   let boardMode = "cap";
   const LATMAX = Math.max(...S1.map(m => m.latency.mean_ms));     // thin latency bars: linear, slowest System One model = full
+  const BMAX = 85;                                                  // score and R bars start at 0; 85 sits just above GPT-6 Sol
+  const refBand = (() => { const [hi, lo] = REFS.map(r => r.score); return `<b class="ref" style="left:${(100 * lo / BMAX).toFixed(1)}%;width:${(100 * (hi - lo) / BMAX).toFixed(1)}%"></b>`; })();
   function board() {
     const host = $("#board"), cap = boardMode === "cap";
     const val = cap ? m => m.score : R_, rk = cap ? RANK : RANK_R, list = top(S1, val, 8);
@@ -104,9 +106,9 @@
         <div class="seg" role="group" aria-label="Ranking"><button type="button" data-bm="cap" aria-pressed="${cap}">Capability</button><button type="button" data-bm="rel" aria-pressed="${!cap}">Reliability</button></div></div>
       <ol class="board-list">${list.map(m => `<li><span class="rk">${rk.get(m.key)}</span>${logo(m, 26)}
         <button type="button" class="who" data-model="${slug(m)}"><b>${esc(m.name)}</b><span>${meta(m)}</span></button>
-        <span class="mx"><span class="meter" aria-hidden="true"><i style="--w:${val(m).toFixed(1)}%;--c:${c}"></i></span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span>
+        <span class="mx"><span class="track"><span class="meter" aria-hidden="true"><i style="--w:${(100 * val(m) / BMAX).toFixed(1)}%;--c:${c}"></i></span>${cap ? refBand : ""}</span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span>
           <span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span></span></li>`).join("")}</ol>
-      <div class="board-foot"><span>${cap ? `System Two: GPT-6 Sol ${f1(REFS[0].score)} · ${ms(REFS[0].latency.mean_ms)}, Luna ${f1(REFS[1].score)} · ${ms(REFS[1].latency.mean_ms)}` : "R = √(S·N), as a percentage"}</span><a href="#leaderboard">Full leaderboard →</a></div>`;
+      <div class="board-foot"><span class="keys">${cap ? `<span title="GPT-6 Luna ${f1(REFS[1].score)} to GPT-6 Sol ${f1(REFS[0].score)}"><i class="k-ref"></i>GPT-6 (System Two)</span>` : ""}<span><i class="k-lat"></i>Latency</span></span><a href="#leaderboard">Full leaderboard →</a></div>`;
     host.dataset.anim = "0";
     requestAnimationFrame(() => setTimeout(() => { host.dataset.anim = "1"; }, 60));
   }
@@ -498,14 +500,26 @@
 
   // ---- findings ----------------------------------------------------------------------------------------------------
   function findings() {
-    const s1 = top(S1, o => o.score, 2), math = D.analysis.find(a => a.domain === "math");
+    const best = top(S1, o => o.score, 1)[0], math = D.analysis.find(a => a.domain === "math");
+    const slow = top(M.filter(m => m.group === "open"), m => m.latency.mean_ms, 1)[0];
+    const bars = (rows, max, fmt) => `<div class="mini">${rows.map(([l, v, c]) => `<div class="mr"><span class="ml">${l}</span><span class="mt"><i style="--w:${(100 * v / max).toFixed(1)}%;--c:${c}"></i></span><span class="mv">${fmt(v)}</span></div>`).join("")}</div>`;
+    const sec = v => v >= 1000 ? `${(v / 1000).toFixed(1)} s` : `${(v / 1000).toFixed(2)} s`;
+    // the gap by category: one dot per domain, GLiDE minus GPT-6 Luna (medium and hard tiers)
+    const gx = v => (v + 32) / 42 * 100;
+    const dots = `<div class="mini">${[["direct", "Direct"], ["grounded", "Grounded"], ["derivation", "Derivation"]].map(([id, l]) =>
+      `<div class="mr"><span class="ml">${l}</span><span class="mt dots"><b style="left:${gx(0).toFixed(1)}%"></b>${D.analysis.filter(a => a.category === id).map(a =>
+        `<i style="left:${gx(a.gap_glide).toFixed(1)}%" title="${esc(DOM[a.domain].short)}: ${a.gap_glide > 0 ? "+" : ""}${f1(a.gap_glide)}"></i>`).join("")}</span><span class="mv"></span></div>`).join("")}
+      <div class="mini-cap">GLiDE − GPT-6 Luna, one dot per domain</div></div>`;
     const k = [
-      [`${f1(REFS[0].score)}<small> / ${f1(REFS[1].score)}</small>`, "System Two still leads overall", `GPT-6 Sol and Luna; the best System One models reach ${f1(s1[0].score)}.`],
-      ["&lt;&thinsp;0.3<small> s</small>", "System One models are fast", "Every open-weight model, per task on one H100 GPU: tens of times faster than GPT-6."],
-      ["3<small> categories</small>", "The gap depends on the domain", "On par in direct semantic judgment, close in grounded decisions only with a larger backbone, far behind in multi-step derivation."],
-      [`${f1(math.thinking_never)}<small> → ${f1(math.thinking_always)}</small>`, "Thinking helps where derivation is needed", "StartLux Auto in Math. In grounded decisions, a larger backbone helps far more."],
+      [`${f1(REFS[0].score)}<small> / ${f1(REFS[1].score)}</small>`, "System Two still leads overall",
+        bars([["GPT-6 Sol", REFS[0].score, "var(--s2)"], ["GPT-6 Luna", REFS[1].score, "var(--s2)"], ["Best System One", best.score, "var(--cap)"]], 100, f1)],
+      ["&lt;&thinsp;0.3<small> s</small>", "System One models are fast",
+        bars([["Slowest open", slow.latency.mean_ms, "var(--cap)"], ["GPT-6 Luna", REFS[1].latency.mean_ms, "var(--s2)"], ["GPT-6 Sol", REFS[0].latency.mean_ms, "var(--s2)"]], 3000, sec)],
+      ["3<small> categories</small>", "The gap depends on the domain", dots],
+      [`${f1(math.thinking_never)}<small> → ${f1(math.thinking_always)}</small>`, "Thinking helps where derivation is needed",
+        bars([["Math, no thinking", math.thinking_never, "#9db8d6"], ["Math, thinking", math.thinking_always, "var(--rel)"]], 100, f1) + `<div class="mini-cap">StartLux Auto</div>`],
     ];
-    $("#kfacts").innerHTML = k.map(([b, h, p]) => `<div class="kf"><div class="big">${b}</div><h3>${h}</h3><p>${p}</p></div>`).join("");
+    $("#kfacts").innerHTML = k.map(([b, h, viz]) => `<div class="kf"><div class="big">${b}</div><h3>${h}</h3>${viz}</div>`).join("");
   }
   function gap() {
     const CATS = [["direct", "Direct semantic judgment", "System One models perform comparably to System Two."],
@@ -537,16 +551,16 @@
     const t = D.totals;
     const steps = [
       ["Sources and quality control", "40", "established sources",
-        "Public datasets and environments. A task stays only if its label is supported by what the model sees.",
-        '<span>review: people + LLM</span>→<span class="ok">kept</span>or<span class="no">dropped</span>'],
+        "",
+        ['<span>review: people + LLM</span>→<span class="ok">kept</span>or<span class="no">dropped</span>']],
       ["Organization and formulation", "11", "domains in five families",
-        `${t.static.toLocaleString("en-US")} static tasks (<span class="mono">choice</span>, <span class="mono">noul</span>, <span class="mono">score</span>) and ${(t.tools + t.web).toLocaleString("en-US")} web and tool sandbox tasks.`,
-        "<span>Easy</span>→<span>Medium</span>→<span>Hard</span>"],
+        "",
+        [`<span>${t.static.toLocaleString("en-US")} static</span><span>${(t.tools + t.web).toLocaleString("en-US")} sandbox</span>`, "<span>Easy</span>→<span>Medium</span>→<span>Hard</span>"]],
       ["Evaluation", "C · R", "capability and reliability",
-        "Each decision is scored against its verified label, then retested with reordered options and with the correct option removed.",
-        "<span>A B C → C A B</span><span>A ▢ C → Null</span>"],
+        "",
+        ["<span>scored vs. verified label</span>", "<span>A B C → C A B</span><span>A ▢ C → Null</span>"]],
     ];
-    $("#steps").innerHTML = steps.map(([h, big, cap, p, flow], i) => `<div class="step"><span class="n">STEP 0${i + 1}</span><div class="big">${big}</div><div class="big-cap">${cap}</div><h3>${h}</h3><p>${p}</p><div class="flow">${flow}</div></div>`).join("");
+    $("#steps").innerHTML = steps.map(([h, big, cap, p, flow], i) => `<div class="step"><span class="n">STEP 0${i + 1}</span><div class="big">${big}</div><div class="big-cap">${cap}</div><h3>${h}</h3>${p ? `<p>${p}</p>` : ""}${flow.map(f => `<div class="flow">${f}</div>`).join("")}</div>`).join("");
     const rows = D.families.map(f => {
       const ds = D.domains.filter(d => d.family === f.id), n = ds.reduce((s, d) => s + d.tasks, 0);
       return ds.map((d, i) => `<tr style="--fc:${f.color}">${i === 0 ? `<td class="fam-cell" rowspan="${ds.length}"><i></i>${esc(f.name)}<div class="label" style="margin-top:6px">${n.toLocaleString("en-US")} tasks</div></td>` : ""}

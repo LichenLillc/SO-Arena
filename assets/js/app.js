@@ -107,7 +107,7 @@
   const refBand = `<b class="ref" style="left:calc(${(100 * LUNA.score / BMAX).toFixed(2)}% - 1.5px)"></b>`;   // GPT-6 Luna, the System Two reference
   function board() {
     const host = $("#board"), cap = boardMode === "cap";
-    const val = cap ? m => m.score : R_, rk = cap ? RANK : RANK_R, list = top(S1, val, 8);
+    const val = cap ? m => m.score : R_, rk = cap ? RANK : RANK_R, list = top(S1, val, 6);
     const c = cap ? "var(--cap)" : "var(--rel)";
     if (!$(".board-head", host)) {                    // the head (and its toggle) is built once, so the thumb can slide
       host.innerHTML = `<div class="board-head"><span class="label">Top System One models</span>
@@ -172,7 +172,7 @@
       ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
-        mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
+        mini([r1, r2, best].map(o => [`<span class="rkn">#${RANK_R.get(o.key)}</span>${esc(o.name)}`, R_(o), "var(--rel)"]), 100, f1)],
       ["leaderboard", "view:t-domains", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each of the 11 domains (leaderboard tier); dots coloured by domain family.`, dots],
     ];
     const CAP = ["Score", "Mean time per task", "Reliability R", "Per domain, by family"];
@@ -196,7 +196,7 @@
     { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true, title: "Rank among the 18 System One models, by the sorted column" },
     { id: "model", label: "Model", cls: "c-m l", val: m => m.name, asc: true },
     { id: "score", label: "Score", cls: "c-score l", val: m => m.score, title: "Mean of the 11 domain scores" },
-    { id: "prof", label: "By domain", cls: "c-prof l", title: "One bar per domain, grouped by family; the height is the domain score. Point at a bar for its name and rank." },
+    { id: "prof", label: "By domain", cls: "c-prof l", title: "One bar per domain, grouped by family; the height is the domain score. Point at the bars for all 11 scores and ranks." },
     { id: "R", label: "Reliability", cls: "c-n", val: R_, title: "Reliability R, 0-100: keeps its answer when the options are reordered, and notices when the correct option is missing. System One models only." },
     { id: "lat", label: "Latency", cls: "c-n", val: m => m.latency ? m.latency.mean_ms : null, asc: true, title: "Mean latency per task; bars on one scale up to the slowest System One model" },
   ];
@@ -247,8 +247,12 @@
     const grp = (label, list) => list.length ? `<tbody><tr class="grp"><th colspan="${COLS.length}" scope="rowgroup">${label}</th></tr>${list.map(row).join("")}</tbody>` : "";
     // FLIP: after a sort or filter, rows that stay slide from their old place to the new one (300 ms); new rows fade in
     const was = new Map($$("#lb tr[data-model]").map(r => [r.dataset.model, r.getBoundingClientRect().top]));
-    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) + grp("Hybrid: switches to System Two, not ranked", hy) +
-      (refs.length + s1.length + hy.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`);
+    // a search that the active filter hides says so, and offers the matches in All
+    const q = T.q.trim().toLowerCase(), hidden = q && T.filter !== "all" ? M.filter(m => m.group !== "s2" && (m.name + " " + m.developer).toLowerCase().includes(q) && !pass(m)).length : 0;
+    const fl = (FILTERS.find(f => f[0] === T.filter) || [, ""])[1];
+    const note = !(s1.length + hy.length) && hidden ? `<tbody><tr><td colspan="${COLS.length}" class="l empty">No match in ${esc(fl)}. <button type="button" class="showall" data-showall>Show ${hidden} in All</button></td></tr></tbody>`
+      : refs.length + s1.length + hy.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`;
+    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) + grp("Hybrid: switches to System Two, not ranked", hy) + note;
     if (!was.size || RM) return;
     const rows = $$("#lb tr[data-model]");
     rows.forEach(r => { const y = was.get(r.dataset.model);
@@ -274,7 +278,7 @@
     }).join("");
   }
   function leaderboardControls() {
-    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk"><i class="k-prof"><b></b><b></b><b></b></i>By domain: point at a bar for the domain and its rank</span>`;
+    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk"><i class="k-prof"><b></b><b></b><b></b></i>By domain: point at the bars for all 11 scores</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
@@ -282,16 +286,20 @@
       T.sort = c.id; T.dir = c.asc ? 1 : -1; $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     let onBar = false;                                          // profile bars: domain, score and System One rank
     $("#lb").addEventListener("pointermove", e => {
-      const b = e.target.closest(".pb");
-      if (!b) { if (onBar) { untip(); onBar = false; } return; }
-      const m = BY[b.closest("tr").dataset.model], d = DOM[b.dataset.d], k = isS1(m) ? TOPD[d.id].get(m.key) : null;
-      tip(`<b>${esc(d.name)}</b><br><span class="m">${f1(m.domains[d.id])}</span> <span class="s">${k ? `#${k} of ${S1.length}` : m.group === "s2" ? "System Two" : "not ranked"}</span>`, e.clientX, e.clientY);
+      // the whole profile at once: all 11 domains with score and System One rank; the pointed domain stands out
+      const pf = e.target.closest(".dprof");
+      if (!pf) { if (onBar) { untip(); onBar = false; } return; }
+      const b = e.target.closest(".pb"), m = BY[pf.closest("tr").dataset.model];
+      const rows = D.domains.map(d => { const k = isS1(m) ? TOPD[d.id].get(m.key) : null;
+        return `<span class="pr${b && b.dataset.d === d.id ? " on" : ""}"><span>${esc(d.short || d.name)}</span><span class="m">${f1(m.domains[d.id])}</span><span class="s">${k ? `#${k}` : ""}</span></span>`; }).join("");
+      tip(`<b>${esc(m.name)}</b> <span class="s">by domain${isS1(m) ? ` · rank of ${S1.length}` : ""}</span><span class="prof-tip">${rows}</span>`, e.clientX, e.clientY);
       onBar = true;
     });
     $("#lb").addEventListener("pointerleave", () => { if (onBar) { untip(); onBar = false; } });
     $("#lb").addEventListener("click", e => {
       const s = e.target.closest("[data-sort]");
       if (s) { const c = COLS.find(o => o.id === s.dataset.sort); if (T.sort === c.id) T.dir = -T.dir; else { T.sort = c.id; T.dir = c.asc ? 1 : -1; } table(); const nb = $(`[data-sort="${c.id}"]`); if (nb) nb.focus(); return; }
+      if (e.target.closest("[data-showall]")) { T.filter = "all"; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o.dataset.f === "all")); table(); return; }
       const r = e.target.closest("tr[data-model]"); if (r) openModel(BY[r.dataset.model]);
     });
     $("#lb").addEventListener("keydown", e => { const r = e.target.closest("tr[data-model]"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openModel(BY[r.dataset.model]); } });
@@ -452,20 +460,23 @@
     rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
     sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
-    order: { title: "How accuracy moves with the option order", sub: "Change from the original order, in 12 shuffles of the same items.", note: "Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
+    order: { title: "How accuracy moves with the option order", sub: "Change from the original order in 12 shuffles; most stable first, ranked by the range.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
     gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals.", note: "Not only the leaderboard tier, so the gaps differ from the domain cards. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
   let tierDom = "math";
   // Two chart panels share this routine: Results (speed, difficulty, gap) and the Reliability section's evidence.
   const PANELS = [{ key: "speed", tabs: "#ins-tabs", host: "#chart", lg: "#legend", title: "#ins-title", sub: "#ins-sub", note: "#ins-note" },
                   { key: "rel", tabs: "#rel-tabs", host: "#rchart", lg: "#rlegend", title: "#r-title", sub: "#r-sub", note: "#r-note" }];
-  // Each chart card keeps the height of its tallest tab, so switching tabs never moves the page below it.
-  const insights = () => PANELS.forEach(P => {
-    const card = $(P.host).closest(".panel"), cur = P.key, keys = $$('[role="tab"]', $(P.tabs)).map(t => t.dataset.k);
-    card.style.minHeight = ""; let mx = 0;
-    for (const k of keys) { P.key = k; drawPanel(P); mx = Math.max(mx, card.offsetHeight); }
-    P.key = cur; drawPanel(P); card.style.minHeight = mx + "px";
-  });
+  const insights = () => PANELS.forEach(drawPanel);
+  // Switching tabs: each card takes its own tab's height, eased over 240 ms (no blank space, no jump); the chart fades in.
+  function switchPanel(P, k) {
+    const card = $(P.host).closest(".panel"), h0 = card.offsetHeight;
+    P.key = k; drawPanel(P);
+    if (RM) return;
+    const h1 = card.offsetHeight;
+    if (Math.abs(h1 - h0) > 2) card.animate([{ height: h0 + "px", overflow: "hidden" }, { height: h1 + "px", overflow: "hidden" }], { duration: 240, easing: "cubic-bezier(.2, .8, .2, 1)" });
+    $(P.host).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: "ease-out" });
+  }
   function drawPanel(P) {
     const insKey = P.key, c = INS[insKey], LG = $(P.lg);
     $(P.title).innerHTML = esc(c.title) + (c.note ? ` <button class="info" type="button" data-info="${esc(c.note)}">i</button>` : ""); $(P.sub).textContent = c.sub; $(P.note).textContent = "";
@@ -516,8 +527,10 @@
     }
   }
   function orderChart(host, lg) {
-    // Change from the original option order, per reordering; rows in leaderboard order; the original accuracy at the right.
-    const L = S1.filter(o => o.order_acc).sort((a, b) => b.score - a.score);
+    // Change from the original option order, per reordering. Rows ranked by the range of accuracy over the 13 orders
+    // (the original and 12 shuffles), narrowest first; ties by order stability S. The range is printed at the right.
+    const span = o => { const v = [o.order_acc.original, ...o.order_acc.runs]; return Math.max(...v) - Math.min(...v); };
+    const L = S1.filter(o => o.order_acc).sort((a, b) => span(a) - span(b) || (R_(b) != null ? b.reliability.S : 0) - (R_(a) != null ? a.reliability.S : 0));
     const dev = L.flatMap(o => o.order_acc.runs.map(v => Math.abs(v - o.order_acc.original))), X = Math.max(2, Math.ceil(Math.max(...dev)));
     const rowH = 24, m = { l: 150, r: 92, t: 30, b: 42 };
     host.innerHTML = "";
@@ -530,16 +543,17 @@
       S("text", { class: "tick", x: xs(v), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = v > 0 ? `+${v}` : v < 0 ? `−${-v}` : "0";
     }
     S("text", { class: "axis-t", x: xs(0), y: H - 6, "text-anchor": "middle" }, svg).textContent = "Change from the original order (points)";
-    S("text", { class: "tick", x: W - 10, y: m.t - 12, "text-anchor": "end" }, svg).textContent = "original";
+    S("text", { class: "tick", x: W - 10, y: m.t - 12, "text-anchor": "end" }, svg).textContent = "range";
     L.forEach((o, i) => {
       const a = o.order_acc, y = m.t + rowH * i + rowH / 2, c = colorOf(o), d = a.runs.map(v => v - a.original);
-      const r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${o.name}: original order ${f1(a.original)}; 12 reorderings from ${f1(a.min)} to ${f1(a.max)}` }, svg);
+      const r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${i + 1}. ${o.name}: range ${f1(span(o))} points over 13 orders; original order ${f1(a.original)}` }, svg);
       S("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent" }, r);
       S("text", { class: "lbl", x: m.l - 12, y: y + 4, "text-anchor": "end" }, r).textContent = o.name;
+      S("text", { class: "tick", x: 4, y: y + 4, "text-anchor": "start" }, r).textContent = i + 1;
       S("line", { x1: xs(Math.min(0, ...d)), x2: xs(Math.max(0, ...d)), y1: y, y2: y, stroke: c, "stroke-width": 4, "stroke-linecap": "round", opacity: .3 }, r);
       for (const v of d) S("circle", { cx: xs(v), cy: y, r: 3, fill: c, opacity: .85 }, r);
-      S("text", { class: "tick", x: W - 10, y: y + 4, "text-anchor": "end" }, r).textContent = f1(a.original);
-      bindTip(r, () => `<b>${esc(o.name)}</b><br><span class="m">${f1(a.original)}</span> <span class="s">original order · ${f1(a.min)}–${f1(a.max)} over all 13 orders</span>`);
+      S("text", { class: "tick", x: W - 10, y: y + 4, "text-anchor": "end" }, r).textContent = f1(span(o));
+      bindTip(r, () => `<b>${esc(o.name)}</b> <span class="s">#${i + 1} of ${L.length}</span><br><span class="m">${f1(span(o))}</span> <span class="s">points between its best and worst of 13 orders · original ${f1(a.original)}</span>`);
       r.addEventListener("click", () => openModel(o));
     });
     lg.innerHTML = `<span><i style="background:var(--muted)"></i>One reordering</span>` +
@@ -576,69 +590,101 @@
   }
   const showChart = k => { const t = document.getElementById("k-" + k); if (t) t.closest('[role="tablist"]')._sel(t.id); };
   function insightsControls() {
-    PANELS.forEach(P => tabs($(P.tabs), (id, t) => { P.key = t.dataset.k; drawPanel(P); if (!RM) $(P.host).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: "ease-out" }); }));
+    PANELS.forEach(P => tabs($(P.tabs), (id, t) => switchPanel(P, t.dataset.k)));
     const TD = D.domains.filter(d => d.tiers);
     $("#tier-chips").innerHTML = TD.map(d => `<button type="button" class="chip" data-td="${d.id}" aria-pressed="${d.id === tierDom}">${esc(d.short)}</button>`).join("");
     $("#tier-chips").addEventListener("click", e => { const b = e.target.closest("[data-td]"); if (!b) return; tierDom = b.dataset.td; $$("[data-td]").forEach(o => o.setAttribute("aria-pressed", o === b)); insights(); });
   }
 
   // ---- reliability demo and facts -----------------------------------------------------------------------------------
-  // Reliability demo, after the paper's Fig. 1: a robot jumps to hit the block it chooses. Scene 1: the original
-  // options; scene 2: the blocks shuffle and the robot follows B; scene 3: B is removed, "Null" appears, the robot hits it.
-  const ROBOT = `<svg viewBox="0 0 24 30" aria-hidden="true"><rect x="11" y="0" width="2" height="4" fill="currentColor"/><circle cx="12" cy="1.5" r="1.8" fill="var(--cap)"/>
-    <rect x="3" y="4" width="18" height="12" rx="3" fill="currentColor"/><rect x="7" y="8.5" width="3" height="3" rx="1" fill="#fff"/><rect x="14" y="8.5" width="3" height="3" rx="1" fill="#fff"/>
-    <rect x="6" y="17" width="12" height="8" rx="2" fill="currentColor"/><rect x="7" y="25" width="3" height="5" rx="1" fill="currentColor"/><rect x="14" y="25" width="3" height="5" rx="1" fill="currentColor"/></svg>`;
+  // Reliability demo, after the paper's Fig. 1: a robot jumps to hit the option it chooses. Scene 1: the original options;
+  // scene 2: the options shuffle and the robot follows B; scene 3: B is removed, "Null" appears, and the robot hits it.
+  // It plays while in view, pauses briefly, rewinds softly and plays again; a small button pauses it.
+  const ROBOT = `<svg viewBox="0 0 28 34" aria-hidden="true">
+    <path d="M14 6V2.6" stroke="#1b2129" stroke-width="1.6" stroke-linecap="round"/><circle class="tip" cx="14" cy="2.2" r="2.1" fill="var(--cap)"/>
+    <rect x="1.6" y="11.6" width="2.6" height="5.4" rx="1.3" fill="#1b2129"/><rect x="23.8" y="11.6" width="2.6" height="5.4" rx="1.3" fill="#1b2129"/>
+    <rect x="3.4" y="6" width="21.2" height="15.2" rx="6" fill="#1b2129"/><rect x="6.4" y="9.2" width="15.2" height="8.6" rx="4.3" fill="#2b3442"/>
+    <g class="eyes"><circle cx="11" cy="13.5" r="1.75" fill="#9fd4ff"/><circle cx="17" cy="13.5" r="1.75" fill="#9fd4ff"/></g>
+    <rect x="7.6" y="22.2" width="12.8" height="7.4" rx="3" fill="#1b2129"/>
+    <rect x="9" y="28.8" width="3.6" height="4.8" rx="1.6" fill="#1b2129"/><rect x="15.4" y="28.8" width="3.6" height="4.8" rx="1.6" fill="#1b2129"/></svg>`;
   function demo() {
     const host = $("#demo");
     const SC = [["Original options", "", "Correct"], ["Shuffled", "s", "Same answer"], ["Correct option missing", "n", "Picks Null"]];
     host.innerHTML = SC.map(([h, k, v], i) => `<div class="scene2" data-i="${i}"><div class="sh">${k ? `<b class="sym ${k}">${k.toUpperCase()}</b>` : ""}<span>${h}</span></div>
-        <div class="stage2"><span class="bot">${ROBOT}</span></div>
+        <div class="stage2"><span class="bt"><span class="bt-b">${ROBOT}</span><i class="shd"></i></span></div>
         <div class="verdict"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#e3f1e9"/><path d="M4.5 8.2l2.3 2.3 4.7-5" fill="none" stroke="#2f7d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${v}</div></div>`).join("") +
-      `<button class="replay" type="button" id="replay" aria-label="Replay the demo"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
-    const BW = 40, GAP = 10, NW = 56;
+      `<button class="replay" type="button" id="dpause" aria-label="Pause the demo" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="pz" d="M5.5 3.5v9M10.5 3.5v9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="pl" d="M5 3.2l8 4.8-8 4.8z" fill="currentColor"/></svg></button>`;
+    const BW = 40, GAP = 10, NW = 56, SW = 206;
     const scenes = $$(".scene2", host).map(s => {
-      const st = $(".stage2", s), mk = (t, w = BW) => { const b = document.createElement("span"); b.className = "blk2"; b.textContent = t; b.style.width = w + "px"; st.appendChild(b); return b; };
-      const o = { s, st, A: mk("A"), B: mk("B"), C: mk("C"), bot: $(".bot", s), v: $(".verdict", s) };
+      const st = $(".stage2", s), mk = (t, w = BW) => { const b = document.createElement("span"); b.className = "op" + (t === "Null" ? " nul" : ""); b.textContent = t; b.style.width = w + "px"; st.appendChild(b); return b; };
+      const o = { s, st, A: mk("A"), B: mk("B"), C: mk("C"), bot: $(".bt", s), v: $(".verdict", s) };
       if (s.dataset.i === "2") o.N = mk("Null", NW);
+      o.x0 = o.N ? 0 : (SW - 3 * BW - 2 * GAP) / 2;
       return o;
     });
-    const wOf = b => b.textContent === "Null" ? NW : BW;
-    const place = order => { let x = 0; for (const b of order) { b.style.left = x + "px"; x += wOf(b) + GAP; } };
-    const walk = (o, b) => { o.bot.style.left = (parseFloat(b.style.left) + wOf(b) / 2 - 12) + "px"; };
-    const hit = (o, b) => {                          // jump; the block bumps and turns dark as it is hit
-      o.bot.classList.remove("jump"); void o.bot.offsetWidth; o.bot.classList.add("jump");
-      later(() => { b.classList.add("bump", "pick"); later(() => b.classList.remove("bump"), 220); }, 160);
+    const wOf = b => b.classList.contains("nul") ? NW : BW;
+    const place = (o, order) => { let x = o.x0; for (const b of order) { b.style.left = x + "px"; x += wOf(b) + GAP; } };
+    const walk = (o, b, dur = 620) => {                           // walk under an option, with a small bob while moving
+      const to = parseFloat(b.style.left) + wOf(b) / 2 - 14;
+      o.bot.style.transitionDuration = dur + "ms"; o.bot.classList.add("walk"); o.bot.style.left = to + "px";
+      later(() => o.bot.classList.remove("walk"), dur);
     };
-    let timers = [];
-    const later = (f, t) => timers.push(setTimeout(f, RM ? 0 : t));
+    const hit = (o, b) => {                                      // crouch, jump, hit the option at the top, land
+      o.bot.classList.remove("jump"); void o.bot.offsetWidth; o.bot.classList.add("jump");
+      later(() => { b.classList.add("bump", "pick"); later(() => b.classList.remove("bump"), 240); }, 230);
+      later(() => o.bot.classList.remove("jump"), 620);
+    };
+    let timers = [], paused = false, inView = false;
+    const later = (f, t) => timers.push(setTimeout(f, t));
     function reset() {
       timers.forEach(clearTimeout); timers = [];
       for (const o of scenes) {
-        [o.A, o.B, o.C, o.N].forEach(b => b && b.classList.remove("pick", "gone", "hide", "bump"));
-        place([o.A, o.B, o.C]); if (o.N) { o.N.classList.add("hide"); o.N.style.left = 3 * (BW + GAP) + "px"; }
-        o.bot.classList.remove("jump"); o.bot.style.transition = "none"; o.bot.style.left = "-34px"; void o.bot.offsetWidth; o.bot.style.transition = "";
+        [o.A, o.B, o.C, o.N].forEach(b => b && b.classList.remove("pick", "gone", "bump", "lift", "show"));
+        place(o, [o.A, o.B, o.C]); if (o.N) o.N.style.left = 3 * (BW + GAP) + "px";
+        o.bot.classList.remove("jump", "walk", "fade"); o.bot.style.transitionDuration = "0ms"; o.bot.style.left = (o.x0 - 30) + "px"; void o.bot.offsetWidth; o.bot.style.transitionDuration = "";
         o.v.classList.remove("on");
       }
     }
+    function final() {                                           // the end state, for reduced motion
+      reset(); const [a, b, c] = scenes;
+      a.B.classList.add("pick"); a.bot.style.left = (parseFloat(a.B.style.left) + 6) + "px";
+      place(b, [b.C, b.A, b.B]); b.B.classList.add("pick"); b.bot.style.left = (parseFloat(b.B.style.left) + 6) + "px";
+      c.B.classList.add("gone"); c.N.classList.add("show", "pick"); c.bot.style.left = (parseFloat(c.N.style.left) + 14) + "px";
+      scenes.forEach(o => o.v.classList.add("on"));
+    }
     function play() {
       reset(); const [a, b, c] = scenes;
-      later(() => scenes.forEach(o => walk(o, o.B)), 200);                      // all three robots go to B and hit it
-      later(() => scenes.forEach(o => hit(o, o.B)), 900);
-      later(() => a.v.classList.add("on"), 1300);
-      later(() => { b.B.classList.remove("pick"); place([b.C, b.A, b.B]); }, 1900);   // shuffle: B slides to the end
-      later(() => walk(b, b.B), 2500);
-      later(() => hit(b, b.B), 3150);
-      later(() => b.v.classList.add("on"), 3550);
+      later(() => scenes.forEach(o => walk(o, o.B)), 250);                 // all three robots go to B and hit it
+      later(() => scenes.forEach(o => hit(o, o.B)), 950);
+      later(() => a.v.classList.add("on"), 1450);
+      later(() => { b.B.classList.remove("pick"); b.B.classList.add("lift"); }, 1900);   // shuffle: B lifts and moves to the end
+      later(() => place(b, [b.C, b.A, b.B]), 2050);
+      later(() => b.B.classList.remove("lift"), 2650);
+      later(() => walk(b, b.B, 560), 2700);
+      later(() => hit(b, b.B), 3330);
+      later(() => b.v.classList.add("on"), 3850);
       later(() => { c.B.classList.remove("pick"); c.B.classList.add("gone"); }, 1900);   // the correct option drops out
-      later(() => c.N.classList.remove("hide"), 2500);
-      later(() => walk(c, c.N), 2900);
-      later(() => hit(c, c.N), 3600);
-      later(() => c.v.classList.add("on"), 4000);
+      later(() => c.N.classList.add("show"), 2550);                                       // "Null" slides in
+      later(() => walk(c, c.N, 680), 2950);
+      later(() => hit(c, c.N), 3700);
+      later(() => c.v.classList.add("on"), 4250);
+      later(rewind, 6900);
     }
-    $("#replay").addEventListener("click", play);
+    function rewind() {                                          // a soft rewind: verdicts and robots fade, options glide back
+      scenes.forEach(o => { o.v.classList.remove("on"); o.bot.classList.add("fade"); [o.A, o.B, o.C, o.N].forEach(x => x && x.classList.remove("pick")); });
+      later(() => { const [, b, c] = scenes; place(b, [b.A, b.B, b.C]); c.N.classList.remove("show"); c.B.classList.remove("gone"); }, 150);
+      later(play, 1000);
+    }
+    const start = () => { if (!paused && inView) play(); };
+    const btn = $("#dpause");
+    if (RM) { final(); btn.hidden = true; return; }
+    btn.addEventListener("click", () => {
+      paused = !paused; btn.setAttribute("aria-pressed", String(paused)); btn.setAttribute("aria-label", paused ? "Play the demo" : "Pause the demo");
+      if (paused) { timers.forEach(clearTimeout); timers = []; } else start();
+    });
     reset();
-    if ("IntersectionObserver" in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { play(); io.disconnect(); } }, { threshold: .5 }); io.observe(host); }
-    else play();
+    if ("IntersectionObserver" in window) new IntersectionObserver(es => { const v = es.some(e => e.isIntersecting); if (v === inView) return; inView = v; if (v) start(); else reset(); }, { threshold: .35 }).observe(host);
+    else { inView = true; start(); }
   }
   function gap(host, lg) {
     const CATS = [["direct", "Direct semantic judgment", "System One models perform comparably to System Two."],
@@ -679,7 +725,7 @@
         ['<span>reviewed by people and an LLM</span>→<span class="ok">kept</span>/<span class="no">dropped</span>']],
       ["Organization and formulation", "11", "domains in five families",
         "",
-        [`<span>${t.static.toLocaleString("en-US")} static</span><span>${(t.tools + t.web).toLocaleString("en-US")} sandbox</span>`, "<span>Easy</span>→<span>Medium</span>→<span>Hard</span>"]],
+        [`<span>${t.static.toLocaleString("en-US")} static</span>+<span>${(t.tools + t.web).toLocaleString("en-US")} sandbox</span>`, "<span>Easy</span>→<span>Medium</span>→<span>Hard</span><small class=\"fl-n\">(Math adds Very hard)</small>"]],
       ["Evaluation", t.leaderboard_tasks.toLocaleString("en-US"), "leaderboard tasks (hardest tier per domain)",
         "",
         ["<span>scored against the verified label</span>", "<span>then shuffled and with the answer removed</span>"]],
@@ -694,6 +740,70 @@
     $("#dtable").innerHTML = `<thead><tr><th>Family</th><th>Domain</th><th>Tasks</th><th class="tiers">Tasks per tier</th><th class="src">Sources</th></tr></thead><tbody>${rows}</tbody>`;
   }
 
+  // ---- the four highlights under the title: hover or tap shows a small animated picture and two lines ----------------
+  function highlights() {
+    const pop = $("#hlpop"), items = $$(".hl li[data-hl]"); if (!pop || !items.length) return;
+    const best = top(S1, m => m.score, 1)[0], md = DOM.math, tm = best.tiers.math, NM = { E: "Easy", M: "Medium", H: "Hard", V: "Very hard" };
+    const lbk = Object.keys(tm).filter(k => md.leaderboard_tier.includes(NM[k]));
+    const tiered = D.domains.filter(d => d.tiers).length, t = D.totals;
+    const doc = `<span class="doc" aria-hidden="true"><i></i><i></i><i></i></span>`;
+    const chips = (xs, pick, cls = "") => `<span class="chs ${cls}">${xs.map(x => `<b class="${x === pick ? "pk" : x === "" ? "gone" : ""}${x === "Null" ? " nul" : ""}">${x}</b>`).join("")}</span>`;
+    const C = {
+      labels: { h: "Verified labels",
+        viz: `<div class="v-lab">${doc}<span class="tg">B</span><span class="ar">→</span><span class="vd ok">supported · kept</span>
+          ${doc}<span class="tg x">C</span><span class="ar">→</span><span class="vd no">not supported · dropped</span><span class="lens" aria-hidden="true"></span></div>`,
+        p: "Every reference label is checked against what the model can see, by people and an LLM. Tasks that fail are dropped.",
+        more: ['href="#benchmark"', "From 40 established sources"] },
+      tiers: { h: "Difficulty tiers",
+        viz: `<div class="v-tier">${Object.keys(tm).map((k, i) => `<div class="tb${lbk.includes(k) ? " lb" : ""}" style="--h:${tm[k]}%;--d:${i * 90}ms"><span class="bv">${tm[k]}</span><i></i><span class="tk">${NM[k]}</span></div>`).join("")}
+          <span class="brk" style="--n:${lbk.length};--of:${Object.keys(tm).length}">leaderboard</span></div><span class="cap">${esc(best.name)} in Math, score by tier</span>`,
+        p: `${tiered} of ${D.domains.length} domains are split into tiers by domain-specific criteria, such as the number of calculation steps in Math. The leaderboard counts each domain's hardest tier.`,
+        more: ['href="#results" data-chart-link="tier"', "Scores by tier"] },
+      agents: { h: "Agent sandboxes",
+        viz: `<div class="v-agt">${[1, 0, 2].map((p, i) => `<span class="stp" style="--d:${i * 420}ms"><span class="sn">${i + 1}</span><span class="mn">${[0, 1, 2].map(j => `<b class="${j === p ? "pk" : ""}"></b>`).join("")}</span></span><span class="ar">→</span>`).join("")}<span class="goal" style="--d:1260ms">goal ✓</span></div>
+          <span class="cap">Each step: pick the next action from a menu</span>`,
+        p: `In ${t.web.toLocaleString("en-US")} web and ${t.tools.toLocaleString("en-US")} tool tasks, the model works toward a goal step by step, choosing each next action itself.`,
+        more: ['href="#benchmark"', "The 11 domains"] },
+      rel: { h: "Reliability tests",
+        viz: `<div class="v-rel"><b class="sym s">S</b>${chips(["A", "B", "C"], "B")}<span class="ar">→</span>${chips(["C", "A", "B"], "B", "late")}<span class="vd ok late2">same answer</span>
+          <b class="sym n">N</b>${chips(["A", "B", "C"], "B")}<span class="ar">→</span>${chips(["A", "", "C", "Null"], "Null", "late")}<span class="vd ok late2">picks Null</span></div>`,
+        p: "Each item is asked again with its options shuffled (S) and with the correct option removed (N). Reliability R = √(S·N): higher is more reliable.",
+        more: ['href="#reliability"', "Reliability results"] },
+    };
+    let cur = null, leave, intent;
+    const place = li => {
+      const r = li.getBoundingClientRect(), w = pop.offsetWidth;
+      pop.style.left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), innerWidth - w - 12) + scrollX + "px";
+      pop.style.top = r.bottom + scrollY + 10 + "px";
+    };
+    const show = li => {
+      clearTimeout(leave); clearTimeout(intent);
+      if (cur === li) return;
+      if (cur) cur.setAttribute("aria-expanded", "false");
+      const c = C[li.dataset.hl]; cur = li; li.setAttribute("aria-expanded", "true");
+      pop.setAttribute("aria-label", c.h);
+      pop.innerHTML = `<span class="label">${c.h}</span><div class="viz">${c.viz}</div><p>${c.p}</p><a class="more" ${c.more[0]}>${c.more[1]} <span class="arr">→</span></a>`;
+      pop.hidden = false; place(li); pop.classList.remove("go");
+      requestAnimationFrame(() => { pop.classList.add("on"); void pop.offsetWidth; pop.classList.add("go"); });
+    };
+    const hide = () => {
+      clearTimeout(intent); if (!cur) return;
+      cur.setAttribute("aria-expanded", "false"); cur = null;
+      pop.classList.remove("on", "go"); setTimeout(() => { if (!cur) pop.hidden = true; }, 160);
+    };
+    items.forEach(li => {
+      li.addEventListener("pointerenter", e => { if (e.pointerType !== "mouse") return; clearTimeout(leave); clearTimeout(intent); intent = setTimeout(() => show(li), cur ? 0 : 150); });
+      li.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse") return; clearTimeout(intent); leave = setTimeout(hide, 140); });
+      li.addEventListener("click", e => { if (e.pointerType === "mouse") return; cur === li ? hide() : show(li); });
+      li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cur === li ? hide() : show(li); } });
+      li.addEventListener("focus", () => show(li)); li.addEventListener("blur", e => { if (!pop.contains(e.relatedTarget)) hide(); });
+    });
+    pop.addEventListener("pointerenter", () => clearTimeout(leave)); pop.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") leave = setTimeout(hide, 140); });
+    pop.addEventListener("click", e => { if (e.target.closest("a")) hide(); });
+    addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+    document.addEventListener("pointerdown", e => { if (cur && !cur.contains(e.target) && !pop.contains(e.target)) hide(); });
+    addEventListener("scroll", () => { if (cur) hide(); }, { passive: true });
+  }
   // ---- "System One" in the title: hover or tap shows a short definition and a real-time speed race ------------------
   function systemOne() {
     const term = $(".s1"), pop = $("#s1pop"), spot = $(".spot"), race = $(".race", pop); if (!term) return;
@@ -794,7 +904,7 @@
 
   function init() {
     nav(); board(); kres(); leaderboardControls(); table(); dgrid(); insightsControls(); insights();
-    demo(); benchmark(); wire(); infos(); logoMotion(); systemOne();
+    demo(); benchmark(); wire(); infos(); logoMotion(); systemOne(); highlights();
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));
     else if (q.get("model") && BY[q.get("model")]) openModel(BY[q.get("model")]);

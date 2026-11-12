@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=9d2ac14038" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=6d49aa15ab">
+<link rel="stylesheet" href="assets/css/site.css?v=d35f0e1f40">
 <script defer src="assets/js/data.js?v=79cc9fcc40"></script>
-<script defer src="assets/js/app.js?v=4d1c2ed202"></script>
+<script defer src="assets/js/app.js?v=6d85c3f392"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -50,7 +50,7 @@
       <div class="hero-grid">
         <div>
           <h1>Benchmarking the <em>capability</em> spectrum and <em class="r">reliability</em> of <span class="s1" tabindex="0" role="button" aria-expanded="false" aria-controls="s1pop">System One</span> models</h1>
-          <ul class="hl" aria-label="Highlights"><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#796f50"><circle cx="8" cy="8" r="6.2"/><path d="M5.2 8.2l1.9 1.9 3.8-4.1"/></svg>Verified labels</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#61847a"><path d="M2 13.5h3.5v-3.4h3.4V6.7h3.4V3.3H14"/></svg>Difficulty tiers</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#8f6556"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 6.6l2 1.6-2 1.6M8.6 10.2h2.6"/></svg>Agent sandboxes</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:var(--rel)"><path d="M2.5 5.2h8.8M9.4 3l2.2 2.2-2.2 2.2M13.5 10.8H4.7M6.6 8.6l-2.2 2.2 2.2 2.2"/></svg>Reliability tests</li></ul>
+          <ul class="hl" aria-label="Highlights"><li data-hl="labels" tabindex="0" role="button" aria-expanded="false" aria-controls="hlpop"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#796f50"><circle cx="8" cy="8" r="6.2"/><path d="M5.2 8.2l1.9 1.9 3.8-4.1"/></svg>Verified labels</li><li data-hl="tiers" tabindex="0" role="button" aria-expanded="false" aria-controls="hlpop"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#61847a"><path d="M2 13.5h3.5v-3.4h3.4V6.7h3.4V3.3H14"/></svg>Difficulty tiers</li><li data-hl="agents" tabindex="0" role="button" aria-expanded="false" aria-controls="hlpop"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#8f6556"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 6.6l2 1.6-2 1.6M8.6 10.2h2.6"/></svg>Agent sandboxes</li><li data-hl="rel" tabindex="0" role="button" aria-expanded="false" aria-controls="hlpop"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:var(--rel)"><path d="M2.5 5.2h8.8M9.4 3l2.2 2.2-2.2 2.2M13.5 10.8H4.7M6.6 8.6l-2.2 2.2 2.2 2.2"/></svg>Reliability tests</li></ul>
           <p class="authors">Lichen Li<sup>*</sup>, Ziping Dong<sup>*</sup>, Sicheng Feng, Qi Li, Xinchao Wang<sup>†</sup></p>
           <p class="authors-note">* Equal contribution · † Corresponding author</p>
           <div class="cta">
@@ -58,10 +58,10 @@
             <a class="btn" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>
             <a class="btn" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Dataset <span aria-hidden="true">↗</span></a>
           </div>
-          <div class="kres" id="kres" aria-label="Key results"></div>
         </div>
         <div class="board" id="board" data-anim="0" aria-label="Top System One models"></div>
       </div>
+      <div class="kres" id="kres" aria-label="Key results"></div>
     </div>
   </section>
 
@@ -181,7 +181,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">05 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
-        <p class="sec-lead">Three commands, any model. <button class="info" type="button" data-info="The jev command evaluates any model through an adapter; it needs Linux x86-64 and Python 3.12.">i</button></p>
+        <p class="sec-lead">Three steps, any model. <button class="info" type="button" data-info="The jev command evaluates any model through an adapter; it needs Linux x86-64 and Python 3.12.">i</button></p>
       </div>
       <div class="runs rv">
         <div class="run"><span class="label">Step 01 · Get the data</span>
@@ -231,6 +231,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
 
 <div class="tip" id="tip" role="tooltip" hidden></div>
 <div class="spot" aria-hidden="true"></div>
+<div class="hlpop" id="hlpop" role="dialog" aria-label="Highlight" hidden></div>
 <div class="s1pop" id="s1pop" role="dialog" aria-label="What System One means" hidden>
   <span class="label">System One models</span>
   <p>They decide in one forward pass: the model scores the options it is given and answers at once, without writing out reasoning first.</p>

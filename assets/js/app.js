@@ -33,8 +33,8 @@
   const LUNA = M.find(m => m.name === "GPT-6 Luna");
   // Hue carries meaning (wine score, blue reliability, orange System Two, family hues for domains); model size is a
   // neutral lightness ramp and access is a shape (diamond = closed API).
-  const SIZE = { "0.4B": "#c9cdd2", "4B": "#a0a7ae", "9B": "#7a828b", "27B": "#525a63", "31B": "#272c32" };
-  const API = "#8d949b", S2C = "#b0652d";
+  const SIZE = { "0.4B": "#a3cf9b", "4B": "#4fa39b", "9B": "#6a8fc4", "27B": "#8a74b8", "31B": "#433d6e" };   // the paper's size colours
+  const API = "#d4a24e", S2C = "#b0652d";                                       // closed APIs amber, as in the paper
   const closed = m => m.group === "api" || m.group === "s2";
   const colorOf = m => m.group === "s2" ? S2C : closed(m) ? API : SIZE[m.size];
   const slug = m => m.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -77,8 +77,10 @@
     node.addEventListener("focus", () => { const b = node.getBoundingClientRect(); tip(html(), b.right, b.bottom); });
     node.addEventListener("blur", untip);
   }
+  const TOUCH = matchMedia("(hover: none)").matches;
+  const HINT = `<span class="tip-cta"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.2 2.6v8.6l2.2-2 1.5 3.4 1.6-.7-1.5-3.3 3-.2z" fill="currentColor"/></svg>${TOUCH ? "Tap" : "Click"} for details</span>`;
   const mtip = (m, extra = "") => `<b>${esc(m.name)}</b> <span class="s">${meta(m)}</span><br>` +
-    `<span class="m">${f2(m.score)}</span> <span class="s">${RANK.has(m.key) ? `score · #${RANK.get(m.key)} of 18` : m.group === "s2" ? "score · System Two" : "score · not ranked"}</span>${extra}`;
+    `<span class="m">${f2(m.score)}</span> <span class="s">${RANK.has(m.key) ? `score · #${RANK.get(m.key)} of 18` : m.group === "s2" ? "score · System Two" : "score · not ranked"}</span>${extra}${HINT}`;
 
   // ---- navigation --------------------------------------------------------------------------------------------------
   function nav() {
@@ -96,7 +98,7 @@
         if (e.isIntersecting) { links.forEach(a => a.classList.remove("on")); const a = links.get(e.target.id); if (a) a.classList.add("on"); }
       }), { rootMargin: "-40% 0px -55% 0px" });
       links.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
-      addEventListener("scroll", () => { if (scrollY < $("#leaderboard").offsetTop - innerHeight * .5) links.forEach(a => a.classList.remove("on")); }, { passive: true });
+      addEventListener("scroll", () => { if (scrollY < $("#glance").offsetTop - innerHeight * .5) links.forEach(a => a.classList.remove("on")); }, { passive: true });
     }
   }
 
@@ -169,7 +171,7 @@
     const tiles = [
       ["leaderboard", "", `${f1(best.score)}<small>&nbsp;vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna by about ten points. Luna is strong enough to serve as the System Two reference, and one reference keeps the charts clear; GPT-6 Sol scores 82.3.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
-      ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
+      ["glance", "", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([r1, r2, best].map(o => [`<span class="rkn">#${RANK_R.get(o.key)}</span>${esc(o.name)}`, R_(o), "var(--rel)"]), 100, f1)],
@@ -278,7 +280,7 @@
     }).join("");
   }
   function leaderboardControls() {
-    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk"><i class="k-prof"><b></b><b></b><b></b></i>By domain: point at the bars for all 11 scores</span>`;
+    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk"><i class="k-prof"><b></b><b></b><b></b></i>By domain: point at the bars for all 11 scores</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
@@ -292,7 +294,7 @@
       const b = e.target.closest(".pb"), m = BY[pf.closest("tr").dataset.model];
       const rows = D.domains.map(d => { const k = isS1(m) ? TOPD[d.id].get(m.key) : null;
         return `<span class="pr${b && b.dataset.d === d.id ? " on" : ""}"><span>${esc(d.short || d.name)}</span><span class="m">${f1(m.domains[d.id])}</span><span class="s">${k ? `#${k}` : ""}</span></span>`; }).join("");
-      tip(`<b>${esc(m.name)}</b> <span class="s">by domain${isS1(m) ? ` · rank of ${S1.length}` : ""}</span><span class="prof-tip">${rows}</span>`, e.clientX, e.clientY);
+      tip(`<b>${esc(m.name)}</b> <span class="s">by domain${isS1(m) ? ` · rank of ${S1.length}` : ""}</span><span class="prof-tip">${rows}</span>${HINT}`, e.clientX, e.clientY);
       onBar = true;
     });
     $("#lb").addEventListener("pointerleave", () => { if (onBar) { untip(); onBar = false; } });
@@ -362,7 +364,7 @@
         <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · <i class="nw">#${rk} of 18</i>` : m.group === "s2" ? " · System Two" : " · not ranked"}</span></div>
         <div><b class="num">${r ? f1(r.R) : "—"}</b><span><i class="nw">Reliability R</i>${rr ? ` · <i class="nw">#${rr} of 18</i>` : " · measured for System One models only"}</span></div>
         <div><b class="num">${l ? ms(l.mean_ms) : "—"}</b><span>Mean latency · <i class="nw">${l ? l.timing : ""}</i></span></div>
-        <div><b class="num">${r ? `${r.S.toFixed(2)} · ${r.N.toFixed(2)}` : l && l.p99_ms ? ms(l.p99_ms) : "—"}</b><span>${r ? "Order stability S · null discrimination N" : "99th percentile latency"}</span></div>
+        <div><b class="num">${r ? `${r.S.toFixed(2)} · ${r.N.toFixed(2)}` : l && l.p99_ms ? ms(l.p99_ms) : "—"}</b><span>${r ? "Option-order stability S · null discrimination N" : "99th percentile latency"}</span></div>
       </div>
       <h4 class="label">Domain scores <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· leaderboard tier; tick = System One median</span></h4>
       <ul class="bars prof">${prof}</ul>
@@ -410,10 +412,14 @@
   }
   function mark(g, m, x, y, r = 6) {
     if (closed(m)) { const k = r * 1.22; S("path", { class: "mk", d: `M${x} ${y - k}L${x + k} ${y}L${x} ${y + k}L${x - k} ${y}Z`, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g); }
-    else S("circle", { class: "mk", cx: x, cy: y, r, fill: m.group === "auto" ? "#fff" : colorOf(m), stroke: m.group === "auto" ? colorOf(m) : "#fff", "stroke-width": m.group === "auto" ? 2.2 : 1.5 }, g);
+    else { S("circle", { class: "mk", cx: x, cy: y, r, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g);
+      if (m.group === "auto") S("circle", { cx: x, cy: y, r: r * .45, fill: "#fff", "pointer-events": "none" }, g); }
   }
-  function labels(svg, items, bounds, only) {
-    const boxes = items.map(it => ({ x0: it.x - 7, x1: it.x + 7, y0: it.y - 7, y1: it.y + 7 }));
+  // a polyline as small boxes, so labels keep off a plotted line
+  const lineBoxes = (pts, r = 3) => pts.slice(1).flatMap(([x1, y1], i) => { const [x0, y0] = pts[i], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 4));
+    return Array.from({ length: n + 1 }, (_, k) => { const x = x0 + (x1 - x0) * k / n, y = y0 + (y1 - y0) * k / n; return { x0: x - r, x1: x + r, y0: y - r, y1: y + r }; }); });
+  function labels(svg, items, bounds, only, obst = []) {
+    const boxes = items.map(it => ({ x0: it.x - 7, x1: it.x + 7, y0: it.y - 7, y1: it.y + 7 })).concat(obst);
     const hit = b => boxes.some(o => b.x0 < o.x1 && o.x0 < b.x1 && b.y0 < o.y1 && o.y0 < b.y1) || b.x0 < bounds.x0 || b.x1 > bounds.x1 || b.y0 < bounds.y0 || b.y1 > bounds.y1;
     const g = S("g", {}, svg);
     // Highest points first: they are the strongest models, the ones a reader looks for in a crowded corner.
@@ -423,7 +429,7 @@
       // Next to the point first; if all eight spots are taken, one ring further out with a thin leader line.
       const near = [[it.x + gp, it.y - h / 2, "start"], [it.x - gp - w, it.y - h / 2, "end"], [it.x - w / 2, it.y - gp - h, "middle"], [it.x - w / 2, it.y + gp, "middle"],
         [it.x + dg, it.y - dg - h, "start"], [it.x + dg, it.y + dg, "start"], [it.x - dg - w, it.y - dg - h, "end"], [it.x - dg - w, it.y + dg, "end"]].map(c => [...c, null]);
-      const away = [far, far * 1.6].flatMap(R => [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1]].map(([dx, dy]) => [dx, dy, R])).map(([dx, dy, R]) => {
+      const away = [far, far * 1.6, far * 2.3].flatMap(R => [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].map(([dx, dy]) => [dx, dy, R])).map(([dx, dy, R]) => {
         const cx = it.x + dx * R * (dy ? .8 : 1), cy = it.y + dy * R * (dx ? .7 : 1);
         return [dx > 0 ? cx : dx < 0 ? cx - w : cx - w / 2, dx ? cy - h / 2 : dy < 0 ? cy - h : cy, dx > 0 ? "start" : dx < 0 ? "end" : "middle", [dx, dy, cx, cy]];
       });
@@ -458,14 +464,16 @@
     speed: { title: "Score against latency", sub: "Dashed line: the best score reachable at each speed.",
       note: "Mean latency per task: open weights on one H100 GPU, APIs end to end." },
     rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
-    sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
+    sn: { title: "Decision reliability", sub: "Option-order stability S against null discrimination N; dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
-    order: { title: "How accuracy moves with the option order", sub: "Change from the original order in 12 shuffles; most stable first, ranked by the range.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
+    order: { title: "How accuracy moves with the option order", sub: "Each dot: one of 12 shuffles, against the original order. Ranked by the range over all 13 orders, most stable first.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher option-order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
     gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals.", note: "Not only the leaderboard tier, so the gaps differ from the domain cards. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
   let tierDom = "math";
   // Two chart panels share this routine: Results (speed, difficulty, gap) and the Reliability section's evidence.
-  const PANELS = [{ key: "speed", tabs: "#ins-tabs", host: "#chart", lg: "#legend", title: "#ins-title", sub: "#ins-sub", note: "#ins-note" },
+  const PANELS = [{ key: "speed", pair: true, host: "#spchart", lg: "#sp-legend", title: "#sp-title", sub: "#sp-sub", note: "#sp-note" },
+                  { key: "sn", pair: true, host: "#snchart", lg: "#sn-legend", title: "#sn-title", sub: "#sn-sub", note: "#sn-note" },
+                  { key: "tier", tabs: "#ins-tabs", host: "#chart", lg: "#legend", title: "#ins-title", sub: "#ins-sub", note: "#ins-note" },
                   { key: "rel", tabs: "#rel-tabs", host: "#rchart", lg: "#rlegend", title: "#r-title", sub: "#r-sub", note: "#r-note" }];
   const insights = () => PANELS.forEach(drawPanel);
   // Switching tabs: each card takes its own tab's height, eased over 240 ms (no blank space, no jump); the chart fades in.
@@ -484,7 +492,7 @@
     const host = $(P.host);
     host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" ? "region" : "img");
     if (insKey === "speed") {
-      const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
+      const { svg, W, H } = frame(host, P.pair ? .9 : .56, 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const lx = v => Math.log10(v), X0 = lx(4), X1 = lx(5000);
       const xs = v => m.l + (lx(v) - X0) / (X1 - X0) * (W - m.l - m.r), ys = v => H - m.b - (v - 25) / 65 * (H - m.t - m.b);
       axes(svg, W, H, m, xs, ys, [[10, "10 ms"], [100, "100 ms"], [1000, "1 s"]], [30, 40, 50, 60, 70, 80, 90].map(v => [v, v]), "Mean latency per task (log scale) →", "↑ Score");
@@ -493,30 +501,32 @@
       S("path", { d: fr.map((o, i) => `${i ? "L" : "M"}${xs(o.latency.mean_ms)} ${ys(o.score)}`).join(""), fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.6, "stroke-dasharray": "5 4", "stroke-linejoin": "round", opacity: .7 }, svg);
       const pts = M.map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
       points(svg, pts, o => mtip(o, `<br><span class="m">${ms(o.latency.mean_ms)}</span> <span class="s">mean latency (${o.latency.timing}${o.key === "SII-Decision-4B" ? ", with flash-linear-attention" : ""})</span>`));
-      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 560 ? new Set([...fr, ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null);
+      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...fr, ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null,
+        lineBoxes(fr.map(o => [xs(o.latency.mean_ms), ys(o.score)])));
       LG.innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
     } else if (insKey === "rel" || insKey === "sn") {
-      const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
+      const { svg, W, H } = frame(host, P.pair ? .9 : .56, 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const RL = S1.filter(o => o.reliability);
-      let pts;
+      let pts; const rb = [];                                  // the R labels' boxes: model labels keep off them
       if (insKey === "rel") {
         const xs = v => m.l + (v - 28) / 46 * (W - m.l - m.r), ys = v => H - m.b - v / 90 * (H - m.t - m.b);
         axes(svg, W, H, m, xs, ys, [30, 40, 50, 60, 70].map(v => [v, v]), [0, 20, 40, 60, 80].map(v => [v, v]), "Score →", "↑ Reliability R");
         pts = RL.map(o => ({ m: o, x: xs(o.score), y: ys(o.reliability.R), label: o.name, aria: `score ${f2(o.score)}, R ${f1(o.reliability.R)}` }));
       } else {
         const xs = v => m.l + (v - .3) / .72 * (W - m.l - m.r), ys = v => H - m.b - v / .85 * (H - m.t - m.b);
-        axes(svg, W, H, m, xs, ys, [.4, .5, .6, .7, .8, .9, 1].map(v => [v, v.toFixed(1)]), [0, .2, .4, .6, .8].map(v => [v, v.toFixed(1)]), "Order stability S →", "↑ Null discrimination N");
+        axes(svg, W, H, m, xs, ys, [.4, .5, .6, .7, .8, .9, 1].map(v => [v, v.toFixed(1)]), [0, .2, .4, .6, .8].map(v => [v, v.toFixed(1)]), "Option-order stability S →", "↑ Null discrimination N");
         const g = S("g", {}, svg);
         for (const r of [.2, .4, .6, .8]) {
           const d = []; for (let s = .3; s <= 1.02; s += .01) { const n = r * r / s; if (n <= .85) d.push(`${d.length ? "L" : "M"}${xs(s)} ${ys(n)}`); }
           S("path", { d: d.join(""), fill: "none", stroke: "#c9c7bd", "stroke-dasharray": "4 4", "stroke-width": 1.1 }, g);
           const s0 = Math.max(.3, r * r / .85);            // label where the curve enters the plot (top or left), away from the points
           S("text", { class: "tick", x: xs(s0) + 6, y: ys(r * r / s0) + 14, "text-anchor": "start" }, g).textContent = `R = ${r * 100}`;
+          rb.push({ x0: xs(s0) + 2, x1: xs(s0) + 56, y0: ys(r * r / s0) + 2, y1: ys(r * r / s0) + 18 });
         }
         pts = RL.map(o => ({ m: o, x: xs(o.reliability.S), y: ys(o.reliability.N), label: o.name, aria: `S ${o.reliability.S.toFixed(2)}, N ${o.reliability.N.toFixed(2)}` }));
       }
       points(svg, pts, o => mtip(o, `<br><span class="m">${f1(o.reliability.R)}</span> <span class="s">R · #${RANK_R.get(o.key)} of 18 · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)}</span>`));
-      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 560 ? new Set([...top(RL, R_, 3), ...top(RL, o => o.score, 3), ...RL.filter(closed), ...top(RL, o => -R_(o), 2)].map(o => o.key)) : null);
+      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...top(RL, R_, 3), ...top(RL, o => o.score, 3), ...RL.filter(closed), ...top(RL, o => -R_(o), 2)].map(o => o.key)) : null, rb);
       LG.innerHTML = sizeLegend(false);
     } else if (insKey === "order") {
       orderChart(host, LG);
@@ -528,11 +538,11 @@
   }
   function orderChart(host, lg) {
     // Change from the original option order, per reordering. Rows ranked by the range of accuracy over the 13 orders
-    // (the original and 12 shuffles), narrowest first; ties by order stability S. The range is printed at the right.
+    // (the original and 12 shuffles), narrowest first; ties by option-order stability S. The range is printed at the right.
     const span = o => { const v = [o.order_acc.original, ...o.order_acc.runs]; return Math.max(...v) - Math.min(...v); };
     const L = S1.filter(o => o.order_acc).sort((a, b) => span(a) - span(b) || (R_(b) != null ? b.reliability.S : 0) - (R_(a) != null ? a.reliability.S : 0));
     const dev = L.flatMap(o => o.order_acc.runs.map(v => Math.abs(v - o.order_acc.original))), X = Math.max(2, Math.ceil(Math.max(...dev)));
-    const rowH = 24, m = { l: 150, r: 92, t: 30, b: 42 };
+    const rowH = 24, narrow = host.clientWidth < 520, m = { l: narrow ? 116 : 150, r: narrow ? 40 : 92, t: 30, b: 42 };
     host.innerHTML = "";
     const W = Math.max(320, host.clientWidth), H = m.t + m.b + rowH * L.length;
     const svg = S("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, host);
@@ -549,15 +559,16 @@
       const r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${i + 1}. ${o.name}: range ${f1(span(o))} points over 13 orders; original order ${f1(a.original)}` }, svg);
       S("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent" }, r);
       S("text", { class: "lbl", x: m.l - 12, y: y + 4, "text-anchor": "end" }, r).textContent = o.name;
-      S("text", { class: "tick", x: 4, y: y + 4, "text-anchor": "start" }, r).textContent = i + 1;
+      if (!narrow) S("text", { class: "tick", x: 4, y: y + 4, "text-anchor": "start" }, r).textContent = i + 1;
       S("line", { x1: xs(Math.min(0, ...d)), x2: xs(Math.max(0, ...d)), y1: y, y2: y, stroke: c, "stroke-width": 4, "stroke-linecap": "round", opacity: .3 }, r);
       for (const v of d) S("circle", { cx: xs(v), cy: y, r: 3, fill: c, opacity: .85 }, r);
+      if (span(o) === 0 && !narrow) S("text", { class: "tick", x: xs(0) + 10, y: y + 4, "text-anchor": "start" }, r).textContent = "scores each option alone: order cannot matter";
       S("text", { class: "tick", x: W - 10, y: y + 4, "text-anchor": "end" }, r).textContent = f1(span(o));
-      bindTip(r, () => `<b>${esc(o.name)}</b> <span class="s">#${i + 1} of ${L.length}</span><br><span class="m">${f1(span(o))}</span> <span class="s">points between its best and worst of 13 orders · original ${f1(a.original)}</span>`);
+      bindTip(r, () => `<b>${esc(o.name)}</b> <span class="s">#${i + 1} of ${L.length}</span><br><span class="m">${f1(span(o))}</span> <span class="s">points between its best and worst of 13 orders · original ${f1(a.original)}</span>${HINT}`);
       r.addEventListener("click", () => openModel(o));
     });
     lg.innerHTML = `<span><i style="background:var(--muted)"></i>One reordering</span>` +
-      Object.entries(SIZE).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join("") + `<span><i style="background:${API}"></i>Closed API</span>`;
+      Object.entries(SIZE).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join("") + `<span><i class="dia" style="background:${API}"></i>Closed API</span>`;
   }
   function tierChart(host, id, lgHost, compact = false) {
     const d = DOM[id], ks = Object.keys(d.tiers), names = { E: "Easy", M: "Medium", H: "Hard", V: "Very hard" };
@@ -577,7 +588,7 @@
       S("path", { d: dd, fill: "none", stroke: "transparent", "stroke-width": 12 }, a);
       const ln = S("path", { d: dd, fill: "none", stroke: on ? col : "#d9d7ce", "stroke-width": on ? 2.4 : 1.2, "stroke-dasharray": o.group === "s2" ? "5 4" : null }, a);
       for (const p of pts) S("circle", { cx: p[0], cy: p[1], r: on ? 3.4 : 2, fill: on ? col : "#d9d7ce", stroke: "#fff", "stroke-width": on ? 1.2 : 0 }, a);
-      bindTip(a, () => `<b>${esc(o.name)}</b><br><span class="m">${ks.map(k => `${k} ${t[k]}`).join(" · ")}</span>`);
+      bindTip(a, () => `<b>${esc(o.name)}</b><br><span class="m">${ks.map(k => `${k} ${t[k]}`).join(" · ")}</span>${HINT}`);
       a.addEventListener("pointerenter", () => { ln.setAttribute("stroke", col); ln.setAttribute("stroke-width", 2.6); a.parentNode.appendChild(a); });
       a.addEventListener("pointerleave", () => { if (!on) { ln.setAttribute("stroke", "#d9d7ce"); ln.setAttribute("stroke-width", 1.2); } });
       a.addEventListener("click", () => openModel(o));
@@ -590,7 +601,7 @@
   }
   const showChart = k => { const t = document.getElementById("k-" + k); if (t) t.closest('[role="tablist"]')._sel(t.id); };
   function insightsControls() {
-    PANELS.forEach(P => tabs($(P.tabs), (id, t) => switchPanel(P, t.dataset.k)));
+    PANELS.filter(P => P.tabs).forEach(P => tabs($(P.tabs), (id, t) => switchPanel(P, t.dataset.k)));
     const TD = D.domains.filter(d => d.tiers);
     $("#tier-chips").innerHTML = TD.map(d => `<button type="button" class="chip" data-td="${d.id}" aria-pressed="${d.id === tierDom}">${esc(d.short)}</button>`).join("");
     $("#tier-chips").addEventListener("click", e => { const b = e.target.closest("[data-td]"); if (!b) return; tierDom = b.dataset.td; $$("[data-td]").forEach(o => o.setAttribute("aria-pressed", o === b)); insights(); });
@@ -773,7 +784,7 @@
     let cur = null, leave, intent;
     const place = li => {
       const r = li.getBoundingClientRect(), w = pop.offsetWidth;
-      pop.style.left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), innerWidth - w - 12) + scrollX + "px";
+      pop.style.left = Math.min(Math.max(12, r.left - 8), innerWidth - w - 12) + scrollX + "px";   // left-aligned to its tag
       pop.style.top = r.bottom + scrollY + 10 + "px";
     };
     const show = li => {

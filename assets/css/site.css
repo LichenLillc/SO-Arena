@@ -970,3 +970,36 @@ section[id] { scroll-margin-top: 64px; }
 /* BibTeX wraps on narrow screens */
 @media (max-width: 760px) { .bib pre { white-space: pre-wrap; overflow-wrap: anywhere; } }
 .lb .showall { margin-left: 6px; font-weight: 600; color: var(--rel); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- "click for details": a hint at the foot of model tooltips; a small pill beside the name on table rows ---- */
+.tip .tip-cta { display: flex; align-items: center; gap: 5px; margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--line); font: 600 11.5px/1.2 var(--sans); color: var(--rel); }
+.tip .tip-cta svg { width: 12px; height: 12px; }
+.lb .mcell b::after { content: "Details ›"; display: inline-block; margin-left: 9px; padding: 3px 8px; border-radius: 99px; background: var(--soft-2);
+  font: 600 10.5px/1 var(--sans); color: var(--ink-2); vertical-align: 2px; opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
+@media (hover: hover) { .lb tbody tr[data-model]:hover .mcell b::after { opacity: 1; transform: none; } }
+@media (hover: none) { .lb .mcell b::after { content: none; } }
+.chart .pt:hover .mk { filter: drop-shadow(0 1px 2px rgba(15, 18, 22, .25)); }
+
+/* ---- at a glance: score against latency and decision reliability side by side (user) ---- */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.pair .panel-head h3 { font-size: 24px; }
+.pair .insights { display: block; }
+.pair .insights .chart-col { border: 0; padding-bottom: 16px; }
+@media (max-width: 1080px) { .pair { grid-template-columns: 1fr; } }
+/* the hover pill takes no layout space (it widened the table at 1024 px) */
+.lb .mcell b { position: relative; }
+.lb .mcell b::after { position: absolute; left: 100%; top: 50%; margin-top: -9px; white-space: nowrap; vertical-align: 0; }
+/* the highlight tags look interactive: the same quiet underline as "System One" */
+.hl li[data-hl] { text-decoration: underline dotted rgba(15, 18, 22, .3); text-decoration-thickness: 1.5px; text-underline-offset: .28em; }
+.hl li[data-hl]:hover, .hl li[data-hl][aria-expanded="true"] { text-decoration-color: transparent; }
+@media (max-width: 760px) { .kres .kr:nth-child(n) { border-left: 0; padding-left: 0; } }
+@media (max-width: 760px) {
+  .tools-r, .tools-r .search { width: 100%; } .tools-r .search input { width: 100%; }
+  .hero .cta { gap: 8px; } .hero .cta .btn { padding: 0 13px; }
+}
+.hlpop .vd.ok { color: #1f6b47; }
+@media (max-width: 520px) {
+  .hero .cta { display: grid; grid-template-columns: 1fr 1fr; }
+  .hero .cta .btn { justify-content: center; } .hero .cta .btn-dark { grid-column: 1 / -1; }
+  .board-head .label { white-space: nowrap; font-size: 10px; letter-spacing: .05em; }
+}

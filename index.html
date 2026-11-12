@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=9d2ac14038" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=0420020c28">
+<link rel="stylesheet" href="assets/css/site.css?v=86c0e6a98a">
 <script defer src="assets/js/data.js?v=79cc9fcc40"></script>
-<script defer src="assets/js/app.js?v=534e109bdd"></script>
+<script defer src="assets/js/app.js?v=10a720e05a"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -27,7 +27,7 @@
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="SO-Arena, back to top"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="#2e76c9" d="M53.70 55.51A32.00 32.00 0 0 1 8.49 10.30L19.31 21.12A16.71 16.71 0 0 0 42.88 44.69Z"/><path fill="#c63f5d" d="M10.30 8.49A32.00 32.00 0 0 1 55.51 53.70L44.69 42.88A16.71 16.71 0 0 0 21.12 19.31Z"/></svg>SO-Arena</a>
     <nav class="nav-links" aria-label="Sections">
-      <a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a>
+      <a href="#glance">Overview</a><a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a>
       <a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
     </nav>
     <div class="nav-end">
@@ -37,7 +37,7 @@
     </div>
   </div>
   <nav class="wrap sheet-nav" id="sheet-nav" aria-label="Sections">
-    <a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a>
+    <a href="#glance">Overview</a><a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a>
     <a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
   </nav>
 </header>
@@ -65,11 +65,38 @@
     </div>
   </section>
 
-  <!-- 01 Leaderboard -->
+  <!-- 01 Speed and reliability: the two charts people choose a model by (user) -->
+  <section class="sec" id="glance" aria-labelledby="gl-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="label">01 — At a glance</span><h2 id="gl-h">Speed and reliability</h2></div>
+      </div>
+      <div class="pair">
+        <div class="panel" id="p-sp">
+          <div class="panel-head"><div><h3 id="sp-title"></h3><p id="sp-sub"></p></div></div>
+          <div class="insights"><div class="chart-col">
+            <div class="chart" id="spchart" role="img"></div>
+            <div class="legend" id="sp-legend"></div>
+            <p class="note" id="sp-note"></p>
+          </div></div>
+        </div>
+        <div class="panel" id="p-sn">
+          <div class="panel-head"><div><h3 id="sn-title"></h3><p id="sn-sub"></p></div></div>
+          <div class="insights"><div class="chart-col">
+            <div class="chart" id="snchart" role="img"></div>
+            <div class="legend" id="sn-legend"></div>
+            <p class="note" id="sn-note"></p>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Leaderboard -->
   <section class="sec" id="leaderboard" aria-labelledby="lb-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">01 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
+        <div><span class="label">02 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
         <p class="sec-lead">The mean of 11 domains, each on its hardest tier. <button class="info" type="button" data-info="1,232 of the 2,919 tasks count toward the score. Reliability is measured for the 18 System One models; GPT-6 Sol and Luna are System Two references.">i</button></p>
       </div>
       <div class="toolbar">
@@ -100,12 +127,12 @@
   <section class="sec" id="reliability" aria-labelledby="rl-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">02 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
+        <div><span class="label">03 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
         
       </div>
       <div class="rel2 rv" id="demo"></div>
       <div class="rkey">
-        <span><b class="sym s">S</b>Order stability: keeps its answer when shuffled <button class="info" type="button" data-info="Share of 12 reorderings in which the model keeps its answer; 0 is chance, 1 always.">i</button></span>
+        <span><b class="sym s">S</b>Option-order stability: keeps its answer when the options are shuffled <button class="info" type="button" data-info="Share of 12 reorderings in which the model keeps its answer; 0 is chance, 1 always.">i</button></span>
         <span><b class="sym n">N</b>Null discrimination: notices the missing answer <button class="info" type="button" data-info="How well the model's 'no option is correct' probability separates items with and without their correct option: 2·AUC − 1; 0 is chance, 1 perfect.">i</button></span>
         <span><b class="sym r">R</b>Reliability = √(S·N), from 0 to 100</span>
       </div>
@@ -113,7 +140,6 @@
         <div class="panel-head">
           <div class="seg tabrow" role="tablist" aria-label="Reliability chart" id="rel-tabs">
             <button role="tab" aria-selected="true" data-k="rel" id="k-rel">Score vs. reliability</button>
-            <button role="tab" aria-selected="false" data-k="sn" id="k-sn" tabindex="-1">Order stability vs. null discrimination</button>
             <button role="tab" aria-selected="false" data-k="order" id="k-order" tabindex="-1">Option order</button>
           </div>
           <div><h3 id="r-title">Reliability against score</h3><p id="r-sub"></p></div>
@@ -133,16 +159,15 @@
   <section class="sec" id="results" aria-labelledby="in-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">03 — Results</span><h2 id="in-h">How System One models compare</h2></div>
+        <div><span class="label">04 — Results</span><h2 id="in-h">How System One models compare</h2></div>
       </div>
       <div class="panel">
         <div class="panel-head">
           <div class="seg tabrow" role="tablist" aria-label="Chart" id="ins-tabs">
-            <button role="tab" aria-selected="true" data-k="speed" id="k-speed">Speed</button>
-            <button role="tab" aria-selected="false" data-k="tier" id="k-tier" tabindex="-1">Difficulty</button>
+            <button role="tab" aria-selected="true" data-k="tier" id="k-tier">Difficulty</button>
             <button role="tab" aria-selected="false" data-k="gap" id="k-gap" tabindex="-1">Gap to GPT-6</button>
           </div>
-          <div><h3 id="ins-title">Score against latency</h3><p id="ins-sub"></p></div>
+          <div><h3 id="ins-title">Difficulty</h3><p id="ins-sub"></p></div>
         </div>
         <div class="insights">
           <div class="chart-col">
@@ -160,7 +185,7 @@
   <section class="sec" id="benchmark" aria-labelledby="bm-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">04 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
+        <div><span class="label">05 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
         <p class="sec-lead">Static questions plus web and tool sandboxes, all posed as decisions.</p>
       </div>
       <div class="steps rv" id="steps"></div>
@@ -180,7 +205,7 @@
   <section class="sec" id="evaluate" aria-labelledby="ev-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">05 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
+        <div><span class="label">06 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
         <p class="sec-lead">Three steps, any model. <button class="info" type="button" data-info="The jev command evaluates any model through an adapter; it needs Linux x86-64 and Python 3.12.">i</button></p>
       </div>
       <div class="runs rv">
@@ -207,7 +232,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
   <section class="sec" id="cite" aria-labelledby="ci-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">06 — Citation</span><h2 id="ci-h">Cite SO-Arena</h2></div>
+        <div><span class="label">07 — Citation</span><h2 id="ci-h">Cite SO-Arena</h2></div>
         <p class="sec-lead">Correspondence: <a href="mailto:xinchao@nus.edu.sg" style="text-decoration:underline;text-underline-offset:3px">xinchao@nus.edu.sg</a></p>
       </div>
       <div class="bib"><button class="copy" type="button" id="copy">Copy</button>
@@ -225,7 +250,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
   <div class="wrap foot-in">
     <div><a class="brand" href="#top"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="#2e76c9" d="M53.70 55.51A32.00 32.00 0 0 1 8.49 10.30L19.31 21.12A16.71 16.71 0 0 0 42.88 44.69Z"/><path fill="#c63f5d" d="M10.30 8.49A32.00 32.00 0 0 1 55.51 53.70L44.69 42.88A16.71 16.71 0 0 0 21.12 19.31Z"/></svg>SO-Arena</a>
       <p>Results as reported in the paper; no benchmark items. Model names and logos belong to their developers.</p></div>
-    <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a><a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Dataset ↗</a></nav>
+    <nav aria-label="Footer"><a href="#glance">Overview</a><a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a><a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Dataset ↗</a></nav>
   </div>
 </footer>
 

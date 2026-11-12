@@ -332,7 +332,10 @@
     });
   }
   function leaderboardControls() {
-    $("#lb-group").addEventListener("click", e => { T.group = !T.group; e.currentTarget.setAttribute("aria-checked", T.group); table(); });
+    // the switch's label names the view on screen: "Ranked view" (one list) or "Grouped view"
+    $("#lb-group").addEventListener("click", e => { const sw = e.currentTarget, l = $(".sw-l", sw); T.group = !T.group; sw.setAttribute("aria-checked", T.group);
+      l.textContent = T.group ? "Grouped view" : "Ranked view"; if (!RM) l.animate([{ opacity: 0, transform: "translateY(3px)" }, { opacity: 1, transform: "none" }], { duration: 200, easing: "ease-out" });
+      sw.title = T.group ? "Switch back to the ranked view: one list" : "Switch to the grouped view: System Two reference, closed APIs, then open weights by size"; table(); });
     $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk">By domain, one bar each (click one to sort by it):${D.families.map(f => `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("")}</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });

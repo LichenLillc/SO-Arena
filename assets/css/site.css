@@ -1156,6 +1156,7 @@ section[id] { scroll-margin-top: -87px; }
 .sw[aria-checked="true"] .sw-t { background: var(--ink); } .sw[aria-checked="true"]:hover .sw-t { background: #2b3138; }
 .sw[aria-checked="true"] .sw-k { transform: translateX(14px); }
 .sw[aria-checked="true"] .sw-l { color: var(--ink); }
+.sw-l { display: inline-block; min-width: 86px; text-align: left; }
 .sw:focus-visible { outline: none; } .sw:focus-visible .sw-t { box-shadow: 0 0 0 2px var(--rel); }
 .lb.flat tbody tr.ref td { background: #fcfbf8; }
 /* the whole word is centred: the drawing shifts between the resting and the open centre with the letters (user) */

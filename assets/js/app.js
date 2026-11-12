@@ -127,13 +127,13 @@
     const dots = `<div class="mini"><div class="mr one"><span class="ml">−50</span><span class="mt dots big"><b style="left:${gx(0).toFixed(1)}%"></b>${D.domains.map((d, i) =>
         `<i style="left:${gx(gaps[i]).toFixed(1)}%;background:${FAM[d.family].color}" title="${esc(d.short)}: ${sg(gaps[i])}"></i>`).join("")}</span><span class="mv">+10</span></div></div>`;
     const tiles = [
-      ["leaderboard", "", `${f1(best.score)}<small> vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna, our System Two reference, by about ten points.",
+      ["leaderboard", "", `${f1(best.score)}<small>&nbsp;vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna, our System Two reference, by about ten points.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
       ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model, per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
-      ["results", "gap", `${sg(lo)}<small> to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each domain, as in the domain rankings; dots coloured by family.`, dots],
+      ["results", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each domain, as in the domain rankings; dots coloured by family.`, dots],
     ];
     $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz]) => `<a class="kr" href="#${sec_}"${k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3><p>${p}</p>${viz}</a>`).join("");
   }
@@ -151,12 +151,11 @@
     return hit;
   };
   const COLS = [
-    { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true, title: "Rank among the 18 System One models, by the sorted column" },
+    { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true, title: "Score rank among the 18 System One models" },
     { id: "model", label: "Model", cls: "c-m l", val: m => m.name, asc: true },
     { id: "score", label: "Score", cls: "c-score", val: m => m.score, title: "Mean of the 11 domain scores" },
     { id: "R", label: "Reliability", cls: "c-n", val: R_, title: "Reliability R, 0-100: keeps its answer when the options are reordered, and notices when the correct option is missing. System One models only." },
     { id: "lat", label: "Latency", cls: "c-n", val: m => m.latency ? m.latency.mean_ms : null, asc: true, title: "Mean latency per task" },
-    { id: "prof", label: "Domains", cls: "c-prof l", title: "Score in each of the 11 domains, grouped by family" },
   ];
   // per-domain System One ranks (domain cards, drawers and the profile tooltips)
   const TOPD = Object.fromEntries(D.domains.map(d => [d.id, ranksOf(S1, m => m.domains[d.id])]));
@@ -180,12 +179,12 @@
   const row = m => {
     const ref = m.group === "s2";
     return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
-      <td class="c-rk">${(T.sort === "R" ? RANK_R : T.sort === "lat" ? RANK_L : RANK).get(m.key) ?? (ref ? "" : "–")}</td>
+      <td class="c-rk">${RANK.get(m.key) ?? (ref ? "" : "–")}</td>
       <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}</small></div></div></td>
       <td class="c-score${T.sort === "score" ? " sorted" : ""}" data-l="Score"><div class="scell"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span>${f2(m.score)}</span></div></td>
       <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? `<span class="rcell"><span class="meter" aria-hidden="true"><i style="--w:${R_(m)}%;--c:var(--rel)"></i></span>${f1(R_(m))}</span>` : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
       <td class="c-n${T.sort === "lat" ? " sorted" : ""}" data-l="Latency">${m.latency ? ms(m.latency.mean_ms) : '<span class="dim">—</span>'}</td>
-      <td class="c-prof">${prof(m)}</td></tr>`;
+</tr>`;
   };
   function table() {
     const head = `<thead><tr>${COLS.map(c => c.id === "prof" ? `<th class="${c.cls}" scope="col"><span class="th" title="${esc(c.title)}">${c.label}</span></th>`
@@ -234,14 +233,13 @@
       onBar = true;
     });
     $("#lb").addEventListener("pointerleave", () => { if (onBar) { untip(); onBar = false; } });
-    $("#fam-key").innerHTML = FAMS.map(({ f }) => `<span><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("");
     $("#lb").addEventListener("click", e => {
       const s = e.target.closest("[data-sort]");
       if (s) { const c = COLS.find(o => o.id === s.dataset.sort); if (T.sort === c.id) T.dir = -T.dir; else { T.sort = c.id; T.dir = c.asc ? 1 : -1; } table(); const nb = $(`[data-sort="${c.id}"]`); if (nb) nb.focus(); return; }
       const r = e.target.closest("tr[data-model]"); if (r) openModel(BY[r.dataset.model]);
     });
     $("#lb").addEventListener("keydown", e => { const r = e.target.closest("tr[data-model]"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openModel(BY[r.dataset.model]); } });
-    tabs($("#lb-view"), id => { const dom = id === "t-domains"; $("#filters").style.display = dom ? "none" : "flex"; $(".tools-r").style.visibility = dom ? "hidden" : "visible"; });
+    tabs($("#lb-view"), id => { const dom = id === "t-domains"; $("#filters").style.display = dom ? "none" : "flex"; $(".tools-r").style.visibility = dom ? "hidden" : "visible"; $("#msort").classList.toggle("off", dom); });
   }
 
   // ---- tabs (ARIA) -------------------------------------------------------------------------------------------------
@@ -264,12 +262,13 @@
   function openDrawer(kicker, html, param, title) {
     $("#dr-kicker").textContent = kicker; drBody.innerHTML = html;
     if (typeof dr.showModal === "function") { if (!dr.open) dr.showModal(); } else dr.setAttribute("open", "");
+    document.documentElement.classList.add("dr-open");
     dr.scrollTop = 0;
     const u = new URL(location.href); u.search = param; history.replaceState(null, "", u);
     document.title = `${title} — SO-Arena`;
   }
   const closeDrawer = () => { if (dr.open) dr.close(); };
-  dr.addEventListener("close", () => { const u = new URL(location.href); u.search = ""; history.replaceState(null, "", u); document.title = "SO-Arena — Benchmarking System One Models"; untip(); });
+  dr.addEventListener("close", () => { document.documentElement.classList.remove("dr-open"); const u = new URL(location.href); u.search = ""; history.replaceState(null, "", u); document.title = "SO-Arena — Benchmarking System One Models"; untip(); });
   $(".dr-close").addEventListener("click", closeDrawer);
   dr.addEventListener("click", e => { if (e.target === dr) closeDrawer(); });
 
@@ -294,7 +293,7 @@
       <h4 class="label">Domain scores <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· leaderboard tier; tick = System One median</span></h4>
       <ul class="bars prof">${prof}</ul>
       ${m.order_acc ? (() => { const a = m.order_acc, lo = Math.floor(a.min - 2), hi = Math.ceil(a.max + 2), x = v => (100 * (v - lo) / (hi - lo)).toFixed(1);
-        return `<h4 class="label">Accuracy across option orders <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· original and 12 reorderings of the same 939 items</span></h4>
+        return `<h4 class="label">Accuracy across option orders <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· reliability items, original and 12 reorderings (not the score)</span></h4>
         <div class="ordr"><span class="ax">${lo}</span><span class="tr"><b style="left:${x(a.min)}%;width:${(x(a.max) - x(a.min)).toFixed(1)}%"></b>${a.runs.map(v => `<i style="left:${x(v)}%"></i>`).join("")}<u style="left:${x(a.original)}%" title="Original order ${f1(a.original)}"></u></span><span class="ax">${hi}</span>
         <span class="v">${f1(a.min)}–${f1(a.max)}</span></div>`; })() : ""}
       <h4 class="label">By difficulty tier</h4>
@@ -378,8 +377,8 @@
     }
   }
   const sizeLegend = (auto = true, extra = "") => Object.entries(SIZE).map(([s, c]) => `<span><i style="background:${c}"></i>${s}</span>`).join("") +
-    `<span><i class="dia" style="background:${API}"></i>Closed API</span>` + (auto ? `<span><i class="ring" style="--c:${SIZE["4B"]}"></i>Hybrid</span>` : "") +
-    `<span><i class="dia" style="background:${S2C}"></i>GPT-6 (System Two)</span>` + extra;
+    `<span><i class="dia" style="background:${API}"></i>Closed API</span>` + (auto ? `<span><i class="ring" style="--c:${SIZE["4B"]}"></i>Hybrid</span>` +
+    `<span><i class="dia" style="background:${S2C}"></i>GPT-6 (System Two)</span>` : "") + extra;
 
   const INS = {
     speed: { title: "Score against latency", sub: "The line is the Pareto frontier of System One models.",
@@ -471,7 +470,7 @@
       r.addEventListener("click", () => openModel(o));
     });
     lg.innerHTML = `<span><i style="background:var(--muted)"></i>One reordering</span>` +
-      Object.entries(SIZE).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join("") + `<span><i class="dia" style="background:${API}"></i>Closed API</span>`;
+      Object.entries(SIZE).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join("") + `<span><i style="background:${API}"></i>Closed API</span>`;
   }
   function tierChart(host, id, lgHost, compact = false) {
     const d = DOM[id], ks = Object.keys(d.tiers), names = { E: "Easy", M: "Medium", H: "Hard", V: "Very hard" };
@@ -516,7 +515,7 @@
     const sc = [["Baseline: one option set", "Other benchmarks score a single decision.", "Correct"],
       ["Options reordered", "Does the model choose the same option?", "Same choice"],
       ["Correct option missing", "Does it see that no option is correct?", "No valid option"]];
-    host.innerHTML = `<div class="demo-top"><span class="label">The two tests</span><button class="btn" type="button" id="replay" style="height:32px;font-size:13px">Replay</button></div>` +
+    host.innerHTML = `<div class="demo-top"><span class="label">Baseline and the two tests</span><button class="btn" type="button" id="replay" style="height:32px;font-size:13px">Replay</button></div>` +
       sc.map(([h, p, v], i) => `<div class="scene" data-i="${i}"><div><h4>${h}</h4><p>${p}</p></div><div class="stage"></div>
         <div class="verdict"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#e3f1e9"/><path d="M4.5 8.2l2.3 2.3 4.7-5" fill="none" stroke="#2f7d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${v}</div></div>`).join("");
     const W = 34, G = 8, NW = 58;
@@ -559,28 +558,29 @@
       ["grounded", "Fine-grained grounded decision", "Only the larger, more capable backbone comes close."],
       ["derivation", "Multi-step derivation", "Both System One models fall far behind."]];
     const G1 = "#8e2c43", G2 = "#dba1ae", BB = "#4a535c", TH = "#a3a8ae";
-    const gx = v => 4 + (v + 50) / 65 * 90, bx = v => 4 + v / 30 * 88, tx = v => 4 + (v + 5) / 50 * 88;
+    const gx = v => 4 + (v + 50) / 65 * 90, bx = v => 4 + (v + 5) / 50 * 88, tx = bx;      // both gains on one scale
     const rect = (x0, x1, y, h, c) => `<rect x="${Math.min(x0, x1)}%" y="${y}" width="${Math.max(.4, Math.abs(x1 - x0))}%" height="${h}" rx="2" fill="${c}"/>`;
     const ci = (c, y) => `<line x1="${gx(c[0])}%" x2="${gx(c[1])}%" y1="${y}" y2="${y}" stroke="var(--ink-2)" stroke-width="1.6" opacity=".75"/>`;
     const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v)), lgHtml = gapLegend(G1, G2, BB, TH);
     const vgrid = (f, vals, y1, y2) => vals.map(v => `<line x1="${f(v)}%" x2="${f(v)}%" y1="${y1}" y2="${y2}" stroke="${v === 0 ? "#b9b7ad" : "#efeee9"}"/>`).join("");
     const head = (f, vals, title) => `<svg class="gap-ticks" aria-hidden="true">${vals.map(v => `<text x="${f(v)}%" y="27" text-anchor="middle">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}<text class="t" x="${f(0) - 1}%" y="11" text-anchor="end">${title}</text></svg>`;
+    const headG = t => `<svg class="gap-ticks" aria-hidden="true">${[0, 20, 40].map(v => `<text x="${bx(v)}%" y="27" text-anchor="middle">${v ? "+" + v : 0}</text>`).join("")}<text class="t" x="${bx(0)}%" y="11">${t}</text></svg>`;
     const row = a => {
       const d = DOM[a.domain], z = gx(0);
-      return `<div class="gap-r"><span class="dn">${esc(d.name.replace("Text-based ", ""))}</span>
-        <div><span class="cl">Gap to GPT-6 Luna</span><svg role="img" aria-label="Gap to GPT-6 Luna: GLiDE ${sg(a.gap_glide)}, StartLux Instant ${sg(a.gap_startlux)}">${vgrid(gx, [-40, -20, 0, 10], 0, 34)}
+      return `<div class="gap-r"><span class="dn">${esc(d.name)}</span>
+        <div><span class="cl">Gap to GPT-6 Luna</span><svg role="img" aria-label="Gap to GPT-6 Luna: GLiDE ${sg(a.gap_glide)}, StartLux Instant ${sg(a.gap_startlux)}">${vgrid(gx, [-40, -30, -20, -10, 0, 10], 0, 34)}
           ${rect(z, gx(a.gap_glide), 6, 9, G1)}${ci(a.gap_glide_ci, 10.5)}${rect(z, gx(a.gap_startlux), 19, 9, G2)}${ci(a.gap_startlux_ci, 23.5)}
           <text x="${gx(Math.max(a.gap_glide_ci[1], 0)) + 1.2}%" y="14">${sg(a.gap_glide)}</text><text x="${gx(Math.max(a.gap_startlux_ci[1], 0)) + 1.2}%" y="27.5">${sg(a.gap_startlux)}</text></svg></div>
-        <div class="gain"><span class="cl">Backbone gain</span><svg role="img" aria-label="Backbone gain ${sg(a.backbone_gain)}">${vgrid(bx, [0], 6, 28)}${rect(bx(0), bx(a.backbone_gain), 11, 12, BB)}<text x="${bx(a.backbone_gain) + 1.5}%" y="21">${sg(a.backbone_gain)}</text></svg></div>
-        <div class="gain"><span class="cl">Thinking gain</span><svg role="img" aria-label="Thinking gain ${sg(a.thinking_gain)}">${vgrid(tx, [0], 6, 28)}${rect(tx(0), tx(a.thinking_gain), 11, 12, TH)}<text x="${tx(Math.max(0, a.thinking_gain)) + 1.5}%" y="21">${sg(a.thinking_gain)}</text></svg></div></div>`;
+        <div class="gain"><span class="cl">Backbone gain</span><svg role="img" aria-label="Backbone gain ${sg(a.backbone_gain)}">${vgrid(bx, [0, 20, 40], 6, 28)}${rect(bx(0), bx(a.backbone_gain), 11, 12, BB)}<text x="${bx(a.backbone_gain) + 1.5}%" y="21">${sg(a.backbone_gain)}</text></svg></div>
+        <div class="gain"><span class="cl">Thinking gain</span><svg role="img" aria-label="Thinking gain ${sg(a.thinking_gain)}">${vgrid(tx, [0, 20, 40], 6, 28)}${rect(tx(0), tx(a.thinking_gain), 11, 12, TH)}<text x="${tx(Math.max(0, a.thinking_gain)) + 1.5}%" y="21">${sg(a.thinking_gain)}</text></svg></div></div>`;
     };
-    host.innerHTML = `<div class="gap"><div class="legend gap-lg">${lgHtml}</div><div class="gap-h label"><span>Domain</span>${head(gx, [-40, -20, 0, 10], "Gap to GPT-6 Luna")}<span class="gain">Backbone gain</span><span class="gain">Thinking gain</span></div>` +
+    host.innerHTML = `<div class="gap"><div class="legend gap-lg">${lgHtml}</div><div class="gap-h label"><span>Domain</span>${head(gx, [-40, -30, -20, -10, 0, 10], "Gap to GPT-6 Luna")}<div class="gain">${headG("Backbone gain")}</div><div class="gain">${headG("Thinking gain")}</div></div>` +
       CATS.map(([id, h, t]) => `<div class="gap-c"><h4>${h}</h4><span>${t}</span></div>` + D.analysis.filter(a => a.category === id).map(row).join("")).join("") + `</div>`;
     lg.innerHTML = "";
   }
   function gapLegend(G1, G2, BB, TH) {
     return `<span><i style="background:${G1}"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span><span><i class="ln" style="background:var(--ink-2)"></i>95% confidence interval</span>
-      <span><i style="background:${BB}"></i>Backbone gain: smaller → 27B model of the same line, mean of four lines</span><span><i style="background:${TH}"></i>Thinking gain: StartLux Auto, always vs. never thinking</span>`;
+      <span class="gain"><i style="background:${BB}"></i>Backbone gain: smaller → 27B model of the same line, mean of four lines</span><span class="gain"><i style="background:${TH}"></i>Thinking gain: StartLux Auto, always vs. never thinking</span>`;
   }
 
   // ---- benchmark ---------------------------------------------------------------------------------------------------
@@ -647,7 +647,7 @@
   // ---- logo: the O unfolds the full name when the pointer comes near it ---------------------------------------------
   function logoMotion() {
     const svg = $(".logo-anim"); if (!svg) return;
-    const ring = svg.querySelector(".lg-ring-rot");
+    const ring = svg.querySelector(".lg-band");
     let open = false, raf = 0, px = 0, py = 0;
     const set = o => { if (o !== open) { open = o; svg.classList.toggle("open", o); } };
     addEventListener("pointermove", e => {

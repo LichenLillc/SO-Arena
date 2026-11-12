@@ -76,7 +76,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   background: radial-gradient(600px 300px at 12% 0%, rgba(168, 58, 82, .07), transparent 70%), radial-gradient(700px 320px at 92% 8%, rgba(44, 106, 168, .07), transparent 70%); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 56px; align-items: start; }
 .hero-logo { margin: 0 0 24px; }
-.hero-logo svg { display: block; max-width: 100%; height: auto; overflow: visible; cursor: pointer; outline: none; }
 h1 { font: 400 clamp(32px, 3.3vw, 46px)/1.06 var(--display); letter-spacing: -.015em; margin: 0; color: var(--ink); }
 h1 em { font-style: italic; color: var(--cap); }
 h1 em.r { color: var(--rel); }
@@ -175,7 +174,7 @@ table.lb { border-collapse: separate; border-spacing: 0; width: 100%; font-size:
 .lb .mcell small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .lb .c-score { width: 1%; }
 .lb .scell { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
-.lb .scell .meter { width: 84px; height: 5px; }
+.lb .scell .meter { width: 64px; height: 5px; }
 .lb .scell span { font: 600 15px/1 var(--sans); color: var(--ink); min-width: 46px; font-variant-numeric: tabular-nums; }
 .lb .c-n { width: 1%; font: 500 14px/1 var(--sans); font-variant-numeric: tabular-nums; }
 .lb thead th.c-n, .lb thead th.c-rk { font: 500 11px/1.2 var(--mono); }
@@ -477,7 +476,7 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .dtable .tk { font-size: 11px; color: var(--muted); margin-right: 3px; }
 /* ---- code blocks with copy buttons ---- */
 .run { position: relative; }
-.code pre { overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.code pre { overflow-x: auto; white-space: pre; }
 .copy-code { position: absolute; top: 12px; right: 14px; height: 26px; padding: 0 10px; border-radius: 6px; font: 500 12px var(--sans); color: var(--ink-2); background: #fff; border: 1px solid var(--line-2); }
 .copy-code:hover { color: var(--ink); border-color: var(--ink-2); }
 /* ---- domain cards: ties share the badge; hover only where there is a pointer ---- */
@@ -547,7 +546,7 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 
 /* ---- round 2 polish ---- */
 .lb .rcell { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
-.lb .rcell .meter { width: 44px; height: 4px; }
+.lb .rcell .meter { width: 64px; height: 5px; }
 .gap-lg { padding: 0 0 6px; }
 .mr.one { grid-template-columns: 24px minmax(0, 1fr) 24px; }
 .mr.one .ml, .mr.one .mv { font: 400 10.5px var(--mono); color: var(--muted); text-align: center; }
@@ -566,21 +565,24 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
   .lb td.c-n .rcell .meter { display: none; }
 }
 
-/* ---- animated logo ---- */
-/* At rest "SO-Arena"; .open: the O turns once while "ystem" and "ne" unfold out of it. One easing for every part. */
-.logo-anim { --ease: cubic-bezier(.65, 0, .35, 1); --t: .9s; }
-.logo-anim g { transform-box: view-box; transition: transform var(--t) var(--ease), opacity calc(var(--t) * .55) var(--ease); }
-.logo-anim .lg-ring-pos { transform: translateX(var(--ring-dx)); }
-.logo-anim .lg-arena { transform: translateX(var(--arena-dx)); }
-.logo-anim .lg-ystem { opacity: 0; transform: translateX(var(--ystem-dx)) scaleX(.4); }
-.logo-anim .lg-ne { opacity: 0; transform: translateX(var(--ne-dx)) scaleX(.4); }
-.logo-anim.open .lg-ring-pos, .logo-anim.open .lg-arena, .logo-anim.open .lg-ystem, .logo-anim.open .lg-ne { transform: none; opacity: 1; }
-.logo-anim.open .lg-ystem, .logo-anim.open .lg-ne { transition-delay: 0s, calc(var(--t) * .28); }
-.logo-anim.open .lg-ring-rot { transform: rotate(360deg); }
+/* ---- animated logo (centred on a fixed O) ---- */
+.logo-anim { --move: cubic-bezier(.16, 1, .3, 1); --turn: cubic-bezier(.65, 0, .35, 1); --t: 1s; }
+.logo-anim .lg-s, .logo-anim .lg-arena, .logo-anim .lg-cy, .logo-anim .lg-cn, .logo-anim .lg-ring { transform-box: view-box; }
+.logo-anim .lg-s, .logo-anim .lg-arena, .logo-anim .lg-cy, .logo-anim .lg-cn { transition: transform var(--t) var(--move); }
+.logo-anim .lg-s { transform: translateX(var(--s-dx)); }
+.logo-anim .lg-arena { transform: translateX(var(--a-dx)); }
+.logo-anim .lg-cy, .logo-anim .lg-cn { transform: scaleX(0); }
+.logo-anim .lg-ring { transition: transform calc(var(--t) * 1.15) var(--turn); }
+.logo-anim .lg-words { opacity: 0; transition: opacity .2s ease; }
+.logo-anim.open .lg-s, .logo-anim.open .lg-arena, .logo-anim.open .lg-cy, .logo-anim.open .lg-cn { transform: none; }
+.logo-anim.open .lg-ring { transform: rotate(360deg); }
+.logo-anim.open .lg-words { opacity: 1; transition: opacity .5s ease calc(var(--t) * .8); }
+.hero-logo { display: flex; justify-content: center; margin: -8px 0 40px; }
+.hero-logo svg { display: block; max-width: 100%; height: auto; overflow: visible; cursor: pointer; outline: none; }
 .logo-anim:focus-visible { outline: 2px solid var(--rel); outline-offset: 6px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) {
-  .logo-anim g { transition: opacity .2s linear; }
-  .logo-anim.open .lg-ring-rot { transform: none; }
+  .logo-anim .lg-s, .logo-anim .lg-arena, .logo-anim .lg-cy, .logo-anim .lg-cn, .logo-anim .lg-ring { transition: none; }
+  .logo-anim.open .lg-ring { transform: none; }
 }
 
 /* ---- "System One" in the title: a quiet underline; hover: highlighter sweep, spotlight, popover with a speed race ---- */
@@ -629,3 +631,12 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 }
 .dcard .desc { margin: 4px 0 2px; font-size: 13px; line-height: 1.4; color: var(--ink-2); min-height: 2.8em; }
 .dr-lead { margin: 6px 0 0; font-size: 15px; color: var(--ink); }
+
+
+/* ---- round 3 designer ---- */
+.dr-open { overflow: hidden; }
+.nav { background: #fff; }
+#msort.off { display: none !important; }
+.step .flow span, .step .flow span.ok, .step .flow span.no { border: 0; background: none; padding: 0; }
+.step .flow span.ok { color: var(--good); } .step .flow span.no { color: var(--cap); }
+@media (max-width: 760px) { .bib pre { padding-top: 44px; } }

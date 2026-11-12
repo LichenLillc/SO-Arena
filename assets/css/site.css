@@ -627,3 +627,5 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
   .gap-h { display: block; padding: 4px 0 6px; } .gap-h > span { display: none; }
   .bars:not(.prof) li { grid-template-columns: 24px 22px minmax(0, 1fr) 40px 42px 50px; gap: 6px; }
 }
+.dcard .desc { margin: 4px 0 2px; font-size: 13px; line-height: 1.4; color: var(--ink-2); min-height: 2.8em; }
+.dr-lead { margin: 6px 0 0; font-size: 15px; color: var(--ink); }

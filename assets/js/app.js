@@ -161,6 +161,20 @@
   // per-domain System One ranks (domain cards, drawers and the profile tooltips)
   const TOPD = Object.fromEntries(D.domains.map(d => [d.id, ranksOf(S1, m => m.domains[d.id])]));
   const FAMS = D.families.map(f => ({ f, ds: D.domains.filter(d => d.family === f.id) }));
+  // What each domain asks, in plain words (from the paper's per-domain construction notes)
+  const DESC = {
+    sentiment: "Read the sentiment, emotion or rating behind reviews and posts.",
+    intent: "Tell what a customer wants: single requests, goals across a conversation, fine-grained intents.",
+    math: "Pick the right answer to math problems, from grade school to AIME.",
+    code: "Judge whether a solution to a programming problem is correct.",
+    science: "Answer science questions, from school level to graduate (GPQA Diamond).",
+    knowledge: "Answer general-knowledge and everyday commonsense questions.",
+    safety: "Judge harmful content, policy compliance, over-refusal and hallucinated answers.",
+    retrieval: "Grade how relevant a passage or contract clause is to a query.",
+    verification: "Check whether an agent really completed its task, from its state or history.",
+    tools: "Choose the next tool call, step by step, in a live API sandbox.",
+    web: "Choose the next action on a web page, step by step, to reach a goal.",
+  };
   const prof = m => `<div class="dprof" role="img" aria-label="${esc(D.domains.map(d => `${d.short || d.name} ${f1(m.domains[d.id])}`).join(", "))}">${FAMS.map(({ f, ds }) =>
     `<span class="pg" style="--n:${ds.length}">${ds.map(d => `<span class="pb" data-d="${d.id}" style="--h:${m.domains[d.id].toFixed(1)}%;--fc:${f.color}"></span>`).join("")}</span>`).join("")}</div>`;
   const row = m => {
@@ -199,7 +213,7 @@
     $("#dgrid").innerHTML = overall + ids.map(id => {
       const d = DOM[id], f = FAM[d.family], val = m => m.domains[id], rk = TOPD[id], l = top(S1, val, 3);
       return `<button type="button" class="dcard" data-domain="${id}" style="--fc:${f.color}"><div class="dcard-top"><span class="label"><i></i>${esc(f.name.split(" ")[0])}</span><span class="label">${d.leaderboard_tasks} tasks</span></div>
-        <h3>${esc(d.name)}</h3><div class="meta">${d.leaderboard_tier === "All tasks" ? "All tasks (untiered)" : d.leaderboard_tier + " tier"}</div>
+        <h3>${esc(d.name)}</h3><p class="desc">${DESC[id]}</p><div class="meta">${d.leaderboard_tier === "All tasks" ? "All tasks (untiered)" : d.leaderboard_tier + " tier"}</div>
         <ol class="drows">${l.map(m => `<li class="${rk.get(m.key) === 1 ? "first" : ""}"><span class="p">${rk.get(m.key)}</span>${logo(m, 22)}<span class="n">${esc(m.name)}</span><span class="meter"><i style="--w:${val(m)}%;--c:var(--cap)"></i></span><span class="v">${f1(val(m))}</span></li>`).join("")}</ol>
         <div class="ref"><span>GPT-6 Luna (System Two)</span><b>${f1(val(LUNA))}</b></div>
         <span class="go">Full ranking and tiers →</span></button>`;
@@ -296,6 +310,7 @@
       return `<li class="${ref ? "ref" : a ? "auto" : ""}"><span class="rk">${isS1(m) ? rk.get(m.key) : ref ? "ref" : "–"}</span>${logo(m, 22)}<button type="button" class="n" data-model="${slug(m)}">${esc(m.name)}</button>
         <span class="bar"><i style="width:${val(m)}%;--bc:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span class="v">${f1(val(m))}</span><span class="ms">${ms(m.latency.mean_ms)}</span></li>`; }).join("");
     openDrawer(f.name, `<h2 id="dr-title">${esc(d.name)}</h2>
+      <p class="dr-lead">${DESC[id]}</p>
       <p class="dr-sub">${d.tasks} tasks (${counts}). The leaderboard uses ${d.leaderboard_tier === "All tasks" ? "all tasks" : id === "math" ? "the hard and very hard tiers" : "the hard tier"} (${d.leaderboard_tasks} tasks).
         Sources${d.sources_by_tier ? ", easy to hard" : ""}: ${esc(d.sources.join(d.sources_by_tier ? " → " : ", "))}.</p>
       <h4 class="label" style="margin-top:24px">Ranking</h4><ul class="bars">${bars}</ul>

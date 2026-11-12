@@ -129,13 +129,15 @@
     const tiles = [
       ["leaderboard", "", `${f1(best.score)}<small>&nbsp;vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna, our System Two reference, by about ten points.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
-      ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model, per task on one H100; GPT-6 is timed through its API.",
+      ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
-      ["results", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each domain, as in the domain rankings; dots coloured by family.`, dots],
+      ["results", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each of the 11 domains (leaderboard tier); dots coloured by domain family.`, dots],
     ];
-    $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz]) => `<a class="kr" href="#${sec_}"${k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3><p>${p}</p>${viz}</a>`).join("");
+    const CAP = ["Score", "Mean time per task", "Reliability R", "Per domain, by family"];
+    $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz], i) => `<div class="kr"><a class="krl" href="#${sec_}"${k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3></a>
+      <button class="info" type="button" data-info="${esc(p)}">i</button>${viz}<span class="kcap">${CAP[i]}</span></div>`).join("");
   }
 
   // ---- leaderboard -------------------------------------------------------------------------------------------------
@@ -381,13 +383,13 @@
     `<span><i class="dia" style="background:${S2C}"></i>GPT-6 (System Two)</span>` : "") + extra;
 
   const INS = {
-    speed: { title: "Score against latency", sub: "The line is the Pareto frontier of System One models.",
+    speed: { title: "Score against latency", sub: "Dashed line: the best score reachable at each speed.",
       note: "Mean latency per task: open weights on one H100 GPU, APIs end to end." },
     rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
     sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
-    order: { title: "How accuracy moves with the option order", sub: "939 reliability items with a correct answer, in 12 reorderings, as the change from their original order. A wider spread: answers depend more on the order.", note: "Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
-    gap: { title: "Gap to GPT-6 Luna, by domain", sub: "On the medium and hard tiers (not only the leaderboard tier), with 95% confidence intervals. Domains are grouped by how the gap behaves.", note: "Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
+    order: { title: "How accuracy moves with the option order", sub: "Change from the original order, in 12 shuffles of the same items.", note: "Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
+    gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals.", note: "Not only the leaderboard tier, so the gaps differ from the domain cards. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
   let tierDom = "math";
   // Two chart panels share this routine: Results (speed, difficulty, gap) and the Reliability section's evidence.
@@ -396,7 +398,7 @@
   const insights = () => PANELS.forEach(drawPanel);
   function drawPanel(P) {
     const insKey = P.key, c = INS[insKey], LG = $(P.lg);
-    $(P.title).textContent = c.title; $(P.sub).textContent = c.sub; $(P.note).textContent = c.note;
+    $(P.title).innerHTML = esc(c.title) + (c.note ? ` <button class="info" type="button" data-info="${esc(c.note)}">i</button>` : ""); $(P.sub).textContent = c.sub; $(P.note).textContent = "";
     if (P.host === "#chart") $("#tier-chips").hidden = insKey !== "tier";
     const host = $(P.host);
     host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" ? "region" : "img");
@@ -510,43 +512,57 @@
   }
 
   // ---- reliability demo and facts -----------------------------------------------------------------------------------
+  // Reliability demo, after the paper's Fig. 1: a robot jumps to hit the block it chooses. Scene 1: the original
+  // options; scene 2: the blocks shuffle and the robot follows B; scene 3: B is removed, "Null" appears, the robot hits it.
+  const ROBOT = `<svg viewBox="0 0 24 30" aria-hidden="true"><rect x="11" y="0" width="2" height="4" fill="currentColor"/><circle cx="12" cy="1.5" r="1.8" fill="var(--cap)"/>
+    <rect x="3" y="4" width="18" height="12" rx="3" fill="currentColor"/><rect x="7" y="8.5" width="3" height="3" rx="1" fill="#fff"/><rect x="14" y="8.5" width="3" height="3" rx="1" fill="#fff"/>
+    <rect x="6" y="17" width="12" height="8" rx="2" fill="currentColor"/><rect x="7" y="25" width="3" height="5" rx="1" fill="currentColor"/><rect x="14" y="25" width="3" height="5" rx="1" fill="currentColor"/></svg>`;
   function demo() {
     const host = $("#demo");
-    const sc = [["Baseline: one option set", "Other benchmarks score a single decision.", "Correct"],
-      ["Options reordered", "Does the model choose the same option?", "Same choice"],
-      ["Correct option missing", "Does it see that no option is correct?", "No valid option"]];
-    host.innerHTML = `<div class="demo-top"><span class="label">Baseline and the two tests</span><button class="btn" type="button" id="replay" style="height:32px;font-size:13px">Replay</button></div>` +
-      sc.map(([h, p, v], i) => `<div class="scene" data-i="${i}"><div><h4>${h}</h4><p>${p}</p></div><div class="stage"></div>
-        <div class="verdict"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#e3f1e9"/><path d="M4.5 8.2l2.3 2.3 4.7-5" fill="none" stroke="#2f7d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${v}</div></div>`).join("");
-    const W = 34, G = 8, NW = 58;
-    const scenes = $$(".scene", host).map(s => {
-      const st = $(".stage", s), mk = (t, w = W) => { const b = document.createElement("span"); b.className = "blk"; b.textContent = t; b.style.width = w + "px"; st.appendChild(b); return b; };
-      const o = { s, st, A: mk("A"), B: mk("B"), C: mk("C"), v: $(".verdict", s) };
+    const SC = [["Original options", "", "Correct"], ["Shuffled", "s", "Same answer"], ["Correct option missing", "n", "Picks Null"]];
+    host.innerHTML = SC.map(([h, k, v], i) => `<div class="scene2" data-i="${i}"><div class="sh">${k ? `<b class="sym ${k}">${k.toUpperCase()}</b>` : ""}<span>${h}</span></div>
+        <div class="stage2"><span class="bot">${ROBOT}</span></div>
+        <div class="verdict"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#e3f1e9"/><path d="M4.5 8.2l2.3 2.3 4.7-5" fill="none" stroke="#2f7d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${v}</div></div>`).join("") +
+      `<button class="replay" type="button" id="replay" aria-label="Replay the demo"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+    const BW = 40, GAP = 10, NW = 56;
+    const scenes = $$(".scene2", host).map(s => {
+      const st = $(".stage2", s), mk = (t, w = BW) => { const b = document.createElement("span"); b.className = "blk2"; b.textContent = t; b.style.width = w + "px"; st.appendChild(b); return b; };
+      const o = { s, st, A: mk("A"), B: mk("B"), C: mk("C"), bot: $(".bot", s), v: $(".verdict", s) };
       if (s.dataset.i === "2") o.N = mk("Null", NW);
-      o.car = document.createElement("span"); o.car.className = "caret"; st.appendChild(o.car);
       return o;
     });
-    const width = b => b.textContent === "Null" ? NW : W;
-    const place = (o, order) => { let x = 0; for (const b of order) { b.style.left = x + "px"; x += width(b) + G; } };
-    const point = (o, b) => { o.car.style.left = (parseFloat(b.style.left) + width(b) / 2 - 6) + "px"; o.car.style.opacity = 1; };
+    const wOf = b => b.textContent === "Null" ? NW : BW;
+    const place = order => { let x = 0; for (const b of order) { b.style.left = x + "px"; x += wOf(b) + GAP; } };
+    const walk = (o, b) => { o.bot.style.left = (parseFloat(b.style.left) + wOf(b) / 2 - 12) + "px"; };
+    const hit = (o, b) => {                          // jump; the block bumps and turns dark as it is hit
+      o.bot.classList.remove("jump"); void o.bot.offsetWidth; o.bot.classList.add("jump");
+      later(() => { b.classList.add("bump", "pick"); later(() => b.classList.remove("bump"), 220); }, 160);
+    };
     let timers = [];
     const later = (f, t) => timers.push(setTimeout(f, RM ? 0 : t));
     function reset() {
       timers.forEach(clearTimeout); timers = [];
       for (const o of scenes) {
-        [o.A, o.B, o.C, o.N].forEach(b => b && b.classList.remove("pick", "gone", "hide"));
-        place(o, [o.A, o.B, o.C]); if (o.N) { o.N.classList.add("hide"); o.N.style.left = (3 * (W + G)) + "px"; }
-        o.car.style.opacity = 0; o.v.classList.remove("on");
+        [o.A, o.B, o.C, o.N].forEach(b => b && b.classList.remove("pick", "gone", "hide", "bump"));
+        place([o.A, o.B, o.C]); if (o.N) { o.N.classList.add("hide"); o.N.style.left = 3 * (BW + GAP) + "px"; }
+        o.bot.classList.remove("jump"); o.bot.style.transition = "none"; o.bot.style.left = "-34px"; void o.bot.offsetWidth; o.bot.style.transition = "";
+        o.v.classList.remove("on");
       }
     }
     function play() {
       reset(); const [a, b, c] = scenes;
-      later(() => { for (const o of scenes) { o.B.classList.add("pick"); point(o, o.B); } a.v.classList.add("on"); }, 350);
-      later(() => { place(b, [b.C, b.A, b.B]); point(b, b.B); }, 1500);
-      later(() => { c.B.classList.remove("pick"); c.B.classList.add("gone"); c.car.style.opacity = 0; }, 1500);
-      later(() => { c.N.classList.remove("hide"); }, 2100);
-      later(() => { b.v.classList.add("on"); c.N.classList.add("pick"); point(c, c.N); }, 2600);
-      later(() => { c.v.classList.add("on"); }, 2900);
+      later(() => scenes.forEach(o => walk(o, o.B)), 200);                      // all three robots go to B and hit it
+      later(() => scenes.forEach(o => hit(o, o.B)), 900);
+      later(() => a.v.classList.add("on"), 1300);
+      later(() => { b.B.classList.remove("pick"); place([b.C, b.A, b.B]); }, 1900);   // shuffle: B slides to the end
+      later(() => walk(b, b.B), 2500);
+      later(() => hit(b, b.B), 3150);
+      later(() => b.v.classList.add("on"), 3550);
+      later(() => { c.B.classList.remove("pick"); c.B.classList.add("gone"); }, 1900);   // the correct option drops out
+      later(() => c.N.classList.remove("hide"), 2500);
+      later(() => walk(c, c.N), 2900);
+      later(() => hit(c, c.N), 3600);
+      later(() => c.v.classList.add("on"), 4000);
     }
     $("#replay").addEventListener("click", play);
     reset();
@@ -668,9 +684,19 @@
   }
 
   // ---- wiring ------------------------------------------------------------------------------------------------------
+  function infos() {
+    let cur = null;
+    const show = b => { cur = b; const r = b.getBoundingClientRect(); tip(`<span class="s" style="color:inherit">${esc(b.dataset.info)}</span>`, r.right, r.bottom); };
+    const hide = () => { cur = null; untip(); };
+    document.addEventListener("pointerover", e => { const b = e.target.closest(".info"); if (b && e.pointerType === "mouse") show(b); });
+    document.addEventListener("pointerout", e => { const b = e.target.closest(".info"); if (b && e.pointerType === "mouse") hide(); });
+    document.addEventListener("click", e => { const b = e.target.closest(".info"); if (b) { e.preventDefault(); e.stopPropagation(); cur === b ? hide() : show(b); } else if (cur) hide(); }, true);
+    document.addEventListener("focusin", e => { const b = e.target.closest(".info"); if (b) show(b); });
+    document.addEventListener("focusout", e => { if (e.target.closest(".info")) hide(); });
+  }
   function wire() {
     document.addEventListener("click", e => {
-      const kr = e.target.closest(".kr[data-chart], [data-chart-link]"); if (kr) showChart(kr.dataset.chart || kr.dataset.chartLink);
+      const kr = e.target.closest(".krl[data-chart], [data-chart-link]"); if (kr) showChart(kr.dataset.chart || kr.dataset.chartLink);
       const dv = e.target.closest("[data-view]"); if (dv) { $("#lb-view")._sel(dv.dataset.view); $("#leaderboard").scrollIntoView(); return; }
       const bm = e.target.closest("[data-bm]"); if (bm) { boardMode = bm.dataset.bm; board(); return; }
       const dm = e.target.closest("[data-domain]"); if (dm) { openDomain(dm.dataset.domain); return; }
@@ -695,7 +721,7 @@
 
   function init() {
     nav(); board(); kres(); leaderboardControls(); table(); dgrid(); insightsControls(); insights();
-    demo(); benchmark(); wire(); logoMotion(); systemOne();
+    demo(); benchmark(); wire(); infos(); logoMotion(); systemOne();
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));
     else if (q.get("model") && BY[q.get("model")]) openModel(BY[q.get("model")]);

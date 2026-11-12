@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=9d2ac14038" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=9e92375850">
+<link rel="stylesheet" href="assets/css/site.css?v=1ff104ef0a">
 <script defer src="assets/js/data.js?v=79cc9fcc40"></script>
-<script defer src="assets/js/app.js?v=42fba399d3"></script>
+<script defer src="assets/js/app.js?v=abba1c0b4f"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -70,7 +70,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">01 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
-        <p class="sec-lead">The score is the mean of 11 domains, each on its hardest tier: 1,232 of the 2,919 tasks. Reliability is measured for the 18 System One models.</p>
+        <p class="sec-lead">The mean of 11 domains, each on its hardest tier. <button class="info" type="button" data-info="1,232 of the 2,919 tasks count toward the score. Reliability is measured for the 18 System One models; GPT-6 Sol and Luna are System Two references.">i</button></p>
       </div>
       <div class="toolbar">
         <div class="tools-l">
@@ -87,11 +87,11 @@
       </div>
       <div id="v-table" role="tabpanel" aria-labelledby="t-table">
         <div class="tbl-wrap" tabindex="0" aria-label="Leaderboard table; scrolls sideways"><table class="lb" id="lb"></table></div>
-        <div class="lb-foot"><p class="note">Latency: mean per task, one H100 GPU; APIs end to end. GLiDE and KnowLine-31B differ by 0.02 points, less than option order alone moves their accuracy (<a href="#reliability" data-chart-link="order">Reliability → Option order</a>). <a href="data/arena.json" download>All results (JSON)</a></p></div>
+        <div class="lb-foot"><p class="note"><a href="data/arena.json" download>All results (JSON)</a> <button class="info" type="button" data-info="Latency: mean time per task; open weights on one H100 GPU, APIs end to end. GLiDE and KnowLine-31B differ by 0.02 points, less than option order alone moves their accuracy (see Reliability, Option order).">i</button></p></div>
       </div>
       <div id="v-domains" role="tabpanel" aria-labelledby="t-domains" hidden>
         <div class="dgrid" id="dgrid"></div>
-        <p class="note">Top three System One models per domain; GPT-6 Luna for reference.</p>
+        
       </div>
     </div>
   </section>
@@ -101,15 +101,13 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">02 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
-        <p class="sec-lead">Two tests, combined into one reliability score R; the charts below show the results.</p>
+        
       </div>
-      <div class="rel rv">
-        <div class="defs">
-          <div class="def"><span class="sym" aria-hidden="true">S</span><div><h3>Order stability</h3><p>Does the model keep its answer when the options are shuffled? Measured over 12 reorderings; 0 is chance, 1 always.</p></div></div>
-          <div class="def"><span class="sym" aria-hidden="true">N</span><div><h3>Null discrimination</h3><p>Does it notice when the correct option is missing? Measured by how well its “no option is correct” probability separates such items (2·AUC − 1); 0 is chance, 1 perfect.</p></div></div>
-          <div class="def"><span class="sym" aria-hidden="true">R</span><div><h3>Reliability</h3><p>Both at once: <i>R</i> = √(<i>S</i>·<i>N</i>), as a percentage.</p></div></div>
-        </div>
-        <div class="demo" id="demo"></div>
+      <div class="rel2 rv" id="demo"></div>
+      <div class="rkey">
+        <span><b class="sym s">S</b>Order stability: keeps its answer when shuffled <button class="info" type="button" data-info="Share of 12 reorderings in which the model keeps its answer; 0 is chance, 1 always.">i</button></span>
+        <span><b class="sym n">N</b>Null discrimination: notices the missing answer <button class="info" type="button" data-info="How well the model's 'no option is correct' probability separates items with and without their correct option: 2·AUC − 1; 0 is chance, 1 perfect.">i</button></span>
+        <span><b class="sym r">R</b>Reliability = √(S·N), from 0 to 100</span>
       </div>
       <div class="panel rpanel">
         <div class="panel-head">
@@ -163,13 +161,13 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">04 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
-        <p class="sec-lead">Static questions and web and tool sandboxes, posed through one decision interface.</p>
+        <p class="sec-lead">Static questions plus web and tool sandboxes, all posed as decisions.</p>
       </div>
       <div class="steps rv" id="steps"></div>
       <table class="dtable rv" id="dtable"></table>
       <div class="score-box rv">
         <div><h3>How the leaderboard is scored</h3>
-          <p>Domains count equally whatever their size (20 to 200 leaderboard tasks), each on its hardest tier (Math: hard and very hard; untiered domains: all tasks): 1,232 tasks.</p></div>
+          <p>Domains count equally, each on its hardest tier: 1,232 tasks. <button class="info" type="button" data-info="Equal weight whatever the domain's size (20 to 200 leaderboard tasks). Math uses its hard and very hard tiers; untiered domains use all their tasks.">i</button></p></div>
         <div class="formula" aria-label="C of m equals 100 over D times the sum over domains of the mean credit on the domain's leaderboard tasks">
           <math display="block"><mrow><mi>C</mi><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>100</mn><mi>D</mi></mfrac><munderover><mo>∑</mo><mrow><mi>d</mi><mo>=</mo><mn>1</mn></mrow><mi>D</mi></munderover><mfrac><mn>1</mn><mrow><mo>|</mo><msub><mi>T</mi><mi>d</mi></msub><mo>|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>T</mi><mi>d</mi></msub></mrow></munder><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></math>
           <p class="note"><i>c<sub>i</sub>(m)</i> ∈ [0, 1] is model <i>m</i>'s credit on task <i>i</i>; <i>T<sub>d</sub></i> holds domain <i>d</i>'s leaderboard tasks; <i>D</i> = 11.</p>
@@ -183,7 +181,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">05 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
-        <p class="sec-lead">The <span class="mono">jev</span> command evaluates any model through an adapter. Linux x86-64, Python 3.12.</p>
+        <p class="sec-lead">Three commands, any model. <button class="info" type="button" data-info="The jev command evaluates any model through an adapter; it needs Linux x86-64 and Python 3.12.">i</button></p>
       </div>
       <div class="runs rv">
         <div class="run"><span class="label">Step 01 · Get the data</span>
@@ -191,16 +189,16 @@
 ./jev fetch-data --output /path/to/so-arena-data
 export SO_ARENA_DATA=/path/to/so-arena-data
 ./jev verify
-./jev setup</code></pre></div><p><span class="mono">verify</span> checks every data file against the release.</p></div>
+./jev setup</code></pre></div><p>Downloads and checks the data. <button class="info" type="button" data-info="verify checks every data file against the release; setup prepares the sandboxes.">i</button></p></div>
         <div class="run"><span class="label">Step 02 · Run your model</span>
           <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>export JEV_ENDPOINT=http://localhost:8000
 ./jev run --adapter adapters:http \
-  --model your-model --out /path/to/new-run</code></pre></div><p>Your server answers <span class="mono">POST /predict</span> with the decision (an option, yes/no, a grade or option probabilities) and <span class="mono">POST /measure</span> with token counts. Web and tool tasks arrive as a series of one-step decisions.</p></div>
+  --model your-model --out /path/to/new-run</code></pre></div><p>Point it at your model server. <button class="info" type="button" data-info="Your server answers POST /predict with the decision (an option, yes/no, a grade or option probabilities) and POST /measure with token counts. Web and tool tasks arrive as a series of one-step decisions.">i</button></p></div>
         <div class="run"><span class="label">Step 03 · Score</span>
           <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>./jev score --run /path/to/new-run \
   --output /path/to/report.json</code></pre></div><p>The leaderboard score, by domain and tier.</p></div>
       </div>
-      <p class="note">Full instructions: <a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">the SO-Arena repository</a>. Data terms: there is no single licence yet; each task keeps its source's terms, listed in the repository's third-party notices.</p>
+      <p class="note">Full instructions: <a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">the SO-Arena repository</a>. <button class="info" type="button" data-info="Data terms: there is no single licence yet; each task keeps its source's terms, listed in the repository's third-party notices.">i</button></p>
     </div>
   </section>
 

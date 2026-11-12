@@ -640,3 +640,44 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .step .flow span, .step .flow span.ok, .step .flow span.no { border: 0; background: none; padding: 0; }
 .step .flow span.ok { color: var(--good); } .step .flow span.no { color: var(--cap); }
 @media (max-width: 760px) { .bib pre { padding-top: 44px; } }
+
+/* ---- reliability demo: three scenes with a jumping robot ---- */
+.rel2 { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--soft); overflow: hidden; }
+.scene2 { padding: 22px 24px 20px; display: grid; gap: 14px; justify-items: center; }
+.scene2 + .scene2 { border-left: 1px solid var(--line); }
+.scene2 .sh { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650; color: var(--ink); justify-self: start; }
+.stage2 { position: relative; width: 206px; height: 92px; }
+.blk2 { position: absolute; top: 6px; height: 40px; display: grid; place-items: center; border: 1.6px solid var(--ink); border-radius: 9px; background: #fff;
+  font: 650 15px/1 var(--sans); color: var(--ink); transition: left .55s cubic-bezier(.65, 0, .35, 1), transform .22s cubic-bezier(.2, 1.4, .4, 1), opacity .35s, background .2s, color .2s; }
+.blk2.pick { background: var(--ink); color: #fff; }
+.blk2.bump { transform: translateY(-7px); }
+.blk2.gone { transform: translateY(26px) scale(.8); opacity: 0; transition: transform .45s cubic-bezier(.5, 0, .75, 0), opacity .45s; }
+.blk2.hide { opacity: 0; transform: translateX(14px); }
+.bot { position: absolute; top: 58px; left: -34px; width: 24px; height: 30px; color: var(--ink); transition: left .6s cubic-bezier(.65, 0, .35, 1); }
+.bot svg { display: block; width: 24px; height: 30px; }
+.bot.jump { animation: jump .42s cubic-bezier(.2, .8, .4, 1); }
+@keyframes jump { 0% { transform: translateY(0); } 40% { transform: translateY(-11px); } 100% { transform: translateY(0); } }
+.scene2 .verdict { justify-self: center; }
+.replay { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); border: 1px solid var(--line-2); background: #fff; }
+.replay:hover { color: var(--ink); }
+.replay svg { width: 15px; height: 15px; }
+.sym { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font: italic 400 15px/1 var(--display); color: #fff; background: var(--ink); flex: none; }
+.sym.s { background: #3d7fbf; } .sym.n { background: #2c6aa8; } .sym.r { background: var(--ink); }
+.rkey { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; margin: 16px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.rkey span { display: inline-flex; align-items: center; gap: 8px; }
+/* ---- info buttons ---- */
+.info { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--line-2); background: #fff;
+  font: italic 600 11px/1 Georgia, serif; color: var(--muted); vertical-align: 2px; cursor: help; flex: none; padding: 0; margin-left: 2px; }
+.info:hover, .info:focus-visible { color: var(--ink); border-color: var(--ink-2); outline: none; }
+@media (max-width: 1080px) { .rel2 { grid-template-columns: 1fr; } .scene2 + .scene2 { border-left: 0; border-top: 1px solid var(--line); } }
+@media (prefers-reduced-motion: reduce) { .blk2, .bot { transition: none; } .bot.jump { animation: none; } }
+
+/* ---- key results: title, chart, short caption; details behind the info button ---- */
+.kr { position: relative; }
+.krl { display: block; color: inherit; }
+.kr > .info { position: absolute; top: 24px; right: 22px; }
+.kr .kcap { display: block; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
+@media (hover: hover) { .krl:hover h3 { color: var(--rel); } }
+.blk2.gone { transform: none; opacity: 1; border-style: dashed; border-color: #c4c8cd; color: #c4c8cd; background: transparent; animation: drop .5s ease; }
+@keyframes drop { 0% { transform: translateY(0); opacity: 1; } 45% { transform: translateY(18px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+.hero-grid { align-items: center; }

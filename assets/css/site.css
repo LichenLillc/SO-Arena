@@ -1085,3 +1085,11 @@ section[id] { scroll-margin-top: -87px; }
   font: 500 12px/1.3 var(--sans); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .1s; }
 .dock .dl.on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .dock, .dock .di, .lb thead th.c-prof { transition: none !important; } .lb .dbar .t i, .lb .pb::after { animation: none !important; } }
+
+/* reliability ranking: a top-three score rank stands out */
+.chart .lbl.em { font-weight: 700; fill: var(--ink); }
+.tabrow .sym { width: 16px; height: 16px; margin-left: 5px; font-size: 11px; border-radius: 4px; vertical-align: -2px; }
+/* size legend: the dots grow with the model, as in the charts */
+.legend i.sz { width: var(--d); height: var(--d); vertical-align: middle; }
+.legend .lgt { font-weight: 600; color: var(--ink-2); }
+@media (max-width: 520px) { .tabrow .sym { display: none; } }

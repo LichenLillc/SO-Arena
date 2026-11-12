@@ -33,7 +33,12 @@
   const LUNA = M.find(m => m.name === "GPT-6 Luna");
   // Hue carries meaning (wine score, blue reliability, orange System Two, family hues for domains); model size is a
   // neutral lightness ramp and access is a shape (diamond = closed API).
-  const SIZE = { "0.4B": "#a3cf9b", "4B": "#4fa39b", "9B": "#6a8fc4", "27B": "#8a74b8", "31B": "#433d6e" };   // the paper's size colours
+  // Open-weight sizes: one hue, lighter to darker as the model grows (user, 2026-11-12: "tell model size at first
+  // glance"), with dots that also grow; closed APIs amber and GPT-6 orange stay apart from the ramp.
+  const SIZE = { "0.4B": "#9fd0c8", "4B": "#6fb5ad", "9B": "#3f8f8f", "27B": "#2b6474", "31B": "#1d3f55" };
+  // open-weight models: the dot grows with the model (area roughly with log size); APIs and GPT-6 one size
+  const SIZE_R = { "0.4B": 4.2, "4B": 5.3, "9B": 6.1, "27B": 7.2, "31B": 7.6 };
+  const dotR = m => (m.group === "open" || m.group === "auto") ? SIZE_R[m.size] : 6;
   const API = "#d4a24e", S2C = "#b0652d";                                       // closed APIs amber, as in the paper
   const closed = m => m.group === "api" || m.group === "s2";
   const colorOf = m => m.group === "s2" ? S2C : closed(m) ? API : SIZE[m.size];
@@ -176,9 +181,9 @@
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
       ["glance", "", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
-      ["reliability", "rel", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
+      ["reliability", "rrank", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([r1, r2, best].map(o => [`<span class="rkn">#${RANK_R.get(o.key)}</span>${esc(o.name)}`, R_(o), "var(--rel)"]), 100, f1)],
-      ["results", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "Gap to Luna varies by domain", `${esc(best.name)}, the top System One model, minus GPT-6 Luna in each of the 11 domains (leaderboard tier). Left of the Luna line: behind Luna. Dots coloured by domain family.`, dots],
+      ["domains", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "Gap to Luna varies by domain", `${esc(best.name)}, the top System One model, minus GPT-6 Luna in each of the 11 domains (leaderboard tier). Left of the Luna line: behind Luna. Dots coloured by domain family.`, dots],
     ];
     const CAP = ["Score", "Mean time per task", "Reliability R", `${esc(best.name)} minus GPT-6 Luna, per domain`];
     $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz], i) => `<div class="kr"><a class="krl" href="#${sec_}"${k.startsWith("view:") ? ` data-view="${k.slice(5)}"` : k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3></a>
@@ -524,7 +529,7 @@
     if (xT) S("text", { class: "axis-t", x: W - m.r, y: H - 6, "text-anchor": "end" }, svg).textContent = xT;
     if (yT) S("text", { class: "axis-t", x: m.l, y: m.t - 14, "text-anchor": "start" }, svg).textContent = yT;
   }
-  function mark(g, m, x, y, r = 6) {
+  function mark(g, m, x, y, r = dotR(m)) {
     if (closed(m)) { const k = r * 1.22; S("path", { class: "mk", d: `M${x} ${y - k}L${x + k} ${y}L${x} ${y + k}L${x - k} ${y}Z`, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g); }
     else { S("circle", { class: "mk", cx: x, cy: y, r, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g);
       if (m.group === "auto") S("circle", { cx: x, cy: y, r: r * .45, fill: "#fff", "pointer-events": "none" }, g); }
@@ -552,15 +557,15 @@
     for (const it of L) { ms.textContent = it.label; const w = ms.getComputedTextLength(); it.w = (w > 0 ? w : it.label.length * 6.3) + 3; }
     ms.remove();
     const inB = b => b.x0 >= bounds.x0 && b.x1 <= bounds.x1 && b.y0 >= bounds.y0 && b.y1 <= bounds.y1;
-    const PB = items.map(it => ({ x0: it.x - 7, x1: it.x + 7, y0: it.y - 7, y1: it.y + 7, it }));
+    const PB = items.map(it => { const r = dotR(it.m) + 1.5; return { x0: it.x - r, x1: it.x + r, y0: it.y - r, y1: it.y + r, it }; });
     const C = L.map(it => {
-      const w = it.w, out = [], box = (x0, y0) => ({ x0, x1: x0 + w, y0, y1: y0 + h });
-      for (const [x0, y0, c] of [[it.x + 9, it.y - h / 2, 0], [it.x - 9 - w, it.y - h / 2, 1], [it.x - w / 2, it.y - 9 - h, 1.5], [it.x - w / 2, it.y + 9, 1.5],
-        [it.x + 5, it.y - 5 - h, 2], [it.x + 5, it.y + 5, 2], [it.x - 5 - w, it.y - 5 - h, 2.5], [it.x - 5 - w, it.y + 5, 2.5]]) out.push({ b: box(x0, y0), c, l: null });
+      const w = it.w, out = [], box = (x0, y0) => ({ x0, x1: x0 + w, y0, y1: y0 + h }), gp = dotR(it.m) + 3.5, dg = dotR(it.m) * .75;
+      for (const [x0, y0, c] of [[it.x + gp, it.y - h / 2, 0], [it.x - gp - w, it.y - h / 2, 1], [it.x - w / 2, it.y - gp - h, 1.5], [it.x - w / 2, it.y + gp, 1.5],
+        [it.x + dg, it.y - dg - h, 2], [it.x + dg, it.y + dg, 2], [it.x - dg - w, it.y - dg - h, 2.5], [it.x - dg - w, it.y + dg, 2.5]]) out.push({ b: box(x0, y0), c, l: null });
       for (const R of [24, 36, 52, 72]) for (let k = 0; k < 16; k++) {
         const t = k * Math.PI / 8, dx = Math.cos(t), dy = Math.sin(t), ex = it.x + dx * R, ey = it.y + dy * R;
         const b = dx > .38 ? box(ex + 2, ey - h / 2) : dx < -.38 ? box(ex - 2 - w, ey - h / 2) : box(ex - w / 2, dy < 0 ? ey - h - 1 : ey + 1);
-        out.push({ b, c: 6 + R * .14, l: [it.x + dx * 8, it.y + dy * 8, ex, ey] });
+        const r0 = dotR(it.m) + 2; out.push({ b, c: 6 + R * .14, l: [it.x + dx * r0, it.y + dy * r0, ex, ey] });
       }
       return out.filter(c => inB(c.b)).concat([{ b: null, c: 4000, l: null }]);     // last resort: no label
     });
@@ -569,7 +574,7 @@
       const bd = q => Math.hypot(Math.max(c.b.x0 - q.x, 0, q.x - c.b.x1), Math.max(c.b.y0 - q.y, 0, q.y - c.b.y1)), d0 = c.l ? 2 : bd(L[i]);
       for (const p of PB) { if (ov(c.b, p)) v += 1e4 + 50 * area(c.b, p); if (p.it === L[i]) continue;
         if (c.l && segPt(c.l, p.it.x, p.it.y) < 8) v += 1500;
-        if (bd(p.it) < d0 + 7) v += 400; }                    // another point as close as its own: the label would read as that point's
+        if (bd(p.it) < d0 + 7) v += 900; }                    // another point as close as its own: the label would read as that point's
       for (const o of obst) { if (ov(c.b, o)) v += o.w ?? 40; if (c.l && segBox(c.l, o)) v += (o.w ?? 40) / 8; }
       return v; }));
     const pair = (c, d) => { if (!c.b || !d.b) return 0; let v = 0;
@@ -607,14 +612,17 @@
       a.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModel(p.m); } });
     }
   }
-  const sizeLegend = (auto = true, extra = "") => Object.entries(SIZE).map(([s, c]) => `<span><i style="background:${c}"></i>${s}</span>`).join("") +
+  const sizeLegend = (auto = true, extra = "") => `<span class="lgt">Open weights</span>` + Object.entries(SIZE).map(([s, c]) => `<span><i class="sz" style="background:${c};--d:${(2 * SIZE_R[s]).toFixed(1)}px"></i>${s}</span>`).join("") +
     `<span><i class="dia" style="background:${API}"></i>Closed API</span>` + (auto ? `<span><i class="ring" style="--c:${SIZE["4B"]}"></i>Hybrid</span>` +
     `<span><i class="dia" style="background:${S2C}"></i>GPT-6 (System Two)</span>` : "") + extra;
 
   const INS = {
     speed: { title: "Score against latency", sub: "Dashed line: the best score reachable at each speed.",
       note: "Mean latency per task: open weights on one H100 GPU, APIs end to end." },
-    rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
+    rrank: { title: "Reliability ranking", sub: "The 18 System One models by reliability R, with each model's rank by score: the most reliable are not the top scorers.",
+      note: "R = √(S·N) × 100. S: option-order stability; N: null discrimination; both from the reliability runs. Score rank: the leaderboard." },
+    null: { title: "Noticing a missing answer, against score", sub: "Models with similar scores differ widely in N; the score says little about it. Dashed: trend; band: 90% of the models.",
+      note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the 16 System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
     sn: { title: "Decision reliability", sub: "Option-order stability S against null discrimination N; dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
     order: { title: "How accuracy moves with the option order", sub: "Each dot: one of 12 shuffles, against the original order. Ranked by the range over all 13 orders, most stable first.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher option-order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
@@ -624,8 +632,8 @@
   // Two chart panels share this routine: Results (speed, difficulty, gap) and the Reliability section's evidence.
   const PANELS = [{ key: "speed", pair: true, host: "#spchart", lg: "#sp-legend", title: "#sp-title", sub: "#sp-sub", note: "#sp-note" },
                   { key: "sn", pair: true, host: "#snchart", lg: "#sn-legend", title: "#sn-title", sub: "#sn-sub", note: "#sn-note" },
-                  { key: "tier", tabs: "#ins-tabs", host: "#chart", lg: "#legend", title: "#ins-title", sub: "#ins-sub", note: "#ins-note" },
-                  { key: "rel", tabs: "#rel-tabs", host: "#rchart", lg: "#rlegend", title: "#r-title", sub: "#r-sub", note: "#r-note" }];
+                  { key: "gap", tabs: "#ins-tabs", host: "#chart", lg: "#legend", title: "#ins-title", sub: "#ins-sub", note: "#ins-note" },
+                  { key: "rrank", tabs: "#rel-tabs", host: "#rchart", lg: "#rlegend", title: "#r-title", sub: "#r-sub", note: "#r-note" }];
   const insights = () => PANELS.forEach(drawPanel);
   // Switching tabs: each card takes its own tab's height, eased over 240 ms (no blank space, no jump); the chart fades in.
   function switchPanel(P, k) {
@@ -641,7 +649,7 @@
     $(P.title).innerHTML = esc(c.title) + (c.note ? ` <button class="info" type="button" data-info="${esc(c.note)}">i</button>` : ""); $(P.sub).textContent = c.sub; $(P.note).textContent = "";
     if (P.host === "#chart") $("#tier-chips").hidden = insKey !== "tier";
     const host = $(P.host);
-    host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" ? "region" : "img");
+    host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" || insKey === "rrank" ? "region" : "img");
     if (insKey === "speed") {
       const { svg, W, H } = frame(host, P.pair ? .9 : .56, host.clientWidth < 460 ? 400 : 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const lx = v => Math.log10(v), X0 = lx(4), X1 = lx(5000);
@@ -655,14 +663,24 @@
       labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...fr.filter((o, i) => !i || i === fr.length - 1 || o.key === "StartLux-4B-Instant"), ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null,
         lineBoxes(fr.map(o => [xs(o.latency.mean_ms), ys(o.score)])));
       LG.innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
-    } else if (insKey === "rel" || insKey === "sn") {
+    } else if (insKey === "null" || insKey === "sn") {
       const { svg, W, H } = frame(host, P.pair ? .9 : .56, host.clientWidth < 460 ? 400 : 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const RL = S1.filter(o => o.reliability);
       let pts; const rb = [];                                  // the R labels' boxes: model labels keep off them
-      if (insKey === "rel") {
-        const xs = v => m.l + (v - 28) / 46 * (W - m.l - m.r), ys = v => H - m.b - v / 90 * (H - m.t - m.b);
-        axes(svg, W, H, m, xs, ys, [30, 40, 50, 60, 70].map(v => [v, v]), [0, 20, 40, 60, 80].map(v => [v, v]), "Score →", "↑ Reliability R");
-        pts = RL.map(o => ({ m: o, x: xs(o.score), y: ys(o.reliability.R), label: o.name, aria: `score ${f2(o.score)}, R ${f1(o.reliability.R)}` }));
+      if (insKey === "null") {
+        const xs = v => m.l + (v - 28) / 46 * (W - m.l - m.r), ys = v => H - m.b - v / .9 * (H - m.t - m.b);
+        axes(svg, W, H, m, xs, ys, [30, 40, 50, 60, 70].map(v => [v, v]), [0, .2, .4, .6, .8].map(v => [v, v.toFixed(1)]), "Score →", "↑ Null discrimination N");
+        // trend and band as in the paper: quadratic fit over the 16 models other than Laya and Jeva-4B; the band's
+        // half-width is the 90th percentile of the absolute residuals
+        const F = RL.filter(o => o.name !== "Laya" && o.name !== "Jeva-4B"), fit = quad(F.map(o => o.score), F.map(o => o.reliability.N));
+        const res = F.map(o => Math.abs(o.reliability.N - fit.f(o.score))).sort((a, b) => a - b), q = .9 * (res.length - 1), hw = res[Math.floor(q)] + (q % 1) * (res[Math.ceil(q)] - res[Math.floor(q)]);
+        const x0 = Math.min(...F.map(o => o.score)), x1 = Math.max(...F.map(o => o.score)), xsS = Array.from({ length: 41 }, (_, i) => x0 + (x1 - x0) * i / 40);
+        const g = S("g", {}, svg);
+        S("path", { d: xsS.map((v, i) => `${i ? "L" : "M"}${xs(v).toFixed(1)} ${ys(fit.f(v) + hw).toFixed(1)}`).join("") + [...xsS].reverse().map(v => `L${xs(v).toFixed(1)} ${ys(fit.f(v) - hw).toFixed(1)}`).join("") + "Z", fill: "var(--rel)", opacity: .07 }, g);
+        const tl = xsS.map(v => [xs(v), ys(fit.f(v))]);
+        S("path", { d: tl.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(""), fill: "none", stroke: "var(--rel)", "stroke-width": 1.4, "stroke-dasharray": "5 4", opacity: .7 }, g);
+        rb.push(...lineBoxes(tl, 3, 25));
+        pts = RL.map(o => ({ m: o, x: xs(o.score), y: ys(o.reliability.N), label: o.name, aria: `score ${f2(o.score)}, N ${o.reliability.N.toFixed(2)}` }));
       } else {
         const xs = v => m.l + (v - .3) / .72 * (W - m.l - m.r), ys = v => H - m.b - v / .85 * (H - m.t - m.b);
         axes(svg, W, H, m, xs, ys, [.4, .5, .6, .7, .8, .9, 1].map(v => [v, v.toFixed(1)]), [0, .2, .4, .6, .8].map(v => [v, v.toFixed(1)]), "Option-order stability S →", "↑ Null discrimination N");
@@ -682,11 +700,52 @@
       LG.innerHTML = sizeLegend(false);
     } else if (insKey === "order") {
       orderChart(host, LG);
+    } else if (insKey === "rrank") {
+      rankChart(host, LG);
     } else if (insKey === "tier") {
       tierChart(host, tierDom, LG);
     } else {
       gap(host, LG);
     }
+  }
+  // least squares y = a x² + b x + c (centred x, for a well-conditioned solve)
+  function quad(X, Y) {
+    const mx = X.reduce((a, b) => a + b, 0) / X.length, U = X.map(x => x - mx), sm = k => U.reduce((a, u) => a + u ** k, 0);
+    const sy = k => U.reduce((a, u, i) => a + u ** k * Y[i], 0);
+    const A = [[sm(4), sm(3), sm(2)], [sm(3), sm(2), sm(1)], [sm(2), sm(1), U.length]], B = [sy(2), sy(1), sy(0)];
+    for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) { const f = A[j][i] / A[i][i]; for (let k = i; k < 3; k++) A[j][k] -= f * A[i][k]; B[j] -= f * B[i]; }
+    const c = [0, 0, 0]; for (let i = 2; i >= 0; i--) c[i] = (B[i] - A[i].slice(i + 1).reduce((a, v, k) => a + v * c[i + 1 + k], 0)) / A[i][i];
+    return { f: x => c[0] * (x - mx) ** 2 + c[1] * (x - mx) + c[2] };
+  }
+  // Reliability ranking: one row per System One model, by R; S and N beside it; its rank by score at the right
+  function rankChart(host, lg) {
+    const L = S1.filter(o => o.reliability).sort((a, b) => R_(b) - R_(a)), narrow = host.clientWidth < 560;
+    const rowH = 24, m = { l: narrow ? 118 : 156, r: narrow ? 64 : 196, t: 30, b: 14 };
+    host.innerHTML = "";
+    const W = Math.max(320, host.clientWidth), H = m.t + m.b + rowH * L.length;
+    const svg = S("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, host);
+    const xs = v => m.l + v / 100 * (W - m.l - m.r - 44), g = S("g", { class: "grid" }, svg);
+    for (const v of [0, 25, 50, 75, 100]) S("line", { x1: xs(v), x2: xs(v), y1: m.t - 8, y2: H - m.b, stroke: v ? null : "#b9b7ad" }, g);
+    const head = (x, t, a = "end") => { S("text", { class: "tick", x, y: m.t - 12, "text-anchor": a }, svg).textContent = t; };
+    head(xs(0), "R", "start");
+    const cS = W - (narrow ? 0 : 150), cN = W - (narrow ? 0 : 100), cK = W - 10;
+    if (!narrow) { head(cS, "S"); head(cN, "N"); }
+    head(cK, "score rank");
+    L.forEach((o, i) => {
+      const y = m.t + rowH * i + rowH / 2, k = RANK.get(o.key), r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${i + 1}. ${o.name}: R ${f1(R_(o))}, S ${o.reliability.S.toFixed(2)}, N ${o.reliability.N.toFixed(2)}; score rank ${k}` }, svg);
+      S("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent" }, r);
+      if (!narrow) S("text", { class: "tick", x: 4, y: y + 4, "text-anchor": "start" }, r).textContent = i + 1;
+      S("text", { class: "lbl", x: m.l - 12, y: y + 4, "text-anchor": "end" }, r).textContent = o.name;
+      S("rect", { x: xs(0), y: y - 4, width: Math.max(0, xs(R_(o)) - xs(0)), height: 8, rx: 4, fill: "var(--rel)", opacity: .85 }, r);
+      S("text", { class: "lbl", x: xs(R_(o)) + 6, y: y + 4, "text-anchor": "start" }, r).textContent = f1(R_(o));
+      if (!narrow) { S("text", { class: "tick", x: cS, y: y + 4, "text-anchor": "end" }, r).textContent = o.reliability.S.toFixed(2);
+        S("text", { class: "tick", x: cN, y: y + 4, "text-anchor": "end" }, r).textContent = o.reliability.N.toFixed(2); }
+      S("text", { class: "lbl" + (k <= 3 ? " em" : ""), x: cK, y: y + 4, "text-anchor": "end" }, r).textContent = `#${k}`;
+      bindTip(r, () => `<b>${esc(o.name)}</b> <span class="s">#${i + 1} of ${L.length} in reliability · #${k} by score</span><br><span class="m">${f1(R_(o))}</span> <span class="s">R · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)} · score ${f2(o.score)}</span>${HINT}`);
+      r.addEventListener("click", () => openModel(o));
+      r.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModel(o); } });
+    });
+    lg.innerHTML = `<span><i style="background:var(--rel)"></i>Reliability R, 0–100</span><span>Score rank: the model's place on the leaderboard (#1–3 in bold)</span>`;
   }
   function orderChart(host, lg) {
     // Change from the original option order, per reordering. Rows ranked by the range of accuracy over the 13 orders
@@ -987,7 +1046,7 @@
         more: ['href="#benchmark"', "From 40 established sources"] },
       tiers: { h: "Difficulty tiers", pn: "#e2f1f2", hc: "#61847a", hl: "#86b3b0",
         p: `${tiered} of ${D.domains.length} domains are split into tiers by domain-specific criteria, such as the number of calculation steps in Math. The leaderboard counts each domain's hardest tier.`,
-        more: ['href="#results" data-chart-link="tier"', "Scores by tier"] },
+        more: ['href="#domains" data-chart-link="tier"', "Scores by tier"] },
       agents: { h: "Agent sandboxes", pn: "#f6ebe6", hc: "#8f6556", hl: "#c9a79a",
         p: `In ${t.web.toLocaleString("en-US")} web and ${t.tools.toLocaleString("en-US")} tool tasks, the model works toward a goal step by step, choosing each next action itself.`,
         more: ['href="#benchmark"', "The 11 domains"] },

@@ -263,7 +263,7 @@
     }).join("");
   }
   function leaderboardControls() {
-    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk">By domain:${D.families.map(f => `<span><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("")}</span>`;
+    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk"><i class="k-prof"><b></b><b></b><b></b></i>By domain: point at a bar for the domain and its rank</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });

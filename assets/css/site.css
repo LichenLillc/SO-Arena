@@ -817,3 +817,10 @@ dialog.drawer.out::backdrop { animation: fadeout .18s ease-in forwards; }
   .lb .c-score { min-width: 0; padding-right: 10px; } .lb .scell .bt { min-width: 60px; max-width: 120px; }
   .lb .rcell .meter, .lb .lcell .meter { display: none; } .lb .c-m { min-width: 180px; }
 }
+/* the table's domain bars are the score split by domain: one hue (the score's), families set apart by the gaps */
+.lb .c-prof .pb::after { background: var(--cap); opacity: .5; transition: opacity .12s; }
+.lb .c-prof .pb:hover::after { opacity: 1; }
+.lb tr.ref .c-prof .pb::after { background: var(--s2); }
+.lb-keys .k-prof { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 11px; }
+.lb-keys .k-prof b { width: 3px; border-radius: 1px; background: var(--cap); opacity: .5; }
+.lb-keys .k-prof b:nth-child(1) { height: 7px; } .lb-keys .k-prof b:nth-child(2) { height: 11px; } .lb-keys .k-prof b:nth-child(3) { height: 5px; }

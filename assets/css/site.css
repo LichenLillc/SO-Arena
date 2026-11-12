@@ -1148,11 +1148,15 @@ section[id] { scroll-margin-top: -87px; }
 .gap-r svg text.in { fill: #fff; font-weight: 600; }
 @media (max-width: 760px) { .gap-r svg text .sub { display: none; } }
 .qpic.n { overflow: hidden; }
-/* the leaderboard's grouping toggle (off by default: one ranked list) */
-.gtoggle { display: inline-flex; align-items: center; gap: 7px; margin-left: 4px; }
-.gtoggle svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
-.gtoggle svg .g { stroke-dasharray: 2 2; opacity: .6; }
-.gtoggle[aria-pressed="true"] svg .g { opacity: 1; stroke-dasharray: none; }
+/* the leaderboard's view switch: off = one ranked list (default), on = grouped (user, 2026-11-12) */
+.sw { display: inline-flex; align-items: center; gap: 8px; height: 30px; margin-left: 10px; padding: 0 2px; border: 0; background: none; font: 500 12.5px var(--sans); color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.sw-t { position: relative; flex: none; width: 34px; height: 20px; border-radius: 999px; background: #d6d5ce; transition: background-color .2s ease; }
+.sw-k { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(15, 18, 22, .3); transition: transform .22s cubic-bezier(.3, .7, .2, 1); }
+.sw:hover .sw-t { background: #c8c7bf; } .sw:hover { color: var(--ink); }
+.sw[aria-checked="true"] .sw-t { background: var(--ink); } .sw[aria-checked="true"]:hover .sw-t { background: #2b3138; }
+.sw[aria-checked="true"] .sw-k { transform: translateX(14px); }
+.sw[aria-checked="true"] .sw-l { color: var(--ink); }
+.sw:focus-visible { outline: none; } .sw:focus-visible .sw-t { box-shadow: 0 0 0 2px var(--rel); }
 .lb.flat tbody tr.ref td { background: #fcfbf8; }
 /* the whole word is centred: the drawing shifts between the resting and the open centre with the letters (user) */
 .logo-anim .lg-all { transform-box: view-box; transform: translateX(var(--c-rest, 0px)); transition: transform var(--t) var(--move); }

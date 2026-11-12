@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=9d2ac14038" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=23900215f3">
+<link rel="stylesheet" href="assets/css/site.css?v=d341f8704c">
 <script defer src="assets/js/data.js?v=79cc9fcc40"></script>
-<script defer src="assets/js/app.js?v=a12a6aa047"></script>
+<script defer src="assets/js/app.js?v=7012fcf622"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -102,7 +102,7 @@
       <div class="toolbar">
         <div class="tools-l">
           <div class="tools-filters" id="filters" role="group" aria-label="Show models" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-          <button type="button" class="chip gtoggle" id="lb-group" aria-pressed="false" title="Group the rows: System Two reference, closed APIs, open weights by size"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11M2.5 6.5h11M2.5 10.5h11M2.5 13.5h11"/><path class="g" d="M1.5 8.5h13"/></svg>Group by access and size</button>
+          <button type="button" class="sw" id="lb-group" role="switch" aria-checked="false" title="Group the rows: System Two reference, closed APIs, then open weights by size"><span class="sw-t" aria-hidden="true"><span class="sw-k"></span></span><span class="sw-l">Grouped view</span></button>
           <div class="seg msort" id="msort" role="group" aria-label="Sort by"><button type="button" data-ms="score" aria-pressed="true">Score</button><button type="button" data-ms="R" aria-pressed="false">Reliability</button><button type="button" data-ms="lat" aria-pressed="false">Latency</button></div>
         </div>
         <div class="tools-r">

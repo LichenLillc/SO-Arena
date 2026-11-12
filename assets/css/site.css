@@ -840,3 +840,7 @@ dialog.drawer.out::backdrop { animation: fadeout .18s ease-in forwards; }
 .chart .pt, .chart .lbl, .chart .lead { transition: opacity .14s ease; }
 .chart svg:has(.pt:hover) .pt:not(:hover) { opacity: .35; }
 .chart svg:has(.pt:hover) .lbl, .chart svg:has(.pt:hover) .lead { opacity: .5; }
+/* one numeral style for values in rows: the table's sans with tabular figures (display serif stays for headline numbers) */
+.board-list .v { font: 600 14px/1 var(--sans); font-variant-numeric: tabular-nums; }
+.board-list .v.lat { font: 500 11.5px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--muted); }
+.board-list .rk { font: 500 12.5px/1 var(--sans); font-variant-numeric: tabular-nums; }

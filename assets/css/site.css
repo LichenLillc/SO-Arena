@@ -692,3 +692,23 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 /* race: one speed for both bars, so each ends at its time; System One's bar stays a short stub */
 .race .r1 .trk i { width: calc(100% * 113 / 2698); min-width: 5px; }
 .kr .big .arr { display: inline-block; margin: 0 10px; font: 400 26px/1 var(--sans); color: var(--muted); vertical-align: 6px; }
+
+/* ---- hero: the key results fill the left column (2 x 2), level with the leaderboard card ---- */
+.hero-grid { align-items: start; }
+.hero .kres { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 30px 0 0; border-bottom: 0; }
+.hero .kr { padding: 18px 20px 16px 0; border-left: 0; }
+.hero .kr:nth-child(2n) { padding-left: 20px; border-left: 1px solid var(--line); }
+.hero .kr:nth-child(n+3) { border-top: 1px solid var(--line); }
+.hero .kr > .info { top: 20px; right: 6px; }
+.hero .kr:nth-child(2n) > .info { right: 0; }
+.hero .kr .big { font-size: 34px; }
+.hero .kr .big small { font-size: 17px; }
+.hero .kr .big .arr { font-size: 22px; vertical-align: 5px; margin: 0 8px; }
+.hero .kr h3 { margin: 8px 0 0; font-size: 14px; }
+.hero .kr .mini { margin-top: 10px; gap: 6px; }
+@media (max-width: 1080px) { .hero .kres { margin-top: 28px; } }
+@media (max-width: 760px) {
+  .hero .kres { grid-template-columns: 1fr; }
+  .hero .kr, .hero .kr:nth-child(2n) { padding: 16px 0; border-left: 0; }
+  .hero .kr + .kr { border-top: 1px solid var(--line); }
+}

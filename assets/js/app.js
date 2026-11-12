@@ -248,16 +248,21 @@
       if (typeof va === "string") return T.dir * va.localeCompare(vb);
       return T.dir * (va - vb) || b.score - a.score;
     });
-    const refs = order(M.filter(m => m.group === "s2" && pass(m))), s1 = order(M.filter(m => isS1(m) && pass(m))), hy = order(M.filter(m => m.group === "auto" && pass(m)));
+    // Groups as in the paper's score table: the System Two references, the closed APIs, then open weights by size;
+    // # keeps each model's rank among the 18 System One models. StartLux Auto (hybrid) is not listed (user, 2026-11-12).
+    const refs = order(M.filter(m => m.group === "s2" && pass(m))), apis = order(M.filter(m => m.group === "api" && pass(m)));
+    const opens = ["31B", "27B", "9B", "4B", "0.4B"].map(z => [z, order(M.filter(m => m.group === "open" && m.size === z && pass(m)))]);
+    const n1 = apis.length + opens.reduce((a, [, l]) => a + l.length, 0);
     const grp = (label, list) => list.length ? `<tbody><tr class="grp"><th colspan="${COLS.length}" scope="rowgroup">${label}</th></tr>${list.map(row).join("")}</tbody>` : "";
     // FLIP: after a sort or filter, rows that stay slide from their old place to the new one (300 ms); new rows fade in
     const was = new Map($$("#lb tr[data-model]").map(r => [r.dataset.model, r.getBoundingClientRect().top]));
     // a search that the active filter hides says so, and offers the matches in All
-    const q = T.q.trim().toLowerCase(), hidden = q && T.filter !== "all" ? M.filter(m => m.group !== "s2" && (m.name + " " + m.developer).toLowerCase().includes(q) && !pass(m)).length : 0;
+    const q = T.q.trim().toLowerCase(), hidden = q && T.filter !== "all" ? S1.filter(m => (m.name + " " + m.developer).toLowerCase().includes(q) && !pass(m)).length : 0;
     const fl = (FILTERS.find(f => f[0] === T.filter) || [, ""])[1];
-    const note = !(s1.length + hy.length) && hidden ? `<tbody><tr><td colspan="${COLS.length}" class="l empty">No match in ${esc(fl)}. <button type="button" class="showall" data-showall>Show ${hidden} in All</button></td></tr></tbody>`
-      : refs.length + s1.length + hy.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`;
-    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) + grp("Hybrid: switches to System Two, not ranked", hy) + note;
+    const note = !n1 && hidden ? `<tbody><tr><td colspan="${COLS.length}" class="l empty">No match in ${esc(fl)}. <button type="button" class="showall" data-showall>Show ${hidden} in All</button></td></tr></tbody>`
+      : refs.length + n1 ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`;
+    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One · closed APIs", apis) +
+      opens.map(([z, l]) => grp(`System One · open weights · ${z}`, l)).join("") + note;
     if (!was.size || RM) return;
     const rows = $$("#lb tr[data-model]");
     rows.forEach(r => { const y = was.get(r.dataset.model);
@@ -400,7 +405,7 @@
 
   function openDomain(id) {
     const d = DOM[id], f = FAM[d.family], val = m => m.domains[id], rk = TOPD[id];
-    const list = [...M].sort((a, b) => val(b) - val(a));
+    const list = M.filter(m => m.group !== "auto").sort((a, b) => val(b) - val(a));
     const counts = d.tiers ? Object.entries(d.tiers).map(([k, v]) => `${({ E: "easy", M: "medium", H: "hard", V: "very hard" })[k]} ${v}`).join(", ") : "no tiers";
     const bars = list.map(m => { const ref = m.group === "s2", a = m.group === "auto";
       return `<li class="${ref ? "ref" : a ? "auto" : ""}"><span class="rk">${isS1(m) ? rk.get(m.key) : ref ? "ref" : "–"}</span>${logo(m, 22)}<button type="button" class="n" data-model="${slug(m)}">${esc(m.name)}</button>
@@ -410,7 +415,7 @@
       <p class="dr-sub">${d.tasks} tasks (${counts}). The leaderboard uses ${d.leaderboard_tier === "All tasks" ? "all tasks" : id === "math" ? "the hard and very hard tiers" : "the hard tier"} (${d.leaderboard_tasks} tasks).
         Sources${d.sources_by_tier ? ", easy to hard" : ""}: ${esc(d.sources.join(d.sources_by_tier ? " → " : ", "))}.</p>
       <h4 class="label" style="margin-top:24px">Ranking</h4><ul class="bars">${bars}</ul>
-      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references; StartLux Auto is not ranked. Right column: mean latency per task.</p>
+      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references. Right column: mean latency per task.</p>
       ${d.tiers ? `<h4 class="label" style="margin-top:28px">By difficulty tier</h4><div class="chart" id="dr-tier"></div><div class="legend" id="dr-tier-lg"></div>` : ""}`,
       `?domain=${id}`, d.name);
     if (d.tiers) requestAnimationFrame(() => tierChart($("#dr-tier"), id, $("#dr-tier-lg"), true));

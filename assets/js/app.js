@@ -229,18 +229,19 @@
   };
   const prof = m => `<div class="dprof" role="img" aria-label="${esc(D.domains.map(d => `${d.short || d.name} ${f1(m.domains[d.id])}`).join(", "))}">${FAMS.map(({ f, ds }) =>
     `<span class="pg" style="--n:${ds.length}">${ds.map(d => `<span class="pb" data-d="${d.id}" style="--h:${m.domains[d.id].toFixed(1)}%;--fc:${f.color}"></span>`).join("")}</span>`).join("")}</div>`;
-  // one domain as one bar, in its family's colour, with GPT-6 Luna's score in that domain as a tick
-  const dbar = (m, id) => { const v = m.domains[id], c = FAM[DOM[id].family].color;
-    return `<div class="dbar" style="--fc:${c}" role="img" aria-label="${esc(DOM[id].short)} ${f1(v)}"><span class="t"><i style="--w:${v.toFixed(1)}%"></i>${m.group === "s2" ? "" : `<b class="ref" style="left:calc(${LUNA.domains[id].toFixed(1)}% - 1px)"></b>`}</span><span class="v">${f1(v)}</span></div>`; };
+  // one domain as one bar: every row carries it, hidden until a domain is chosen; its width (--dw, per row), colour
+  // (--dfc) and GPT-6 Luna's tick (--dlu) are CSS variables, so a change of domain eases instead of redrawing
+  const dbar = m => `<div class="dbar" role="img"><span class="t"><i></i>${m.group === "s2" ? "" : '<b class="ref"></b>'}</span><span class="v"></span></div>`;
+  const rankOf = m => (T.sort === "R" ? RANK_R : T.sort === "lat" ? RANK_L : DSORT() ? TOPD[DSORT()] : RANK).get(m.key) ?? (m.group === "s2" ? "" : "–");
   // latency bars share one linear scale up to the slowest System One model; slower models get a broken bar
   const latCell = v => `<span class="lcell"><span class="meter${v > LATMAX ? " over" : ""}" aria-hidden="true"><i style="--w:${Math.min(100, 100 * v / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="num">${ms(v)}</span></span>`;
   const row = m => {
     const ref = m.group === "s2";
     return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
-      <td class="c-rk">${(T.sort === "R" ? RANK_R : T.sort === "lat" ? RANK_L : DSORT() ? TOPD[DSORT()] : RANK).get(m.key) ?? (ref ? "" : "–")}</td>
+      <td class="c-rk">${rankOf(m)}</td>
       <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}</small></div></div></td>
       <td class="c-score l${T.sort === "score" ? " sorted" : ""}" data-l="Score"><div class="scell"><span class="track bt"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span>${ref ? "" : refBand}</span><span class="num">${f2(m.score)}</span></div></td>
-      <td class="c-prof l${DSORT() ? " sorted" : ""}">${DSORT() ? dbar(m, DSORT()) : prof(m)}</td>
+      <td class="c-prof l${DSORT() ? " sorted" : ""}"><div class="pwrap">${prof(m)}${dbar(m)}</div></td>
       <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? `<span class="rcell"><span class="meter" aria-hidden="true"><i style="--w:${R_(m)}%;--c:var(--rel)"></i></span><span class="num">${f1(R_(m))}</span></span>` : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
       <td class="c-n${T.sort === "lat" ? " sorted" : ""}" data-l="Latency">${m.latency ? latCell(m.latency.mean_ms) : '<span class="dim">—</span>'}</td>
 </tr>`;
@@ -251,26 +252,55 @@
   const CHEV = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8 5 6.3 7.5 3.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function head() {
     const tb = $("#lb");
-    if (!$("thead", tb)) tb.innerHTML = `<thead><tr>${COLS.map(c => c.id === "prof" ? `<th class="${c.cls}" scope="col"></th>`
+    if (!$("thead", tb)) tb.innerHTML = `<thead><tr>${COLS.map(c => c.id === "prof" ? `<th class="${c.cls}" scope="col"><span class="phd"><button type="button" class="dh-btn" data-dock aria-haspopup="listbox" aria-expanded="false"><i></i><span class="dlab"></span><span class="ar"></span>${CHEV}</button><button type="button" class="dx" data-dclear aria-label="Back to the overall score" title="Back to the overall score">×</button></span></th>`
       : `<th class="${c.cls}" scope="col"><button type="button" data-sort="${c.id}" title="${esc(c.title || "Sort by " + c.label)}">${esc(c.label)}</button></th>`).join("")}</tr></thead>`;
-    const did = DSORT();
+    const did = DSORT(), d = did && DOM[did], pc = COLS.find(c => c.id === "prof");
     $$("thead th", tb).forEach((th, i) => { const c = COLS[i], on = c.id === T.sort || (c.id === "prof" && did);
       if (on) th.setAttribute("aria-sort", T.dir > 0 ? "ascending" : "descending"); else th.removeAttribute("aria-sort"); });
-    const ph = $("thead th.c-prof", tb), d = did && DOM[did];
-    ph.innerHTML = d ? `<span class="phd"><button type="button" class="dh-btn" data-dock aria-haspopup="listbox" aria-expanded="false" title="Sorted by ${esc(d.name)}; choose another domain"><i style="background:${FAM[d.family].color}"></i>${esc(d.short)} <span class="ar">${T.dir > 0 ? "↑" : "↓"}</span>${CHEV}</button><button type="button" class="dx" data-dclear aria-label="Back to the overall score" title="Back to the overall score">×</button></span>`
-      : `<span class="phd"><button type="button" class="dh-btn" data-dock aria-haspopup="listbox" aria-expanded="false" title="${esc(COLS.find(c => c.id === "prof").title)}">${esc(COLS.find(c => c.id === "prof").label)}${CHEV}</button></span>`;
+    const ph = $("thead th.c-prof", tb), b = $(".dh-btn", ph);
+    $(".dlab", b).textContent = d ? d.short : pc.label; $(".ar", b).textContent = d ? (T.dir > 0 ? " ↑" : " ↓") : "";
+    $("i", b).style.background = d ? FAM[d.family].color : ""; b.classList.toggle("on", !!d);
+    b.title = d ? `Sorted by ${d.name}; choose another domain` : pc.title; $(".dx", ph).hidden = !d;
   }
-  function table() {
-    const did = DSORT(), wasD = $("#lb").classList.contains("dmode"), d0 = $("#lb").dataset.d || "";
-    const col = did ? { id: T.sort, val: m => m.domains[did] } : COLS.find(c => c.id === T.sort);
-    const btW = (() => { const b = $("#lb .scell .bt"); return b ? b.getBoundingClientRect().width : 0; })();
-    const order = list => list.sort((a, b) => {
-      const va = col.val(a), vb = col.val(b);
-      if (va == null && vb == null) return b.score - a.score;
-      if (va == null) return 1; if (vb == null) return -1;
+  // the order within each group, for the current sort
+  const cmpRows = () => { const did = DSORT(), col = did ? { val: m => m.domains[did] } : COLS.find(c => c.id === T.sort);
+    return (a, b) => { const va = col.val(a), vb = col.val(b);
+      if (va == null && vb == null) return b.score - a.score; if (va == null) return 1; if (vb == null) return -1;
       if (typeof va === "string") return T.dir * va.localeCompare(vb);
-      return T.dir * (va - vb) || b.score - a.score;
-    });
+      return T.dir * (va - vb) || b.score - a.score; }; };
+  // the chosen domain's values into every row's bar (no redraw: the bars ease to the new widths)
+  function fillD(id) {
+    const tb = $("#lb"), d = DOM[id]; if (!d) return;
+    tb.style.setProperty("--dfc", FAM[d.family].color); tb.style.setProperty("--dlu", LUNA.domains[id].toFixed(1) + "%");
+    $$("tr[data-model]", tb).forEach(r => { const v = BY[r.dataset.model].domains[id], db = $(".dbar", r);
+      r.style.setProperty("--dw", v.toFixed(1) + "%"); $(".v", db).textContent = f1(v); db.setAttribute("aria-label", `${d.short} ${f1(v)}`); });
+  }
+  // Re-sort in place: rows keep their elements and glide to their new places (FLIP); ranks and sorted cells update.
+  function resort() {
+    const tb = $("#lb"), rows = $$("tr[data-model]", tb), first = new Map(rows.map(r => [r, r.getBoundingClientRect().top])), cmp = cmpRows();
+    $$("tbody", tb).forEach(g => $$("tr[data-model]", g).sort((a, b) => cmp(BY[a.dataset.model], BY[b.dataset.model])).forEach(r => g.appendChild(r)));
+    const did = DSORT();
+    rows.forEach(r => { const m = BY[r.dataset.model], rk = $(".c-rk", r), k = String(rankOf(m));
+      if (rk.textContent !== k) { rk.textContent = k; if (!RM) rk.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 120, easing: "ease-out", fill: "backwards" }); }
+      $(".c-score", r).classList.toggle("sorted", T.sort === "score"); $(".c-prof", r).classList.toggle("sorted", !!did);
+      $$(".c-n", r).forEach(c => c.classList.toggle("sorted", (c.dataset.l === "Reliability" && T.sort === "R") || (c.dataset.l === "Latency" && T.sort === "lat"))); });
+    if (RM) return;
+    rows.forEach(r => { const dy = first.get(r) - r.getBoundingClientRect().top;
+      if (Math.abs(dy) > 1) r.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 520, easing: "cubic-bezier(.3, .7, .15, 1)" }); });
+  }
+  // A new sort. Entering, leaving or changing a domain is one continuous change in two steps: the columns and bars
+  // morph (420 ms), then the rows glide to their new order. Other sorts glide at once.
+  function applySort(key, dir) {
+    const was = DSORT(); T.sort = key; T.dir = dir;
+    const did = DSORT(), tb = $("#lb"); head();
+    if (did) fillD(did);
+    tb.classList.toggle("dmode", !!did);
+    strip();
+    clearTimeout(tb._rs);
+    if (!RM && (was || did) && was !== did) tb._rs = setTimeout(resort, 300); else resort();
+  }
+    function table() {
+    const did = DSORT(), cmp = cmpRows(), order = list => list.sort(cmp);
     // Groups as in the paper's score table: the System Two references, the closed APIs, then open weights by size;
     // # keeps each model's rank among the 18 System One models. StartLux Auto (hybrid) is not listed (user, 2026-11-12).
     const refs = order(M.filter(m => m.group === "s2" && pass(m))), apis = order(M.filter(m => m.group === "api" && pass(m)));
@@ -285,16 +315,11 @@
     const note = !n1 && hidden ? `<tbody><tr><td colspan="${COLS.length}" class="l empty">No match in ${esc(fl)}. <button type="button" class="showall" data-showall>Show ${hidden} in All</button></td></tr></tbody>`
       : refs.length + n1 ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`;
     head(); $$("#lb tbody").forEach(n => n.remove());
-    const tb = $("#lb"); tb.classList.toggle("dmode", !!did); tb.dataset.d = did || "";
+    const tb = $("#lb"); tb.classList.add("noanim"); tb.classList.toggle("dmode", !!did);
     tb.insertAdjacentHTML("beforeend", grp("System Two reference", refs) + grp("System One · closed APIs", apis) +
       opens.map(([z, l]) => grp(`System One · open weights · ${z}`, l)).join("") + note);
-    // the morph between the overall view and one domain: score bars ease to their new width, the domain bars grow
-    if (!RM && (did || "") !== d0) {
-      tb.classList.remove("dgrow", "pgrow"); void tb.offsetWidth; tb.classList.add(did ? "dgrow" : "pgrow");
-      clearTimeout(tb._g); tb._g = setTimeout(() => tb.classList.remove("dgrow", "pgrow"), 700);
-      if (!!did !== wasD && btW) { const b1 = $("#lb .scell .bt"), w1 = b1 ? b1.getBoundingClientRect().width : 0;
-        if (w1) $$("#lb .scell .bt").forEach(b => b.animate([{ flex: `0 0 ${btW}px`, minWidth: "0px", maxWidth: "none" }, { flex: `0 0 ${w1}px`, minWidth: "0px", maxWidth: "none" }], { duration: 450, easing: "cubic-bezier(.2, .8, .2, 1)" })); }
-    }
+    if (did) fillD(did);
+    void tb.offsetWidth; requestAnimationFrame(() => tb.classList.remove("noanim"));
     if (!was.size || RM) return;
     const rows = $$("#lb tr[data-model]");
     rows.forEach(r => { const y = was.get(r.dataset.model);
@@ -309,7 +334,7 @@
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
     $("#msort").addEventListener("click", e => { const b = e.target.closest("[data-ms]"); if (!b) return; const c = COLS.find(o => o.id === b.dataset.ms);
-      T.sort = c.id; T.dir = c.asc ? 1 : -1; $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); $("#dsel").hidden = true; $("#dpick").value = "overall"; });
+      applySort(c.id, c.asc ? 1 : -1); });
     let onBar = false;                                          // profile bars: domain, score and System One rank
     $("#lb").addEventListener("pointermove", e => {
       // the whole profile at once: all 11 domains with score and System One rank; the pointed domain stands out
@@ -318,20 +343,20 @@
       const sel = DSORT(), b = pf.classList.contains("dbar") ? { dataset: { d: sel } } : e.target.closest(".pb") || nearBar(pf, e.clientX), m = BY[pf.closest("tr").dataset.model];
       const rows = D.domains.map(d => { const k = isS1(m) ? TOPD[d.id].get(m.key) : null;
         return `<span class="pr${b && b.dataset.d === d.id ? " on" : ""}"><span>${esc(d.short || d.name)}</span><span class="m">${f1(m.domains[d.id])}</span><span class="s">${k ? `#${k}` : ""}</span></span>`; }).join("");
-      const cta = pf.classList.contains("dbar") ? "" : `<span class="tip-cta"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2.5v7l2-2 1.3 2.8 1.2-.6-1.3-2.7h2.8z" fill="currentColor"/></svg>${TOUCH ? "Tap" : "Click"} to sort by ${esc(DOM[b.dataset.d].short)}</span>`;
+      const cta = `<span class="tip-cta"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2.5v7l2-2 1.3 2.8 1.2-.6-1.3-2.7h2.8z" fill="currentColor"/></svg>${TOUCH ? "Tap" : "Click"} ${pf.classList.contains("dbar") ? "to go back to the overall score" : `to sort by ${esc(DOM[b.dataset.d].short)}`}</span>`;
       tip(`<b>${esc(m.name)}</b> <span class="s">by domain${isS1(m) ? ` · rank of ${S1.length}` : ""}</span><span class="prof-tip">${rows}</span>${cta}`, e.clientX, e.clientY);
       onBar = true;
     });
     $("#lb").addEventListener("pointerleave", () => { if (onBar) { untip(); onBar = false; } });
     $("#lb").addEventListener("click", e => {
       const s = e.target.closest("[data-sort]");
-      if (s) { const c = COLS.find(o => o.id === s.dataset.sort); if (T.sort === c.id) T.dir = -T.dir; else { T.sort = c.id; T.dir = c.asc ? 1 : -1; } table(); $("#dsel").hidden = true; $("#dpick").value = "overall"; const nb = $(`[data-sort="${c.id}"]`); if (nb) nb.focus(); return; }
+      if (s) { const c = COLS.find(o => o.id === s.dataset.sort); applySort(c.id, T.sort === c.id ? -T.dir : c.asc ? 1 : -1); return; }
       if (e.target.closest("[data-showall]")) { T.filter = "all"; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o.dataset.f === "all")); table(); return; }
       if (e.target.closest("[data-dclear]")) { sortBy("overall"); return; }
       if (e.target.closest("[data-dock]")) return;                       // the dock handles its own button
-      // the eleven bars: a click sorts by the domain under the pointer (no drawer); the single bar does nothing
-      const pf = e.target.closest(".dprof"); if (pf) { untip(); onBar = false; sortBy((e.target.closest(".pb") || nearBar(pf, e.clientX)).dataset.d); return; }
-      if (e.target.closest(".dbar")) return;
+      // the eleven bars: a click sorts by the domain under the pointer (no drawer); a click on the one bar goes back
+      const pf = e.target.closest(".dprof"); if (pf && !DSORT()) { untip(); onBar = false; sortBy((e.target.closest(".pb") || nearBar(pf, e.clientX)).dataset.d); return; }
+      if (e.target.closest(".dbar") && DSORT()) { untip(); onBar = false; sortBy("overall"); return; }
       const r = e.target.closest("tr[data-model]"); if (r) openModel(BY[r.dataset.model]);
     });
     $("#lb").addEventListener("keydown", e => { const r = e.target.closest("tr[data-model]"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openModel(BY[r.dataset.model]); } });
@@ -339,28 +364,30 @@
     $("#dpick").innerHTML = `<option value="overall">Sort: overall score</option>` + FAMS.map(({ f, ds }) => `<optgroup label="${esc(f.name)}">${ds.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join("")}</optgroup>`).join("");
     $("#dpick").addEventListener("change", e => sortBy(e.target.value));
     $("#dsel").addEventListener("click", e => { if (e.target.closest("[data-dclear]")) sortBy("overall"); });
+    strip();
     dock();
   }
   const nearBar = (pf, x) => $$(".pb", pf).reduce((p, q) => { const a = q.getBoundingClientRect(), b = p.getBoundingClientRect(); return Math.abs(a.left + a.width / 2 - x) < Math.abs(b.left + b.width / 2 - x) ? q : p; });
-  // Choose a domain (or "overall"): the table re-sorts and morphs; a strip above it names the domain, its tier and Luna.
+  // Choose a domain (or "overall"); the strip above the table always names what the table is sorted by, so choosing a
+  // domain changes its text but not its height.
   function sortBy(id) {
-    if (id === "overall") { T.sort = "score"; T.dir = -1; } else { T.sort = "d:" + id; T.dir = -1; }
-    const hd = $("#lb thead"), y0 = hd ? hd.getBoundingClientRect().top : 0;        // the header stays where it is on screen
-    table();
-    const ds = $("#dsel"), d = DOM[id];
-    if (d) { const f = FAM[d.family];
-      ds.innerHTML = `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name)}</span><b>${esc(d.name)}</b><span class="dm">${d.leaderboard_tasks} tasks · ${d.leaderboard_tier === "All tasks" ? "untiered" : d.leaderboard_tier.toLowerCase() + " tier"}</span>` +
-        `<span class="lu">GPT-6 Luna ${f1(LUNA.domains[id])}</span><button type="button" class="lk" data-domain="${id}">Full ranking and tiers <span class="arr">→</span></button><button type="button" class="x" data-dclear>× Overall score</button>`;
-      if (ds.hidden && !RM) ds.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" });
-      ds.hidden = false;
-    } else ds.hidden = true;
-    const dy = hd ? hd.getBoundingClientRect().top - y0 : 0;
-    if (Math.abs(dy) > 1 && y0 > 0 && y0 < innerHeight) scrollBy({ top: dy, behavior: "instant" });
-    $("#dpick").value = d ? id : "overall";
-    $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", !d && o.dataset.ms === T.sort));
+    applySort(DOM[id] ? "d:" + id : "score", -1);
+    $("#dpick").value = DOM[id] ? id : "overall";
+    $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", !DOM[id] && o.dataset.ms === T.sort));
   }
-  // The domain dock, under the By-domain header: one tile per domain (grouped by family) and "Overall" first. As the
-  // pointer moves along it the tiles magnify, as in the macOS Dock; a click sorts the table by that domain.
+  function strip() {
+    const ds = $("#dsel"), id = DSORT(), d = DOM[id], key = id || "overall";
+    if (ds.dataset.k === key && !ds.hidden) return;
+    const f = d && FAM[d.family], luna = d ? LUNA.domains[id] : LUNA.score;
+    ds.innerHTML = (d ? `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name)}</span><b>${esc(d.name)}</b><span class="dm">${d.leaderboard_tasks} tasks · ${d.leaderboard_tier === "All tasks" ? "untiered" : d.leaderboard_tier.toLowerCase() + " tier"}</span>`
+        : `<span class="fam"><i style="background:var(--ink-2)"></i>All 11 domains</span><b>Overall score</b><span class="dm">mean of the 11 domains · ${D.totals.leaderboard_tasks.toLocaleString("en-US")} tasks</span>`) +
+      `<span class="lu">GPT-6 Luna ${d ? f1(luna) : f2(luna)}</span>` +
+      (d ? `<button type="button" class="lk" data-domain="${id}">Full ranking and tiers <span class="arr">→</span></button><button type="button" class="x" data-dclear>× Overall score</button>` : "");
+    if (ds.dataset.k && !RM) ds.animate([{ opacity: .2 }, { opacity: 1 }], { duration: 260, easing: "ease-out" });
+    ds.dataset.k = key; ds.hidden = false;
+  }
+    // The domain menu, under the By-domain header: "Overall" and the 11 domains by family, as a list with line icons;
+  // the rows near the pointer grow, as in the macOS Dock; a click sorts the table by that domain.
   const DICON = {
     overall: '<path d="M3.5 12.5V8.5M8 12.5V3.5M12.5 12.5V6.5"/>',
     sentiment: '<circle cx="8" cy="8" r="5.6"/><path d="M5.6 9.4c1.2 1.6 3.6 1.6 4.8 0"/><path d="M6 6.4v.1M10 6.4v.1"/>',
@@ -378,56 +405,52 @@
   function dock() {
     const th = $("#lb thead th.c-prof"); if (!th) return;
     const dk = document.createElement("div"); dk.className = "dock"; dk.hidden = true; dk.setAttribute("role", "listbox"); dk.setAttribute("aria-label", "Sort the leaderboard by a domain");
-    const tile = (id, name, c) => `<button type="button" class="di" role="option" data-dk="${id}" style="--fc:${c}" aria-label="${esc(name)}" aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true">${DICON[id]}</svg></button>`;
-    dk.innerHTML = tile("overall", "Overall score", "#4a5260") + '<span class="sep"></span>' +
-      FAMS.map(({ f, ds }) => ds.map(d => tile(d.id, d.name, f.color)).join("")).join('<span class="sep"></span>') + '<span class="dl" aria-hidden="true"></span>';
+    const item = (id, name, c) => `<button type="button" class="di" role="option" data-dk="${id}" style="--fc:${c}" aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true">${DICON[id]}</svg><span class="nm">${esc(name)}</span></button>`;
+    dk.innerHTML = item("overall", "Overall score", "var(--ink-2)") +
+      FAMS.map(({ f, ds }) => `<span class="dg"><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>` + ds.map(d => item(d.id, d.short, f.color)).join("")).join("");
     document.body.appendChild(dk);
-    const items = $$(".di", dk), lab = $(".dl", dk), BASE = 32, MAX = 56, SIG = 40;
-    let open = false, base = [], left0 = 0, leave, intent, raf = 0, px = null, calm = 0;
-    const size = x => items.forEach((it, i) => { const s = x == null ? 1 : 1 + (MAX / BASE - 1) * Math.exp(-((x - base[i]) ** 2) / (2 * SIG * SIG));
-      const z = (BASE * s).toFixed(1); it.style.width = it.style.height = z + "px"; it.style.borderRadius = (BASE * s * .27).toFixed(1) + "px"; });
-    const label = it => { if (!it) { lab.classList.remove("on"); return; }
-      lab.textContent = it.getAttribute("aria-label"); const r = it.getBoundingClientRect(), d = dk.getBoundingClientRect();
-      lab.style.left = (r.left - d.left + r.width / 2).toFixed(1) + "px"; lab.style.top = (r.bottom - d.top + 7).toFixed(1) + "px"; lab.classList.add("on"); };
+    const items = $$(".di", dk), MAXS = .34, SIG = 26;
+    let open = false, base = [], top0 = 0, leave, intent, raf = 0, py = null, calm = 0;
+    const size = y => items.forEach((it, i) => it.style.setProperty("--s", y == null ? 1 : (1 + MAXS * Math.exp(-((y - base[i]) ** 2) / (2 * SIG * SIG))).toFixed(3)));
     const btn = () => $("[data-dock]", th);
-    const show = (focus) => {
+    const show = focus => {
       clearTimeout(leave); if (open) return; open = true;
       const cur = DSORT() || "overall";
       items.forEach(it => { const on = it.dataset.dk === cur; it.classList.toggle("cur", on); it.setAttribute("aria-selected", on); });
       dk.classList.add("settle"); size(null); dk.hidden = false;
-      const r = th.getBoundingClientRect(), w = dk.offsetWidth, cx = Math.min(Math.max(r.left + r.width / 2, w / 2 + 12), innerWidth - w / 2 - 12);
-      dk.style.left = cx + scrollX + "px"; dk.style.top = r.bottom + scrollY + 6 + "px";
-      left0 = cx - w / 2; base = items.map(it => it.offsetLeft + BASE / 2);
-      requestAnimationFrame(() => { dk.classList.add("on"); dk.classList.remove("settle"); });
+      const r = th.getBoundingClientRect(), w = dk.offsetWidth, x = Math.min(Math.max(12, r.left + 4), innerWidth - w - 12);
+      dk.style.left = x + scrollX + "px"; dk.style.top = r.bottom + scrollY + 4 + "px";
+      top0 = r.bottom + 4; base = items.map(it => it.offsetTop + it.offsetHeight / 2);
+      requestAnimationFrame(() => dk.classList.add("on"));
       if (btn()) btn().setAttribute("aria-expanded", "true");
-      if (focus) { const it = items.find(o => o.classList.contains("cur")) || items[0]; it.focus(); }
+      if (focus) (items.find(o => o.classList.contains("cur")) || items[0]).focus();
     };
-    const hide = () => { clearTimeout(intent); if (!open) return; open = false; dk.classList.add("settle"); dk.classList.remove("on"); label(null); size(null);
+    const hide = () => { clearTimeout(intent); if (!open) return; open = false; dk.classList.add("settle"); dk.classList.remove("on"); size(null);
       if (btn()) btn().setAttribute("aria-expanded", "false"); setTimeout(() => { if (!open) dk.hidden = true; }, 160); };
     const pick = it => { hide(); calm = Date.now() + 900; sortBy(it.dataset.dk); const b = btn(); if (b) b.focus({ preventScroll: true }); };
     th.addEventListener("pointerenter", e => { if (e.pointerType !== "mouse" || Date.now() < calm) return; clearTimeout(leave); intent = setTimeout(() => show(false), open ? 0 : 120); });
     th.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse") return; clearTimeout(intent); leave = setTimeout(hide, 220); });
     th.addEventListener("click", e => { if (!e.target.closest("[data-dock]")) return; open && e.pointerType !== "mouse" ? hide() : show(e.detail === 0); });
-    th.addEventListener("keydown", e => { if (e.target.closest("[data-dock]") && (e.key === "ArrowDown")) { e.preventDefault(); show(true); } });
+    th.addEventListener("keydown", e => { if (e.target.closest("[data-dock]") && e.key === "ArrowDown") { e.preventDefault(); show(true); } });
     dk.addEventListener("pointerenter", () => clearTimeout(leave));
-    dk.addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; px = e.clientX - left0; dk.classList.remove("settle");
-      if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (px == null) return; size(px);
-        const it = items.reduce((p, q, i) => Math.abs(base[i] - px) < Math.abs(base[items.indexOf(p)] - px) ? q : p, items[0]); label(it); }); });
-    dk.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse") return; px = null; dk.classList.add("settle"); size(null); label(null); leave = setTimeout(hide, 220); });
+    dk.addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; py = e.clientY - top0; dk.classList.remove("settle");
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (py != null) size(py); }); });
+    dk.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse") return; py = null; dk.classList.add("settle"); size(null); leave = setTimeout(hide, 220); });
     dk.addEventListener("click", e => { const it = e.target.closest(".di"); if (it) pick(it); });
     dk.addEventListener("keydown", e => {
       const i = items.indexOf(document.activeElement);
       if (e.key === "Escape") { e.preventDefault(); hide(); if (btn()) btn().focus(); return; }
-      const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-      if (k && i >= 0) { e.preventDefault(); const it = items[(i + k + items.length) % items.length]; it.focus(); }
+      const k = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+      if (k && i >= 0) { e.preventDefault(); items[(i + k + items.length) % items.length].focus(); }
+      if (e.key === "Home" || e.key === "End") { e.preventDefault(); items[e.key === "Home" ? 0 : items.length - 1].focus(); }
     });
-    dk.addEventListener("focusin", e => { const it = e.target.closest(".di"); if (!it) return; dk.classList.add("settle"); size(base[items.indexOf(it)]); requestAnimationFrame(() => label(it)); });
+    dk.addEventListener("focusin", e => { const it = e.target.closest(".di"); if (!it) return; dk.classList.add("settle"); size(base[items.indexOf(it)]); });
     dk.addEventListener("focusout", e => { if (!dk.contains(e.relatedTarget) && !th.contains(e.relatedTarget)) hide(); });
     document.addEventListener("pointerdown", e => { if (open && !dk.contains(e.target) && !th.contains(e.target)) hide(); });
     addEventListener("scroll", () => { if (open) hide(); }, { passive: true });
   }
 
-  // ---- tabs (ARIA) -------------------------------------------------------------------------------------------------
+    // ---- tabs (ARIA) -------------------------------------------------------------------------------------------------
   function tabs(list, onChange) {
     const ts = $$('[role="tab"]', list);
     const sel = (t, focus) => {
@@ -624,7 +647,8 @@
     null: { title: "Noticing a missing answer, against score", sub: "Models with similar scores differ widely in N; the score says little about it. Dashed: trend; band: 90% of the models.",
       note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the 16 System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
     sn: { title: "Decision reliability", sub: "Option-order stability S against null discrimination N; dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
-    tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
+    tier: { title: "How scores fall with difficulty", sub: "In every tiered domain, the median System One model scores lower on each harder tier. Tiers are defined within each domain.",
+      note: "Lines: the domain's best System One model, StartLux Instant (the best 4B model) and GPT-6 Luna. The band spans all 18 System One models; point at it for any model's line." },
     order: { title: "How accuracy moves with the option order", sub: "Each dot: one of 12 shuffles, against the original order. Ranked by the range over all 13 orders, most stable first.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher option-order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
     gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals.", note: "Not only the leaderboard tier, so the gaps differ from the domain cards. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
@@ -791,24 +815,31 @@
     const tops = top(S1, val, compact ? 3 : 1), hi = new Set([...tops.map(o => o.key), ...(compact ? [] : ["StartLux-4B-Instant"]), LUNA.key]);
     const SHADES = ["#8e2c43", "#c4687c", "#e2a7b4"];
     const lineCol = o => o.group === "s2" ? "var(--s2)" : tops.includes(o) ? SHADES[tops.indexOf(o)] : colorOf(o);
+    // all 18 System One models as a band (range, and the middle half darker) with their median, instead of 18 lines;
+    // a model's own line appears when the pointer is on it
+    const qs = (a, q) => { const v = [...a].sort((x, y) => x - y), i = q * (v.length - 1), lo = Math.floor(i); return v[lo] + (i - lo) * (v[Math.ceil(i)] - v[lo]); };
+    const st = ks.map(k => { const v = S1.map(o => o.tiers[id][k]); return [0, .25, .5, .75, 1].map(q => qs(v, q)); });
+    const g0 = S("g", {}, svg), poly = (lo, hi) => ks.map((_, i) => `${i ? "L" : "M"}${xs(i).toFixed(1)} ${ys(st[i][hi]).toFixed(1)}`).join("") + ks.map((_, j) => ks.length - 1 - j).map(i => `L${xs(i).toFixed(1)} ${ys(st[i][lo]).toFixed(1)}`).join("") + "Z";
+    S("path", { d: poly(0, 4), fill: "var(--ink-2)", opacity: .06 }, g0); S("path", { d: poly(1, 3), fill: "var(--ink-2)", opacity: .1 }, g0);
+    S("path", { d: ks.map((_, i) => `${i ? "L" : "M"}${xs(i).toFixed(1)} ${ys(st[i][2]).toFixed(1)}`).join(""), fill: "none", stroke: "var(--muted)", "stroke-width": 1.3, "stroke-dasharray": "2 3" }, g0);
     const g = S("g", {}, svg), ends = [];
-    for (const o of [...M].sort((a, b) => hi.has(a.key) - hi.has(b.key))) {
+    for (const o of [...S1, LUNA].sort((a, b) => hi.has(a.key) - hi.has(b.key))) {
       const t = o.tiers[id], pts = ks.map((k, i) => [xs(i), ys(t[k])]), on = hi.has(o.key), col = lineCol(o);
       const dd = pts.map((p, i) => `${i ? "L" : "M"}${p[0]} ${p[1]}`).join("");
       const a = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${o.name}: ${ks.map(k => `${names[k]} ${t[k]}`).join(", ")}` }, g);
       S("path", { d: dd, fill: "none", stroke: "transparent", "stroke-width": 12 }, a);
-      const ln = S("path", { d: dd, fill: "none", stroke: on ? col : "#d9d7ce", "stroke-width": on ? 2.4 : 1.2, "stroke-dasharray": o.group === "s2" ? "5 4" : null }, a);
-      for (const p of pts) S("circle", { cx: p[0], cy: p[1], r: on ? 3.4 : 2, fill: on ? col : "#d9d7ce", stroke: "#fff", "stroke-width": on ? 1.2 : 0 }, a);
+      const ln = S("path", { d: dd, fill: "none", stroke: on ? col : "transparent", "stroke-width": on ? 2.4 : 2, "stroke-dasharray": o.group === "s2" ? "5 4" : null }, a);
+      const dots = pts.map(p => S("circle", { cx: p[0], cy: p[1], r: on ? 3.4 : 2.6, fill: on ? col : "transparent", stroke: on ? "#fff" : "none", "stroke-width": on ? 1.2 : 0 }, a));
       bindTip(a, () => `<b>${esc(o.name)}</b><br><span class="m">${ks.map(k => `${k} ${t[k]}`).join(" · ")}</span>${HINT}`);
-      a.addEventListener("pointerenter", () => { ln.setAttribute("stroke", col); ln.setAttribute("stroke-width", 2.6); a.parentNode.appendChild(a); });
-      a.addEventListener("pointerleave", () => { if (!on) { ln.setAttribute("stroke", "#d9d7ce"); ln.setAttribute("stroke-width", 1.2); } });
+      a.addEventListener("pointerenter", () => { ln.setAttribute("stroke", col); ln.setAttribute("stroke-width", 2.4); dots.forEach(c => c.setAttribute("fill", col)); a.parentNode.appendChild(a); });
+      a.addEventListener("pointerleave", () => { if (!on) { ln.setAttribute("stroke", "transparent"); dots.forEach(c => c.setAttribute("fill", "transparent")); } });
       a.addEventListener("click", () => openModel(o));
       if (on) ends.push({ x: pts[pts.length - 1][0], y: pts[pts.length - 1][1], label: o.name });
     }
     ends.sort((a, b) => a.y - b.y);
     for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
     for (const e of ends) S("text", { class: "lbl", x: e.x + 9, y: e.y + 4 }, svg).textContent = e.label;
-    if (lgHost) lgHost.innerHTML = [...tops, ...M.filter(o => hi.has(o.key) && !tops.includes(o))].map(o => `<span><i class="${o.group === "s2" ? "dash" : ""}" style="${o.group === "s2" ? "" : `background:${lineCol(o)}`}"></i>${esc(o.name)}</span>`).join("") + `<span><i class="ln" style="background:#d9d7ce"></i>Other models</span>`;
+    if (lgHost) lgHost.innerHTML = [...tops, ...M.filter(o => hi.has(o.key) && !tops.includes(o))].map(o => `<span><i class="${o.group === "s2" ? "dash" : ""}" style="${o.group === "s2" ? "" : `background:${lineCol(o)}`}"></i>${esc(o.name)}</span>`).join("") + `<span><i class="band"></i>All 18 System One models (darker: the middle half; dotted: the median)</span>`;
   }
   const showChart = k => { const t = document.getElementById("k-" + k); if (t) t.closest('[role="tablist"]')._sel(t.id); };
   function insightsControls() {

@@ -15,8 +15,9 @@ A static page with no build step and no external dependencies:
 - `assets/logos/`: model logos (they belong to the models' developers).
 - `assets/fonts/`: Inter, Instrument Serif and JetBrains Mono, self-hosted (SIL Open Font License 1.1, see
   `assets/fonts/LICENSE.txt`).
-- `assets/img/`: the SysOne-Arena logo (`logo.svg`, the paper's Fig. 1 wordmark redrawn for the web, text as
-  outlines), the favicon and the link-preview image (`og.png`, rendered from the page's own header).
+- `assets/img/`: a static logo (`logo.svg`), the favicon (the logo's ring) and the link-preview image (`og.png`,
+  rendered from the page's own header). The animated logo at the top of the page is inline SVG: "SO-Arena" at rest;
+  near the O it unfolds to "System One-Arena". Its letters are glyph outlines of Fraunces (SIL Open Font License 1.1).
 
 ## Data
 

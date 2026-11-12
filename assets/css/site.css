@@ -853,63 +853,100 @@ dialog.drawer.out::backdrop { animation: fadeout .18s ease-in forwards; }
 .hlpop p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
 .hlpop .more { font-size: 12.5px; font-weight: 600; color: var(--ink); }
 .hlpop .more:hover { color: var(--rel); }
-.hlpop .cap { display: block; margin-top: 8px; font-size: 11px; color: var(--muted); }
-.hlpop .ar { color: var(--faint); font-size: 12px; }
-.hlpop .vd { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
-.hlpop .vd.ok { color: #2f7d57; } .hlpop .vd.no { color: #b04a4a; }
-/* verified labels: a lens passes over two tasks; one label holds, one is dropped */
-.v-lab { position: relative; display: grid; grid-template-columns: 26px 24px 14px 1fr; align-items: center; gap: 9px 8px; }
-.v-lab .doc { display: grid; gap: 3px; width: 22px; padding: 4px; border-radius: 4px; background: #fff; border: 1px solid var(--line-2); }
-.v-lab .doc i { display: block; height: 2px; border-radius: 1px; background: #c9cdd2; } .v-lab .doc i:nth-child(2) { width: 70%; }
-.v-lab .tg { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--ink); color: #fff; font: 650 12px/1 var(--sans); }
-.v-lab .vd { opacity: 0; transform: translateX(-4px); }
-.v-lab .lens { position: absolute; left: -4px; top: -4px; width: 36px; height: 30px; border: 2px solid var(--ink-2); border-radius: 50%; opacity: 0; }
-.hlpop.go .v-lab .lens { animation: lens 1.5s cubic-bezier(.65, 0, .35, 1) .15s forwards; }
-@keyframes lens { 0% { opacity: 0; transform: translateY(0); } 12% { opacity: .55; } 45% { transform: translateY(0); } 70% { transform: translateY(31px); opacity: .55; } 100% { transform: translateY(31px); opacity: 0; } }
-.hlpop.go .v-lab .vd { transition: opacity .25s ease, transform .25s ease; opacity: 1; transform: none; }
-.hlpop.go .v-lab .vd.ok { transition-delay: .55s; } .hlpop.go .v-lab .vd.no { transition-delay: 1.25s; }
-.hlpop.go .v-lab .tg.x { animation: drop-tag .3s ease 1.25s forwards; }
-@keyframes drop-tag { to { background: transparent; color: var(--faint); box-shadow: inset 0 0 0 1.5px #c4c8cd; text-decoration: line-through; } }
-/* difficulty tiers: the top model's Math score falls tier by tier */
-.v-tier { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; height: 104px; align-items: end; padding-top: 18px; }
-.v-tier .tb { display: grid; grid-template-rows: auto 64px auto; justify-items: center; gap: 4px; }
-.v-tier .tb i { align-self: end; width: 26px; height: var(--h); border-radius: 4px 4px 1px 1px; background: var(--cap); opacity: .55; transform-origin: bottom; transform: scaleY(0); }
-.v-tier .tb.lb i { opacity: 1; }
-.v-tier .bv { font: 600 12px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); opacity: 0; }
-.v-tier .tk { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
-.hlpop.go .v-tier .tb i { transform: none; transition: transform .5s cubic-bezier(.2, .8, .2, 1) var(--d); }
-.hlpop.go .v-tier .bv { opacity: 1; transition: opacity .25s ease calc(var(--d) + .3s); }
-.v-tier .brk { position: absolute; top: 0; right: 0; width: calc(100% * var(--n) / var(--of) - 5px); border-top: 1.5px solid var(--ink-2); text-align: center;
-  font: 500 9.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); padding-top: 4px; }
-.v-tier .brk::before, .v-tier .brk::after { content: ""; position: absolute; top: -1.5px; width: 1.5px; height: 5px; background: var(--ink-2); }
-.v-tier .brk::before { left: 0; } .v-tier .brk::after { right: 0; }
-/* agent sandboxes: three steps, each a pick from a menu, then the goal */
-.v-agt { display: flex; align-items: center; gap: 7px; }
-.v-agt .stp { display: grid; gap: 4px; justify-items: center; }
-.v-agt .sn { font: 500 10px/1 var(--mono); color: var(--muted); }
-.v-agt .mn { display: grid; gap: 3px; padding: 5px; width: 46px; border-radius: 6px; background: #fff; border: 1px solid var(--line-2); }
-.v-agt .mn b { display: block; height: 7px; border-radius: 2px; background: var(--soft-2); }
-.hlpop.go .v-agt .mn b.pk { animation: pick .3s ease var(--d) forwards; }
-@keyframes pick { to { background: #8f6556; } }
-.v-agt .goal { font-size: 11.5px; font-weight: 650; color: #2f7d57; white-space: nowrap; opacity: 0; }
-.hlpop.go .v-agt .goal { opacity: 1; transition: opacity .3s ease calc(var(--d) + .2s); }
-/* reliability tests: shuffled, and the correct option removed */
-.v-rel { display: grid; grid-template-columns: 22px auto 12px auto 1fr; align-items: center; gap: 10px 7px; }
-.v-rel .sym { width: 20px; height: 20px; font-size: 13px; }
-.v-rel .chs { display: inline-flex; gap: 3px; }
-.v-rel .chs b { display: grid; place-items: center; min-width: 18px; height: 20px; padding: 0 3px; border-radius: 5px; border: 1.3px solid var(--ink); background: #fff; font: 650 11px/1 var(--sans); color: var(--ink); }
-.v-rel .chs b.pk { background: var(--ink); color: #fff; }
-.v-rel .chs b.gone { border-style: dashed; border-color: #c4c8cd; }
-.v-rel .late, .v-rel .late2 { opacity: 0; transform: translateX(-4px); }
-.hlpop.go .v-rel .late { opacity: 1; transform: none; transition: opacity .3s ease .35s, transform .3s ease .35s; }
-.hlpop.go .v-rel .late2 { opacity: 1; transform: none; transition: opacity .3s ease .9s, transform .3s ease .9s; }
-@media (prefers-reduced-motion: reduce) {
-  .hlpop, .hlpop * { transition: none !important; animation: none !important; }
-  .v-lab .vd, .v-tier .bv, .v-agt .goal, .v-rel .late, .v-rel .late2 { opacity: 1; transform: none; }
-  .v-tier .tb i { transform: none; } .v-agt .mn b.pk { background: #8f6556; }
-}
-.v-tier { height: auto; }
-.v-tier .tb { grid-template-rows: 14px 64px 12px; }
+/* the four pictures (round 9, user): other benchmarks | SO-Arena, after the paper's Fig. 1; colours per highlight from
+   the figure's panels (--pn panel, --hc header, --hl line). Resting state = final frame; .go plays the animation. */
+.hlpop { width: min(436px, calc(100vw - 24px)); }
+.hlpop .viz { padding: 10px 10px 8px; background: var(--pn, var(--soft)); }
+.hv { display: block; width: 100%; height: auto; overflow: visible; }
+.hv text { font-family: var(--sans); }
+.hv .hh { font-size: 12.5px; font-weight: 650; fill: var(--ink); }
+.hv .hs { fill: var(--hc); }
+.hv .cap { font-size: 12px; font-style: italic; fill: var(--muted); }
+.hv .rl { font-size: 11px; font-style: italic; fill: var(--muted); }
+.hv .syc.s { fill: #3d7fbf; } .hv .syc.n { fill: #2c6aa8; } .hv .sy { font: italic 400 11px var(--display); fill: #fff; }
+.hv .dv { fill: none; stroke: var(--hl); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.hv .card { fill: #fff; stroke: var(--hl); stroke-width: 1.2; }
+.hv .ico { fill: none; stroke: #646a70; stroke-width: 1.1; stroke-linecap: round; }
+.hv .ct { font-size: 10.5px; font-weight: 650; fill: var(--hc); }
+.hv .q { font-size: 11.5px; font-style: italic; fill: var(--ink); }
+.hv .st { fill: #fff; stroke: #aab0b7; stroke-width: 1; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; }
+.hv .st.on { fill: #d4a24e; stroke: #8a6a2a; }
+.hv .tk, .hv .xk { fill: none; stroke: #2f7d57; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+.hv .xk { stroke: #b0566f; }
+.hv .tk.sgm { stroke: #fff; stroke-width: 1.7; }
+.hv .qm { font-size: 19px; font-weight: 700; fill: #b0566f; }
+.hv .ck { font-size: 11px; font-weight: 600; fill: var(--ink); }
+.hv .mag { opacity: 0; pointer-events: none; }
+.hv .mag circle { fill: rgba(255, 255, 255, .4); stroke: #4a535c; stroke-width: 2; }
+.hv .mag path { stroke: #4a535c; stroke-width: 3; stroke-linecap: round; }
+.hv .fl { fill: none; stroke: var(--hc); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.hv .tl { font-size: 11px; font-weight: 650; fill: var(--ink); }
+.hv .eq { font-size: 15px; font-weight: 600; fill: var(--muted); }
+.hv .bk rect { fill: #fff; stroke: #1b2129; stroke-width: 1.5; }
+.hv .bk text { font-size: 11.5px; font-weight: 650; fill: #1b2129; }
+.hv .bk.nul text { font-size: 10.5px; }
+.hv .bk.pk rect { fill: #1b2129; } .hv .bk.pk text { fill: #fff; }
+.hv .bk.gone rect { fill: none; stroke: #b4b9bf; stroke-dasharray: 3 2.5; } .hv .bk.gone text { fill: #c4c8cd; }
+.hv .ar path { fill: none; stroke: #4a535c; stroke-width: 1.5; stroke-linecap: round; } .hv .ar .ah { fill: #4a535c; stroke: none; }
+.hv .bar { stroke: var(--hl); stroke-width: 1; } .hv .dot { fill: #c3c7cc; }
+.hv .ln { stroke: #d5d8dc; stroke-width: 2.4; stroke-linecap: round; }
+.hv .pq { font-size: 13px; font-weight: 700; fill: var(--hc); }
+.hv .pgh { fill: var(--hc); opacity: .3; }
+.hv .sbx { fill: rgba(255, 255, 255, .5); stroke: var(--hc); stroke-width: 1.3; stroke-dasharray: 6 4; }
+.hv .sbl { fill: var(--pn); } .hv .sb { font-size: 11px; font-style: italic; fill: var(--hc); }
+.hv .ch rect { fill: #fff; stroke: #1b2129; stroke-width: 1.3; } .hv .ch text { font-size: 10.5px; font-weight: 650; fill: #1b2129; }
+.hv .lp { fill: none; stroke: var(--hc); stroke-width: 1.5; } .hv .ah2 { fill: var(--hc); }
+.hv .sg { fill: #fff; stroke: #1b2129; stroke-width: 1.3; } .hv .sg.ok { fill: #4b9a72; } .hv .sg.bad { stroke: #b0566f; }
+.hv .fp { stroke: #4a535c; stroke-width: 2; stroke-linecap: round; } .hv .ff { fill: #c4c8cd; stroke: #4a535c; stroke-width: 1.2; stroke-linejoin: round; }
+.hv .rb, .hv .a-in, .hv .a-pop, .hv .bk { transform-box: fill-box; transform-origin: 50% 100%; }
+.hv .a-pop, .hv .xk { transform-box: fill-box; transform-origin: center; }
+.hv .eyes { transform-box: fill-box; transform-origin: center; animation: blink 3.6s infinite; }
+.hlpop.go .hv .a-in { animation: hv-in .35s ease-out var(--d) both; }
+.hlpop.go .hv .a-pop { animation: hv-pop .4s cubic-bezier(.3, 1.5, .5, 1) var(--d) both; }
+.hlpop.go .hv .a-draw { stroke-dasharray: 1; animation: hv-draw .3s ease-out var(--d) both; }
+.hlpop.go .hv .a-hop { animation: hv-hop .55s cubic-bezier(.3, 0, .3, 1) var(--d); }
+.hlpop.go .hv .a-wh { animation: hv-walk .5s cubic-bezier(.2, .8, .2, 1) var(--d) both, hv-hop .55s cubic-bezier(.3, 0, .3, 1) var(--h); }
+.hlpop.go .hv .a-hop4 { animation: hv-hop2 .8s ease .45s 4; }
+.hlpop.go .hv .st.on { animation: hv-star .3s cubic-bezier(.3, 1.5, .5, 1) var(--d) both; }
+.hlpop.go .hv .mag { animation: hv-mag 1.25s ease-in-out .55s both; }
+.hlpop.go .hv .c0 { animation: hv-c0 .6s cubic-bezier(.2, .8, .2, 1) 1.3s both; }
+.hlpop.go .hv .c1 { animation: hv-c1 1.05s linear .75s both; }
+.hlpop.go .hv .c2 { animation: hv-c2 1.7s linear .3s both; }
+.hlpop.go .hv .ch.f1 rect { animation: hv-fr 1.6s linear .45s 2 forwards; } .hlpop.go .hv .ch.f1 text { animation: hv-ft 1.6s linear .45s 2 forwards; }
+.hlpop.go .hv .ch.f2 rect { animation: hv-fr 1.6s linear 1.25s forwards; } .hlpop.go .hv .ch.f2 text { animation: hv-ft 1.6s linear 1.25s forwards; }
+.hlpop.go .hv .ch.f3 rect { animation: hv-fr 1.6s linear 2.85s forwards; } .hlpop.go .hv .ch.f3 text { animation: hv-ft 1.6s linear 2.85s forwards; }
+.hlpop.go .hv .pgh { animation: hv-pgh .8s ease .45s 4 forwards; }
+.hlpop.go .hv .sg.ok { animation: hv-sg .3s ease var(--d) both; }
+.hlpop.go .hv .sg.bad { animation: hv-sgb .3s ease var(--d) both; }
+.hlpop.go .hv .a-pick rect { animation: hv-pk .25s ease var(--d) both; } .hlpop.go .hv .a-pick text { animation: hv-pkt .25s ease var(--d) both; }
+.hlpop.go .hv .a-gone rect { animation: hv-gone .45s ease var(--d) both; } .hlpop.go .hv .a-gone text { animation: hv-gonet .45s ease var(--d) both; }
+.hlpop.go .hv .a-sl { animation: hv-sl .4s cubic-bezier(.2, .8, .2, 1) var(--d) both; }
+.hlpop.go .hv .a-sl rect { animation: hv-pk .25s ease 3.45s both; } .hlpop.go .hv .a-sl text { animation: hv-pkt .25s ease 3.45s both; }
+.hlpop.go .hv .a-mv { animation: hv-mv .6s cubic-bezier(.45, 0, .25, 1) var(--d) both, hv-hop .55s cubic-bezier(.3, 0, .3, 1) 3.3s; }
+@keyframes hv-in { from { opacity: 0; transform: translateY(3px); } }
+@keyframes hv-pop { from { opacity: 0; transform: scale(.3); } 70% { opacity: 1; transform: scale(1.12); } }
+@keyframes hv-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes hv-hop { 0%, 100% { transform: none; } 18% { transform: scale(1.08, .9); } 45% { transform: translateY(-8px) scale(.96, 1.05); } 75% { transform: scale(1.04, .96); } }
+@keyframes hv-hop2 { 0%, 60%, 100% { transform: none; } 12% { transform: scale(1.06, .92); } 30% { transform: translateY(-6px); } 48% { transform: scale(1.03, .97); } }
+@keyframes hv-walk { from { opacity: 0; transform: translateX(-34px); } 40% { opacity: 1; } }
+@keyframes hv-star { from { fill: #fff; stroke: #aab0b7; transform: scale(.5); } }
+@keyframes hv-mag { 0% { opacity: 0; transform: translate(170px, 56px); } 12% { opacity: 1; transform: translate(172px, 56px); } 45% { transform: translate(236px, 58px); }
+  55% { transform: translate(176px, 72px); } 86% { opacity: 1; transform: translate(232px, 74px); } 100% { opacity: 0; transform: translate(232px, 74px); } }
+@keyframes hv-c0 { from { opacity: 0; transform: translateX(-34px); } 40% { opacity: 1; } }
+@keyframes hv-c1 { 0% { opacity: 0; transform: translate(-101px, 26px); } 20% { opacity: 1; } 55% { transform: translate(-45px, 26px); } 72% { transform: translate(-24px, -6px); } 100% { transform: none; } }
+@keyframes hv-c2 { 0% { opacity: 0; transform: translate(-180px, 52px); } 12% { opacity: 1; } 34% { transform: translate(-124px, 52px); } 45% { transform: translate(-103px, 20px); }
+  56% { transform: translate(-79px, 26px); } 74% { transform: translate(-58px, 26px); } 86% { transform: translate(-38px, -6px); } 100% { transform: none; } }
+@keyframes hv-fr { 0%, 36% { fill: #1b2129; } 40%, 100% { fill: #fff; } }
+@keyframes hv-ft { 0%, 36% { fill: #fff; } 40%, 100% { fill: #1b2129; } }
+@keyframes hv-pgh { 0%, 100% { opacity: .3; } 15% { opacity: .9; } 55% { opacity: .3; } }
+@keyframes hv-sg { from { fill: #fff; } }
+@keyframes hv-sgb { from { stroke: #1b2129; } }
+@keyframes hv-pk { from { fill: #fff; } } @keyframes hv-pkt { from { fill: #1b2129; } }
+@keyframes hv-gone { from { fill: #fff; stroke: #1b2129; stroke-dasharray: none; } }
+@keyframes hv-gonet { from { fill: #1b2129; } }
+@keyframes hv-sl { from { opacity: 0; transform: translateX(14px); } }
+@keyframes hv-mv { from { transform: translateX(-56px); } }
+@media (prefers-reduced-motion: reduce) { .hlpop, .hlpop * { transition: none !important; animation: none !important; } }
 
 /* ---- reliability demo, polished (user): option cards, a friendlier robot, eased motion, automatic replay ---- */
 .stage2 { width: 206px; height: 96px; }

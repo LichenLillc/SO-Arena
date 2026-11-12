@@ -415,36 +415,73 @@
     else { S("circle", { class: "mk", cx: x, cy: y, r, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g);
       if (m.group === "auto") S("circle", { cx: x, cy: y, r: r * .45, fill: "#fff", "pointer-events": "none" }, g); }
   }
-  // a polyline as small boxes, so labels keep off a plotted line
-  const lineBoxes = (pts, r = 3) => pts.slice(1).flatMap(([x1, y1], i) => { const [x0, y0] = pts[i], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 4));
-    return Array.from({ length: n + 1 }, (_, k) => { const x = x0 + (x1 - x0) * k / n, y = y0 + (y1 - y0) * k / n; return { x0: x - r, x1: x + r, y0: y - r, y1: y + r }; }); });
+  // a polyline as small boxes, so labels keep off a plotted line; w: the cost of a label touching one box
+  const lineBoxes = (pts, r = 3, w = 40) => pts.slice(1).flatMap(([x1, y1], i) => { const [x0, y0] = pts[i], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 4));
+    return Array.from({ length: n + 1 }, (_, k) => { const x = x0 + (x1 - x0) * k / n, y = y0 + (y1 - y0) * k / n; return { x0: x - r, x1: x + r, y0: y - r, y1: y + r, w }; }); });
+  // Point labels, placed together rather than one by one. Each label has candidate spots: next to its point, or out
+  // along a thin leader line (16 directions, 4 lengths). The layout minimizes one cost: overlaps with labels and
+  // points are all but forbidden, leader lines must not cross labels, points or each other, labels keep off plotted
+  // lines, and nearer and plainer spots are preferred. Coordinate descent from several seeded starts keeps the best.
+  const ov = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+  const area = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+  const cross = (p, q) => { const o = (a, b, c) => Math.sign((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]));
+    return o(p[0], p[1], q[0]) * o(p[0], p[1], q[1]) < 0 && o(q[0], q[1], p[0]) * o(q[0], q[1], p[1]) < 0; };
+  const segBox = (l, b) => { const [x1, y1, x2, y2] = l, A = [x1, y1], B = [x2, y2];
+    if ((x1 > b.x0 && x1 < b.x1 && y1 > b.y0 && y1 < b.y1) || (x2 > b.x0 && x2 < b.x1 && y2 > b.y0 && y2 < b.y1)) return true;
+    const c = [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]];
+    return c.some((p, i) => cross([A, B], [p, c[(i + 1) % 4]])); };
+  const segPt = (l, x, y) => { const [x1, y1, x2, y2] = l, dx = x2 - x1, dy = y2 - y1, t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy || 1)));
+    return Math.hypot(x1 + t * dx - x, y1 + t * dy - y); };
   function labels(svg, items, bounds, only, obst = []) {
-    const boxes = items.map(it => ({ x0: it.x - 7, x1: it.x + 7, y0: it.y - 7, y1: it.y + 7 })).concat(obst);
-    const hit = b => boxes.some(o => b.x0 < o.x1 && o.x0 < b.x1 && b.y0 < o.y1 && o.y0 < b.y1) || b.x0 < bounds.x0 || b.x1 > bounds.x1 || b.y0 < bounds.y0 || b.y1 > bounds.y1;
-    const g = S("g", {}, svg);
-    // Highest points first: they are the strongest models, the ones a reader looks for in a crowded corner.
-    for (const it of [...items].sort((a, b) => a.y - b.y)) {
-      if (only && !only.has(it.m.key)) continue;              // on narrow screens: label the points that carry the story
-      const w = it.label.length * 6.3 + 2, h = 14, gp = 9, dg = 5, far = 24;
-      // Next to the point first; if all eight spots are taken, one ring further out with a thin leader line.
-      const near = [[it.x + gp, it.y - h / 2, "start"], [it.x - gp - w, it.y - h / 2, "end"], [it.x - w / 2, it.y - gp - h, "middle"], [it.x - w / 2, it.y + gp, "middle"],
-        [it.x + dg, it.y - dg - h, "start"], [it.x + dg, it.y + dg, "start"], [it.x - dg - w, it.y - dg - h, "end"], [it.x - dg - w, it.y + dg, "end"]].map(c => [...c, null]);
-      const away = [far, far * 1.6, far * 2.3].flatMap(R => [[1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]].map(([dx, dy]) => [dx, dy, R])).map(([dx, dy, R]) => {
-        const cx = it.x + dx * R * (dy ? .8 : 1), cy = it.y + dy * R * (dx ? .7 : 1);
-        return [dx > 0 ? cx : dx < 0 ? cx - w : cx - w / 2, dx ? cy - h / 2 : dy < 0 ? cy - h : cy, dx > 0 ? "start" : dx < 0 ? "end" : "middle", [dx, dy, cx, cy]];
-      });
-      for (const [x0, y0, a, lead] of [...near, ...away]) {
-        const b = { x0, x1: x0 + w, y0, y1: y0 + h };
-        if (hit(b)) continue;
-        boxes.push(b);
-        if (lead) {
-          const [dx, dy, cx, cy] = lead, u = Math.hypot(dx, dy);
-          S("line", { class: "lead", x1: it.x + dx / u * 6, y1: it.y + dy / u * 6, x2: cx - dx * 2, y2: cy - (dx ? 0 : dy * 2) }, g);
-        }
-        S("text", { class: "lbl", x: a === "start" ? x0 : a === "end" ? x0 + w : x0 + w / 2, y: y0 + 11, "text-anchor": a }, g).textContent = it.label;
-        break;
+    const g = S("g", {}, svg), L = items.filter(it => !only || only.has(it.m.key)), h = 14;
+    const ms = S("text", { class: "lbl", x: -999, y: -999 }, g);
+    for (const it of L) { ms.textContent = it.label; const w = ms.getComputedTextLength(); it.w = (w > 0 ? w : it.label.length * 6.3) + 3; }
+    ms.remove();
+    const inB = b => b.x0 >= bounds.x0 && b.x1 <= bounds.x1 && b.y0 >= bounds.y0 && b.y1 <= bounds.y1;
+    const PB = items.map(it => ({ x0: it.x - 7, x1: it.x + 7, y0: it.y - 7, y1: it.y + 7, it }));
+    const C = L.map(it => {
+      const w = it.w, out = [], box = (x0, y0) => ({ x0, x1: x0 + w, y0, y1: y0 + h });
+      for (const [x0, y0, c] of [[it.x + 9, it.y - h / 2, 0], [it.x - 9 - w, it.y - h / 2, 1], [it.x - w / 2, it.y - 9 - h, 1.5], [it.x - w / 2, it.y + 9, 1.5],
+        [it.x + 5, it.y - 5 - h, 2], [it.x + 5, it.y + 5, 2], [it.x - 5 - w, it.y - 5 - h, 2.5], [it.x - 5 - w, it.y + 5, 2.5]]) out.push({ b: box(x0, y0), c, l: null });
+      for (const R of [24, 36, 52, 72]) for (let k = 0; k < 16; k++) {
+        const t = k * Math.PI / 8, dx = Math.cos(t), dy = Math.sin(t), ex = it.x + dx * R, ey = it.y + dy * R;
+        const b = dx > .38 ? box(ex + 2, ey - h / 2) : dx < -.38 ? box(ex - 2 - w, ey - h / 2) : box(ex - w / 2, dy < 0 ? ey - h - 1 : ey + 1);
+        out.push({ b, c: 6 + R * .14, l: [it.x + dx * 8, it.y + dy * 8, ex, ey] });
       }
+      return out.filter(c => inB(c.b)).concat([{ b: null, c: 4000, l: null }]);     // last resort: no label
+    });
+    // the part of a candidate's cost that does not depend on the other labels
+    const own = C.map((cs, i) => cs.map(c => { if (!c.b) return c.c; let v = c.c;
+      const bd = q => Math.hypot(Math.max(c.b.x0 - q.x, 0, q.x - c.b.x1), Math.max(c.b.y0 - q.y, 0, q.y - c.b.y1)), d0 = c.l ? 2 : bd(L[i]);
+      for (const p of PB) { if (ov(c.b, p)) v += 1e4 + 50 * area(c.b, p); if (p.it === L[i]) continue;
+        if (c.l && segPt(c.l, p.it.x, p.it.y) < 8) v += 1500;
+        if (bd(p.it) < d0 + 7) v += 400; }                    // another point as close as its own: the label would read as that point's
+      for (const o of obst) { if (ov(c.b, o)) v += o.w ?? 40; if (c.l && segBox(c.l, o)) v += (o.w ?? 40) / 8; }
+      return v; }));
+    const pair = (c, d) => { if (!c.b || !d.b) return 0; let v = 0;
+      if (ov(c.b, d.b)) v += 1e4 + 50 * area(c.b, d.b);
+      if (c.l && segBox(c.l, d.b)) v += 5000; if (d.l && segBox(d.l, c.b)) v += 5000;    // worse than no label
+      if (c.l && d.l && cross([[c.l[0], c.l[1]], [c.l[2], c.l[3]]], [[d.l[0], d.l[1]], [d.l[2], d.l[3]]])) v += 3000;
+      return v; };
+    const n = L.length; let bestSel = null, bestCost = Infinity, seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let run = 0; run < 6; run++) {
+      const sel = new Array(n).fill(-1), order = [...Array(n).keys()].sort((a, b) => L[a].y - L[b].y);
+      if (run) for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+      const costOf = (i, k) => { let v = own[i][k]; for (let j = 0; j < n; j++) if (j !== i && sel[j] >= 0) v += pair(C[i][k], C[j][sel[j]]); return v; };
+      for (let pass = 0; pass < 30; pass++) {
+        let moved = false;
+        for (const i of order) { let bk = sel[i], bv = bk >= 0 ? costOf(i, bk) : Infinity;
+          for (let k = 0; k < C[i].length; k++) { const v = costOf(i, k); if (v < bv - 1e-9) { bv = v; bk = k; } }
+          if (bk !== sel[i]) { sel[i] = bk; moved = true; } }
+        if (!moved) break;
+      }
+      let tot = 0; for (let i = 0; i < n; i++) { tot += own[i][sel[i]]; for (let j = i + 1; j < n; j++) tot += pair(C[i][sel[i]], C[j][sel[j]]); }
+      if (tot < bestCost) { bestCost = tot; bestSel = sel.slice(); }
     }
+    L.forEach((it, i) => { const c = C[i][bestSel[i]]; if (!c.b) return;
+      if (c.l) S("line", { class: "lead", x1: c.l[0], y1: c.l[1], x2: c.l[2], y2: c.l[3] }, g);
+      S("text", { class: "lbl", x: c.b.x0 + 1, y: c.b.y0 + 11, "text-anchor": "start" }, g).textContent = it.label; });
   }
   function points(svg, pts, tipFn) {
     const g = S("g", {}, svg);
@@ -492,7 +529,7 @@
     const host = $(P.host);
     host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" ? "region" : "img");
     if (insKey === "speed") {
-      const { svg, W, H } = frame(host, P.pair ? .9 : .56, 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
+      const { svg, W, H } = frame(host, P.pair ? .9 : .56, host.clientWidth < 460 ? 400 : 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const lx = v => Math.log10(v), X0 = lx(4), X1 = lx(5000);
       const xs = v => m.l + (lx(v) - X0) / (X1 - X0) * (W - m.l - m.r), ys = v => H - m.b - (v - 25) / 65 * (H - m.t - m.b);
       axes(svg, W, H, m, xs, ys, [[10, "10 ms"], [100, "100 ms"], [1000, "1 s"]], [30, 40, 50, 60, 70, 80, 90].map(v => [v, v]), "Mean latency per task (log scale) →", "↑ Score");
@@ -501,11 +538,11 @@
       S("path", { d: fr.map((o, i) => `${i ? "L" : "M"}${xs(o.latency.mean_ms)} ${ys(o.score)}`).join(""), fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.6, "stroke-dasharray": "5 4", "stroke-linejoin": "round", opacity: .7 }, svg);
       const pts = M.map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
       points(svg, pts, o => mtip(o, `<br><span class="m">${ms(o.latency.mean_ms)}</span> <span class="s">mean latency (${o.latency.timing}${o.key === "SII-Decision-4B" ? ", with flash-linear-attention" : ""})</span>`));
-      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...fr, ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null,
+      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...fr.filter((o, i) => !i || i === fr.length - 1 || o.key === "StartLux-4B-Instant"), ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null,
         lineBoxes(fr.map(o => [xs(o.latency.mean_ms), ys(o.score)])));
       LG.innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
     } else if (insKey === "rel" || insKey === "sn") {
-      const { svg, W, H } = frame(host, P.pair ? .9 : .56, 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
+      const { svg, W, H } = frame(host, P.pair ? .9 : .56, host.clientWidth < 460 ? 400 : 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const RL = S1.filter(o => o.reliability);
       let pts; const rb = [];                                  // the R labels' boxes: model labels keep off them
       if (insKey === "rel") {
@@ -517,7 +554,8 @@
         axes(svg, W, H, m, xs, ys, [.4, .5, .6, .7, .8, .9, 1].map(v => [v, v.toFixed(1)]), [0, .2, .4, .6, .8].map(v => [v, v.toFixed(1)]), "Option-order stability S →", "↑ Null discrimination N");
         const g = S("g", {}, svg);
         for (const r of [.2, .4, .6, .8]) {
-          const d = []; for (let s = .3; s <= 1.02; s += .01) { const n = r * r / s; if (n <= .85) d.push(`${d.length ? "L" : "M"}${xs(s)} ${ys(n)}`); }
+          const d = [], cp = []; for (let s = .3; s <= 1.02; s += .01) { const n = r * r / s; if (n <= .85) { d.push(`${d.length ? "L" : "M"}${xs(s)} ${ys(n)}`); cp.push([xs(s), ys(n)]); } }
+          rb.push(...lineBoxes(cp, 2, 6));                  // labels may cross the light curves, at a small cost
           S("path", { d: d.join(""), fill: "none", stroke: "#c9c7bd", "stroke-dasharray": "4 4", "stroke-width": 1.1 }, g);
           const s0 = Math.max(.3, r * r / .85);            // label where the curve enters the plot (top or left), away from the points
           S("text", { class: "tick", x: xs(s0) + 6, y: ys(r * r / s0) + 14, "text-anchor": "start" }, g).textContent = `R = ${r * 100}`;
@@ -754,34 +792,90 @@
   // ---- the four highlights under the title: hover or tap shows a small animated picture and two lines ----------------
   function highlights() {
     const pop = $("#hlpop"), items = $$(".hl li[data-hl]"); if (!pop || !items.length) return;
-    const best = top(S1, m => m.score, 1)[0], md = DOM.math, tm = best.tiers.math, NM = { E: "Easy", M: "Medium", H: "Hard", V: "Very hard" };
-    const lbk = Object.keys(tm).filter(k => md.leaderboard_tier.includes(NM[k]));
     const tiered = D.domains.filter(d => d.tiers).length, t = D.totals;
-    const doc = `<span class="doc" aria-hidden="true"><i></i><i></i><i></i></span>`;
-    const chips = (xs, pick, cls = "") => `<span class="chs ${cls}">${xs.map(x => `<b class="${x === pick ? "pk" : x === "" ? "gone" : ""}${x === "Null" ? " nul" : ""}">${x}</b>`).join("")}</span>`;
+    // Each illustration compares other benchmarks (left) with SO-Arena (right), after the paper's Fig. 1, and reads
+    // on its own: short in-picture labels, no reliance on the paragraph below. 380 units wide; animated by CSS once
+    // the popover has the class "go"; the resting state is the final frame (reduced motion shows only that).
+    const r1 = v => +v.toFixed(1), DK = "#1b2129", BLUE = "#6f9fd0", OCHRE = "#e0b46a", ROSE = "#d98a98";
+    const tx = (x, y, t, c = "", an = "middle", st = "") => `<text x="${r1(x)}" y="${r1(y)}" text-anchor="${an}" class="${c}"${st ? ` style="${st}"` : ""}>${t}</text>`;
+    const BOTG = c => { const ln = c === DK ? "" : ` stroke="${DK}" stroke-width="1.4"`;
+      return `<path d="M14 6V2.6" stroke="${DK}" stroke-width="1.6" stroke-linecap="round"/><circle cx="14" cy="2.2" r="2.1" fill="var(--cap)"/>` +
+        `<rect x="1.6" y="11.6" width="2.6" height="5.4" rx="1.3" fill="${DK}"/><rect x="23.8" y="11.6" width="2.6" height="5.4" rx="1.3" fill="${DK}"/>` +
+        `<rect x="3.4" y="6" width="21.2" height="15.2" rx="6" fill="${c}"${ln}/><rect x="6.4" y="9.2" width="15.2" height="8.6" rx="4.3" fill="#2b3442"/>` +
+        `<g class="eyes"><circle cx="11" cy="13.5" r="1.75" fill="#9fd4ff"/><circle cx="17" cy="13.5" r="1.75" fill="#9fd4ff"/></g>` +
+        `<rect x="7.6" y="22.2" width="12.8" height="7.4" rx="3" fill="${c}"${ln}/>` +
+        `<rect x="9" y="28.8" width="3.6" height="4.8" rx="1.6" fill="${DK}"/><rect x="15.4" y="28.8" width="3.6" height="4.8" rx="1.6" fill="${DK}"/>`; };
+    // a robot with its feet at (x, y); the outer group carries the animation, in the picture's own units
+    const bot = (x, y, sc, c = DK, cls = "", st = "") => `<g class="rb ${cls}"${st ? ` style="${st}"` : ""}><g transform="translate(${r1(x - 14 * sc)} ${r1(y - 34 * sc)}) scale(${sc})">${BOTG(c)}</g></g>`;
+    const tick = (x, y, z, c = "", st = "") => `<path class="tk ${c}" pathLength="1"${st ? ` style="${st}"` : ""} d="M${r1(x - .5 * z)} ${r1(y)}L${r1(x - .12 * z)} ${r1(y + .4 * z)}L${r1(x + .55 * z)} ${r1(y - .45 * z)}"/>`;
+    const xmk = (x, y, z, c = "", st = "") => { const d = .38 * z; return `<path class="xk ${c}"${st ? ` style="${st}"` : ""} d="M${r1(x - d)} ${r1(y - d)}L${r1(x + d)} ${r1(y + d)}M${r1(x + d)} ${r1(y - d)}L${r1(x - d)} ${r1(y + d)}"/>`; };
+    const blk = (x, y, t, c = "", st = "", w = 20) => `<g class="bk ${c}"${st ? ` style="${st}"` : ""}><rect x="${x}" y="${y}" width="${w}" height="20" rx="4.5"/><text x="${x + w / 2}" y="${y + 14.2}" text-anchor="middle">${t}</text></g>`;
+    const arw = (x1, y1, x2, y2, c = "", st = "") => { const t = Math.atan2(y2 - y1, x2 - x1), h = 5.5, bx = x2 - h * Math.cos(t), by = y2 - h * Math.sin(t), px = -Math.sin(t) * h * .6, py = Math.cos(t) * h * .6;
+      return `<g class="ar ${c}"${st ? ` style="${st}"` : ""}><path d="M${x1} ${y1}L${r1(bx)} ${r1(by)}"/><path class="ah" d="M${x2} ${y2}L${r1(bx + px)} ${r1(by + py)}L${r1(bx - px)} ${r1(by - py)}Z"/></g>`; };
+    const star = (x, y, r, on, st) => `<path class="st${on ? " on" : ""}"${on ? ` style="${st}"` : ""} d="M${Array.from({ length: 10 }, (_, k) => { const t = (-90 + 36 * k) * Math.PI / 180, q = k % 2 ? r * .45 : r; return `${r1(x + q * Math.cos(t))} ${r1(y + q * Math.sin(t))}`; }).join("L")}Z"/>`;
+    const pic = (H, sp, alt, L, R, cL, cR) => { const cr = (sp + 6 + 380) / 2;
+      return `<svg class="hv" viewBox="0 0 380 ${H}" role="img" aria-label="${esc(alt)}">${tx(sp / 2, 13, "Other benchmarks", "hh")}${tx(cr, 13, "SO-Arena", "hh hs")}` +
+        `<path class="dv" d="M${sp + 3} 3V${H - 4}"/>${L}${R}${cL ? tx(sp / 2, H - 5, cL, "cap") : ""}${cR ? tx(cr, H - 5, cR, "cap") : ""}</svg>`; };
+    const review = (x, y, w, q1, q2, n, d0) => `<rect class="card" x="${x}" y="${y}" width="${w}" height="80" rx="7"/>` +
+      `<circle class="ico" cx="${x + 12}" cy="${y + 12}" r="5.6"/><circle class="ico" cx="${x + 12}" cy="${y + 10.6}" r="1.9"/><path class="ico" d="M${x + 8.4} ${y + 16.2}q3.6 -3.4 7.2 0"/>` +
+      tx(x + 22, y + 15.6, "Review", "ct", "start") + tx(x + 8, y + 35, q1, "q", "start") + tx(x + 8, y + 49, q2, "q", "start") +
+      tx(x + 8, y + 70.5, "Label", "ct", "start") + [0, 1, 2, 3, 4].map(k => star(x + 47 + 12.4 * k, y + 66.5, 5.3, k < n, `--d:${r1(d0 + k * .12)}s`)).join("");
+    const V = {
+      labels: () => pic(170, 146, "Other benchmarks: a review that says 'Bought it for my parents' carries a five-star label the text does not support. SO-Arena: 'Fake product. Don't buy!' carries one star, checked against a reliable source and by human review.",
+        review(6, 26, 112, "“Bought it for", "my parents.”", 5, .15) + bot(134, 106, .78, DK, "a-hop", "--d:.85s") + tx(134, 72, "?", "qm a-pop", "middle", "--d:1s"),
+        review(155, 26, 118, "“Fake product.", "Don't buy!”", 1, .9) + `<g class="mag"><circle r="8.5"/><path d="M6 6l5.5 5.5"/></g>` +
+          tick(161, 121, 11, "a-draw", "--d:1.75s") + tx(171, 125, "Reliable source", "ck a-in", "start", "--d:1.75s") +
+          tick(161, 139, 11, "a-draw", "--d:2s") + tx(171, 143, "Human review", "ck a-in", "start", "--d:2s") +
+          bot(318, 106, .78, DK, "a-hop", "--d:2.35s") + tick(318, 68, 17, "a-draw", "--d:2.45s"),
+        "Ambiguous label", "Grounded label"),
+      tiers: () => pic(162, 146, "Other benchmarks: three models all pass tasks of one uniform difficulty, so they tie. SO-Arena: easy, medium and hard tiers; the three models stop at different steps, so they separate.",
+        `<path class="fl" d="M8 104H140"/>` + [[30, BLUE], [74, OCHRE], [118, ROSE]].map(([x, c], i) => bot(x, 104, .74, c, "a-in", `--d:${r1(.1 + i * .12)}s`) + tick(x, 121, 13, "a-draw", `--d:${r1(.55 + i * .15)}s`)).join("") +
+          tx(52, 90, "=", "eq a-in", "middle", "--d:1.1s") + tx(96, 90, "=", "eq a-in", "middle", "--d:1.1s"),
+        `<path class="fl" d="M154 128H218V102H284V76H376"/>` + tx(186, 143, "Easy", "tl") + tx(251, 117, "Medium", "tl") + tx(330, 91, "Hard", "tl") +
+          bot(186, 128, .74, BLUE, "c0") + bot(251, 102, .74, OCHRE, "c1") + bot(330, 76, .74, ROSE, "c2"),
+        "Uniform difficulty", "Stratified difficulty"),
+      agents: () => pic(170, 140, "Other benchmarks: one question, one answer. SO-Arena: in a sandbox the model chooses one action after another (click, type, back) and the episode is scored by progress: three steps done, the fourth failed, the goal not reached.",
+        `<rect class="card" x="6" y="40" width="50" height="42" rx="5"/><path class="bar" d="M6 49.5H56"/><circle class="dot" cx="11.5" cy="44.8" r="1.5"/><circle class="dot" cx="16" cy="44.8" r="1.5"/><circle class="dot" cx="20.5" cy="44.8" r="1.5"/>` +
+          `<path class="ln" d="M12 60H44M12 67.5H34"/>` + tx(47, 77.5, "?", "pq") + arw(60, 61, 75, 61, "a-in", "--d:.25s") + bot(91, 82, .74, DK, "a-hop", "--d:.5s") +
+          blk(108, 51, "B", "pk a-pop", "--d:.8s") + tick(118, 85, 12, "a-draw", "--d:1s"),
+        `<rect class="sbx" x="149" y="27" width="227" height="89" rx="10"/><rect class="sbl" x="238" y="21" width="50" height="12"/>` + tx(263, 30.5, "Sandbox", "sb") +
+          `<rect class="card" x="158" y="43" width="50" height="44" rx="5"/><path class="bar" d="M158 52.5H208"/><circle class="dot" cx="163.5" cy="47.8" r="1.5"/><circle class="dot" cx="168" cy="47.8" r="1.5"/><circle class="dot" cx="172.5" cy="47.8" r="1.5"/>` +
+          `<rect class="pgh" x="163" y="59" width="38" height="8" rx="2.5"/><path class="ln" d="M164 74H198M164 81H186"/>` + arw(212, 65, 227, 65) +
+          bot(243, 92, .74, DK, "a-hop4") +
+          [["click", 42, "f1"], ["type", 62, "f2"], ["back", 82, "f3"]].map(([t, y, f]) => `<g class="ch ${f}"><rect x="261" y="${y}" width="48" height="16" rx="8"/>${tx(285, y + 11.6, t)}</g>`).join("") +
+          `<path class="lp" d="M309 50C333 50 333 107 309 107H183V94"/><path class="ah2" d="M183 90l-3.3 5.5h6.6z"/>` +
+          [0, 1, 2, 3, 4].map(k => { const x = 160 + 34 * k, d = `--d:${r1(.85 + .8 * k)}s`;
+            return `<rect class="sg${k < 3 ? " ok" : k === 3 ? " bad" : ""}" x="${x}" y="126" width="28" height="12" rx="4"${k < 4 ? ` style="${d}"` : ""}/>` +
+              (k < 3 ? tick(x + 14, 132, 7.5, "sgm a-draw", d) : k === 3 ? xmk(x + 14, 132, 7.5, "a-pop", d) : ""); }).join("") +
+          `<path class="fp" d="M346 143V117"/><path class="ff" d="M346 117.5l12 4.2l-12 4.2z"/>`,
+        "Single-turn evaluation", "Many steps, scored by progress"),
+      rel: () => pic(168, 128, "Other benchmarks: one option order, scored on accuracy only. SO-Arena: the model keeps answer B when the options are reordered, and picks Null when the correct option is removed.",
+        blk(31, 58, "A") + blk(54, 58, "B", "pk a-pick", "--d:.9s") + blk(77, 58, "C") + bot(64, 108, .66, DK, "a-wh", "--d:.15s;--h:.75s") + tick(110, 67, 14, "a-draw", "--d:1.1s"),
+        `<rect class="syc s" x="138" y="20" width="13" height="13" rx="3.5"/>` + tx(144.5, 30.4, "S", "sy") + tx(156, 30, "Options reordered", "rl", "start") +
+          blk(138, 37, "A") + blk(161, 37, "B", "pk a-pick", "--d:.45s") + blk(184, 37, "C") + bot(171, 81, .6, DK, "a-hop", "--d:.3s") +
+          arw(209, 43, 229, 43, "a-in", "--d:.75s") + arw(229, 51, 209, 51, "a-in", "--d:.75s") +
+          `<g class="a-in" style="--d:.95s">${blk(235, 37, "C") + blk(258, 37, "A") + blk(281, 37, "B", "pk a-pick", "--d:1.45s")}</g>` + bot(291, 81, .6, DK, "a-wh", "--d:1.05s;--h:1.3s") +
+          tick(318, 47, 14, "a-draw", "--d:1.65s") +
+          `<rect class="syc n" x="138" y="93" width="13" height="13" rx="3.5"/>` + tx(144.5, 103.4, "N", "sy") + tx(156, 103, "Correct option missing", "rl", "start") +
+          blk(138, 110, "A") + blk(161, 110, "B", "gone a-gone", "--d:2.2s") + blk(184, 110, "C") + blk(207, 110, "Null", "pk nul a-sl", "--d:2.5s", 40) +
+          bot(227, 154, .6, DK, "a-mv", "--d:2.75s") + tick(264, 120, 14, "a-draw", "--d:3.65s"),
+        "Accuracy only", ""),
+    };
     const C = {
-      labels: { h: "Verified labels",
-        viz: `<div class="v-lab">${doc}<span class="tg">B</span><span class="ar">→</span><span class="vd ok">supported · kept</span>
-          ${doc}<span class="tg x">C</span><span class="ar">→</span><span class="vd no">not supported · dropped</span><span class="lens" aria-hidden="true"></span></div>`,
+      labels: { h: "Verified labels", pn: "#f5f6e8", hc: "#796f50", hl: "#a3a982",
         p: "Every reference label is checked against what the model can see, by people and an LLM. Tasks that fail are dropped.",
         more: ['href="#benchmark"', "From 40 established sources"] },
-      tiers: { h: "Difficulty tiers",
-        viz: `<div class="v-tier">${Object.keys(tm).map((k, i) => `<div class="tb${lbk.includes(k) ? " lb" : ""}" style="--h:${tm[k]}%;--d:${i * 90}ms"><span class="bv">${tm[k]}</span><i></i><span class="tk">${NM[k]}</span></div>`).join("")}
-          <span class="brk" style="--n:${lbk.length};--of:${Object.keys(tm).length}">leaderboard</span></div><span class="cap">${esc(best.name)} in Math, score by tier</span>`,
+      tiers: { h: "Difficulty tiers", pn: "#e2f1f2", hc: "#61847a", hl: "#86b3b0",
         p: `${tiered} of ${D.domains.length} domains are split into tiers by domain-specific criteria, such as the number of calculation steps in Math. The leaderboard counts each domain's hardest tier.`,
         more: ['href="#results" data-chart-link="tier"', "Scores by tier"] },
-      agents: { h: "Agent sandboxes",
-        viz: `<div class="v-agt">${[1, 0, 2].map((p, i) => `<span class="stp" style="--d:${i * 420}ms"><span class="sn">${i + 1}</span><span class="mn">${[0, 1, 2].map(j => `<b class="${j === p ? "pk" : ""}"></b>`).join("")}</span></span><span class="ar">→</span>`).join("")}<span class="goal" style="--d:1260ms">goal ✓</span></div>
-          <span class="cap">Each step: pick the next action from a menu</span>`,
+      agents: { h: "Agent sandboxes", pn: "#f6ebe6", hc: "#8f6556", hl: "#c9a79a",
         p: `In ${t.web.toLocaleString("en-US")} web and ${t.tools.toLocaleString("en-US")} tool tasks, the model works toward a goal step by step, choosing each next action itself.`,
         more: ['href="#benchmark"', "The 11 domains"] },
-      rel: { h: "Reliability tests",
-        viz: `<div class="v-rel"><b class="sym s">S</b>${chips(["A", "B", "C"], "B")}<span class="ar">→</span>${chips(["C", "A", "B"], "B", "late")}<span class="vd ok late2">same answer</span>
-          <b class="sym n">N</b>${chips(["A", "B", "C"], "B")}<span class="ar">→</span>${chips(["A", "", "C", "Null"], "Null", "late")}<span class="vd ok late2">picks Null</span></div>`,
+      rel: { h: "Reliability tests", pn: "#e3e8f4", hc: "#2c6aa8", hl: "#9fb3d4",
         p: "Each item is asked again with its options shuffled (S) and with the correct option removed (N). Reliability R = √(S·N): higher is more reliable.",
         more: ['href="#reliability"', "Reliability results"] },
     };
-    let cur = null, leave, intent;
+    let cur = null, leave, intent, loop;
     const place = li => {
       const r = li.getBoundingClientRect(), w = pop.offsetWidth;
       pop.style.left = Math.min(Math.max(12, r.left - 8), innerWidth - w - 12) + scrollX + "px";   // left-aligned to its tag
@@ -793,12 +887,13 @@
       if (cur) cur.setAttribute("aria-expanded", "false");
       const c = C[li.dataset.hl]; cur = li; li.setAttribute("aria-expanded", "true");
       pop.setAttribute("aria-label", c.h);
-      pop.innerHTML = `<span class="label">${c.h}</span><div class="viz">${c.viz}</div><p>${c.p}</p><a class="more" ${c.more[0]}>${c.more[1]} <span class="arr">→</span></a>`;
-      pop.hidden = false; place(li); pop.classList.remove("go");
+      pop.innerHTML = `<span class="label">${c.h}</span><div class="viz" style="--pn:${c.pn};--hc:${c.hc};--hl:${c.hl}">${V[li.dataset.hl]()}</div><p>${c.p}</p><a class="more" ${c.more[0]}>${c.more[1]} <span class="arr">→</span></a>`;
+      pop.hidden = false; place(li); pop.classList.remove("go"); clearInterval(loop);
       requestAnimationFrame(() => { pop.classList.add("on"); void pop.offsetWidth; pop.classList.add("go"); });
+      if (!RM) loop = setInterval(() => { pop.classList.remove("go"); void pop.offsetWidth; pop.classList.add("go"); }, 7000);   // plays again while open
     };
     const hide = () => {
-      clearTimeout(intent); if (!cur) return;
+      clearTimeout(intent); clearInterval(loop); if (!cur) return;
       cur.setAttribute("aria-expanded", "false"); cur = null;
       pop.classList.remove("on", "go"); setTimeout(() => { if (!cur) pop.hidden = true; }, 160);
     };
@@ -911,6 +1006,8 @@
       setTimeout(() => $$(".rv:not(.in)").forEach(n => { if (n.getBoundingClientRect().top < innerHeight * 1.2) n.classList.add("in"); }), 2000);
     } else $$(".rv").forEach(n => n.classList.add("in"));
     let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(insights, 150); });
+    // chart labels are measured: draw again once the web font has loaded, so the measured widths are the real ones
+    if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(() => insights());
   }
 
   function init() {

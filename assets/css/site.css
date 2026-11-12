@@ -575,14 +575,14 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .logo-anim .lg-ring { transition: transform calc(var(--t) * 1.15) var(--turn); }
 .logo-anim .lg-words { opacity: 0; transition: opacity .2s ease; }
 .logo-anim.open .lg-s, .logo-anim.open .lg-arena, .logo-anim.open .lg-cy, .logo-anim.open .lg-cn { transform: none; }
-.logo-anim.open .lg-ring { transform: rotate(360deg); }
+.logo-anim .lg-ring { transform: rotate(-180deg); }
+.logo-anim.open .lg-ring { transform: rotate(0deg); }       /* at rest turned half a revolution; open: the paper's orientation */
 .logo-anim.open .lg-words { opacity: 1; transition: opacity .5s ease calc(var(--t) * .8); }
 .hero-logo { display: flex; justify-content: center; margin: -8px 0 40px; }
 .hero-logo svg { display: block; max-width: 100%; height: auto; overflow: visible; cursor: pointer; outline: none; }
 .logo-anim:focus-visible { outline: 2px solid var(--rel); outline-offset: 6px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) {
   .logo-anim .lg-s, .logo-anim .lg-arena, .logo-anim .lg-cy, .logo-anim .lg-cn, .logo-anim .lg-ring { transition: none; }
-  .logo-anim.open .lg-ring { transform: none; }
 }
 
 /* ---- "System One" in the title: a quiet underline; hover: highlighter sweep, spotlight, popover with a speed race ---- */
@@ -688,3 +688,4 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .hero-logo { margin-bottom: 26px; }
 .kres { margin-top: 40px; }
 .run pre { font-size: 12px; }
+

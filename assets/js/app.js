@@ -121,11 +121,11 @@
   const mini = (rows, max, fmt) => `<div class="mini">${rows.map(([l, v, c]) => `<div class="mr"><span class="ml">${l}</span><span class="mt"><i style="--w:${(100 * v / max).toFixed(1)}%;--c:${c}"></i></span><span class="mv">${fmt(v)}</span></div>`).join("")}</div>`;
   function kres() {
     const best = top(S1, o => o.score, 1)[0], slow = top(M.filter(m => m.group === "open"), m => m.latency.mean_ms, 1)[0];
-    const [r1, r2] = top(S1, R_, 2), gaps = D.analysis.map(a => a.gap_glide), lo = Math.min(...gaps), hi = Math.max(...gaps);
+    const [r1, r2] = top(S1, R_, 2), gaps = D.domains.map(d => best.domains[d.id] - LUNA.domains[d.id]), lo = Math.min(...gaps), hi = Math.max(...gaps);
     const sec = v => `${(v / 1000).toFixed(v >= 1000 ? 1 : 2)} s`, sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v));
-    const gx = v => (v + 32) / 42 * 100;
-    const dots = `<div class="mini"><div class="mr one"><span class="ml">−30</span><span class="mt dots big"><b style="left:${gx(0).toFixed(1)}%"></b>${D.analysis.map(a =>
-        `<i style="left:${gx(a.gap_glide).toFixed(1)}%;background:${FAM[DOM[a.domain].family].color}" title="${esc(DOM[a.domain].short)}: ${sg(a.gap_glide)}"></i>`).join("")}</span><span class="mv">+10</span></div></div>`;
+    const gx = v => (v + 50) / 60 * 100;
+    const dots = `<div class="mini"><div class="mr one"><span class="ml">−50</span><span class="mt dots big"><b style="left:${gx(0).toFixed(1)}%"></b>${D.domains.map((d, i) =>
+        `<i style="left:${gx(gaps[i]).toFixed(1)}%;background:${FAM[d.family].color}" title="${esc(d.short)}: ${sg(gaps[i])}"></i>`).join("")}</span><span class="mv">+10</span></div></div>`;
     const tiles = [
       ["leaderboard", "", `${f1(best.score)}<small> vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna, our System Two reference, by about ten points.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
@@ -133,7 +133,7 @@
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
-      ["results", "gap", `${sg(lo)}<small> to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna, one dot per domain, coloured by family (medium and hard tiers).`, dots],
+      ["results", "gap", `${sg(lo)}<small> to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each domain, as in the domain rankings; dots coloured by family.`, dots],
     ];
     $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz]) => `<a class="kr" href="#${sec_}"${k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3><p>${p}</p>${viz}</a>`).join("");
   }
@@ -280,7 +280,7 @@
       <h4 class="label">Domain scores <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· leaderboard tier; tick = System One median</span></h4>
       <ul class="bars prof">${prof}</ul>
       ${m.order_acc ? (() => { const a = m.order_acc, lo = Math.floor(a.min - 2), hi = Math.ceil(a.max + 2), x = v => (100 * (v - lo) / (hi - lo)).toFixed(1);
-        return `<h4 class="label">Accuracy across 13 option orders <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· same 939 items</span></h4>
+        return `<h4 class="label">Accuracy across option orders <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· original and 12 reorderings of the same 939 items</span></h4>
         <div class="ordr"><span class="ax">${lo}</span><span class="tr"><b style="left:${x(a.min)}%;width:${(x(a.max) - x(a.min)).toFixed(1)}%"></b>${a.runs.map(v => `<i style="left:${x(v)}%"></i>`).join("")}<u style="left:${x(a.original)}%" title="Original order ${f1(a.original)}"></u></span><span class="ax">${hi}</span>
         <span class="v">${f1(a.min)}–${f1(a.max)}</span></div>`; })() : ""}
       <h4 class="label">By difficulty tier</h4>
@@ -294,12 +294,12 @@
     const counts = d.tiers ? Object.entries(d.tiers).map(([k, v]) => `${({ E: "easy", M: "medium", H: "hard", V: "very hard" })[k]} ${v}`).join(", ") : "no tiers";
     const bars = list.map(m => { const ref = m.group === "s2", a = m.group === "auto";
       return `<li class="${ref ? "ref" : a ? "auto" : ""}"><span class="rk">${isS1(m) ? rk.get(m.key) : ref ? "ref" : "–"}</span>${logo(m, 22)}<button type="button" class="n" data-model="${slug(m)}">${esc(m.name)}</button>
-        <span class="bar"><i style="width:${val(m)}%;--bc:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span class="v">${f1(val(m))}</span></li>`; }).join("");
+        <span class="bar"><i style="width:${val(m)}%;--bc:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span class="v">${f1(val(m))}</span><span class="ms">${ms(m.latency.mean_ms)}</span></li>`; }).join("");
     openDrawer(f.name, `<h2 id="dr-title">${esc(d.name)}</h2>
       <p class="dr-sub">${d.tasks} tasks (${counts}). The leaderboard uses ${d.leaderboard_tier === "All tasks" ? "all tasks" : id === "math" ? "the hard and very hard tiers" : "the hard tier"} (${d.leaderboard_tasks} tasks).
         Sources${d.sources_by_tier ? ", easy to hard" : ""}: ${esc(d.sources.join(d.sources_by_tier ? " → " : ", "))}.</p>
       <h4 class="label" style="margin-top:24px">Ranking</h4><ul class="bars">${bars}</ul>
-      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references; StartLux Auto is not ranked.</p>
+      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references; StartLux Auto is not ranked. Right column: mean latency per task.</p>
       ${d.tiers ? `<h4 class="label" style="margin-top:28px">By difficulty tier</h4><div class="chart" id="dr-tier"></div><div class="legend" id="dr-tier-lg"></div>` : ""}`,
       `?domain=${id}`, d.name);
     if (d.tiers) requestAnimationFrame(() => tierChart($("#dr-tier"), id, $("#dr-tier-lg"), true));
@@ -463,7 +463,7 @@
     const { svg, W, H } = frame(host, compact ? .62 : .56, 300, compact ? 380 : 500);
     const m = { l: 40, r: compact ? 104 : 128, t: 30, b: 40 };
     const xs = i => m.l + i / (ks.length - 1) * (W - m.l - m.r), ys = v => H - m.b - v / 100 * (H - m.t - m.b);
-    axes(svg, W, H, m, xs, ys, ks.map((k, i) => [i, names[k]]), [0, 20, 40, 60, 80, 100].map(v => [v, v]), "", "↑ Score");
+    axes(svg, W, H, m, xs, ys, ks.map((k, i) => [i, W < 520 ? ({ E: "Easy", M: "Med.", H: "Hard", V: "V. hard" })[k] : names[k]]), [0, 20, 40, 60, 80, 100].map(v => [v, v]), "", "↑ Score");
     const val = o => o.domains[id];
     const tops = top(S1, val, compact ? 3 : 1), hi = new Set([...tops.map(o => o.key), ...(compact ? [] : ["StartLux-4B-Instant"]), LUNA.key]);
     const SHADES = ["#8e2c43", "#c4687c", "#e2a7b4"];
@@ -592,6 +592,43 @@
     $("#dtable").innerHTML = `<thead><tr><th>Family</th><th>Domain</th><th>Tasks</th><th class="tiers">Tasks per tier</th><th class="src">Sources</th></tr></thead><tbody>${rows}</tbody>`;
   }
 
+  // ---- "System One" in the title: hover or tap shows a short definition and a real-time speed race ------------------
+  function systemOne() {
+    const term = $(".s1"), pop = $("#s1pop"), spot = $(".spot"), race = $(".race", pop); if (!term) return;
+    let open = false, timers = [];
+    const place = () => {
+      const r = term.getBoundingClientRect(), w = pop.offsetWidth;
+      const left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), innerWidth - w - 12);
+      pop.style.left = left + scrollX + "px"; pop.style.top = r.bottom + scrollY + 12 + "px";
+      spot.style.setProperty("--x", r.left + r.width / 2 + "px"); spot.style.setProperty("--y", r.top + r.height / 2 + 40 + "px");
+      spot.style.setProperty("--rx", Math.max(240, r.width * 1.6) + "px"); spot.style.setProperty("--ry", "190px");
+    };
+    const run = () => {                      // the bars fill at the models' real mean times; the times light up when done
+      timers.forEach(clearTimeout); timers = [];
+      race.classList.remove("go");
+      $$(".t", race).forEach(t => { t.classList.remove("done"); t.classList.toggle("wait", !RM); t.textContent = RM ? t.dataset.v : t.dataset.ms > 500 ? "thinking" : ""; });
+      void race.offsetWidth; race.classList.add("go");
+      $$(".t", race).forEach(t => timers.push(setTimeout(() => { t.classList.remove("wait"); t.classList.add("done"); t.textContent = t.dataset.v; }, RM ? 0 : 250 + +t.dataset.ms)));
+    };
+    const set = o => {
+      if (o === open) return; open = o;
+      term.classList.toggle("on", o); spot.classList.toggle("on", o); term.setAttribute("aria-expanded", o);
+      if (o) { pop.hidden = false; place(); requestAnimationFrame(() => pop.classList.add("on")); run(); }
+      else { pop.classList.remove("on"); timers.forEach(clearTimeout); setTimeout(() => { if (!open) pop.hidden = true; }, 260); }
+    };
+    let leave;
+    const enter = () => { clearTimeout(leave); set(true); }, out = () => { leave = setTimeout(() => set(false), 160); };
+    term.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") enter(); });
+    term.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") out(); });
+    pop.addEventListener("pointerenter", enter); pop.addEventListener("pointerleave", out);
+    term.addEventListener("click", e => { if (e.pointerType !== "mouse") set(!open); });
+    term.addEventListener("focus", () => set(true)); term.addEventListener("blur", () => set(false));
+    term.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); set(!open); } });
+    addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
+    document.addEventListener("pointerdown", e => { if (open && !term.contains(e.target) && !pop.contains(e.target)) set(false); });
+    addEventListener("scroll", () => { if (open) set(false); }, { passive: true });
+  }
+
   // ---- logo: the O unfolds the full name when the pointer comes near it ---------------------------------------------
   function logoMotion() {
     const svg = $(".logo-anim"); if (!svg) return;
@@ -643,7 +680,7 @@
 
   function init() {
     nav(); board(); kres(); leaderboardControls(); table(); dgrid(); insightsControls(); insights();
-    demo(); benchmark(); wire(); logoMotion();
+    demo(); benchmark(); wire(); logoMotion(); systemOne();
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));
     else if (q.get("model") && BY[q.get("model")]) openModel(BY[q.get("model")]);

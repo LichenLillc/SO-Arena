@@ -191,7 +191,7 @@
   }
 
   // ---- leaderboard -------------------------------------------------------------------------------------------------
-  const T = { sort: "score", dir: -1, filter: "all", q: "" };
+  const T = { sort: "score", dir: -1, filter: "all", q: "", group: false };   // group: by access and size (off by default, user)
   const FILTERS = [["all", "All"], ["small", "Open ≤ 4B"], ["large", "Open ≥ 9B"], ["api", "APIs"]];
   const pass = m => {
     const q = T.q.trim().toLowerCase(), hit = !q || (m.name + " " + m.developer).toLowerCase().includes(q);
@@ -301,8 +301,9 @@
   }
     function table() {
     const did = DSORT(), cmp = cmpRows(), order = list => list.sort(cmp);
-    // Groups as in the paper's score table: the System Two references, the closed APIs, then open weights by size;
-    // # keeps each model's rank among the 18 System One models. StartLux Auto (hybrid) is not listed (user, 2026-11-12).
+    // One ranked list by default; grouped (the toggle) as in the paper's score table: the System Two references, the
+    // closed APIs, then open weights by size. # is always the rank among the 18 System One models; the GPT-6 rows are
+    // references without a rank. StartLux Auto (hybrid) is not listed (user, 2026-11-12).
     const refs = order(M.filter(m => m.group === "s2" && pass(m))), apis = order(M.filter(m => m.group === "api" && pass(m)));
     const opens = ["31B", "27B", "9B", "4B", "0.4B"].map(z => [z, order(M.filter(m => m.group === "open" && m.size === z && pass(m)))]);
     const n1 = apis.length + opens.reduce((a, [, l]) => a + l.length, 0);
@@ -316,19 +317,22 @@
       : refs.length + n1 ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`;
     head(); $$("#lb tbody").forEach(n => n.remove());
     const tb = $("#lb"); tb.classList.add("noanim"); tb.classList.toggle("dmode", !!did);
-    tb.insertAdjacentHTML("beforeend", grp("System Two reference", refs) + grp("System One · closed APIs", apis) +
-      opens.map(([z, l]) => grp(`System One · open weights · ${z}`, l)).join("") + note);
+    tb.classList.toggle("flat", !T.group);
+    tb.insertAdjacentHTML("beforeend", (T.group ? grp("System Two reference", refs) + grp("System One · closed APIs", apis) +
+      opens.map(([z, l]) => grp(`System One · open weights · ${z}`, l)).join("") : refs.length + n1 ? `<tbody>${order([...refs, ...apis, ...opens.flatMap(([, l]) => l)]).map(row).join("")}</tbody>` : "") + note);
     if (did) fillD(did);
     void tb.offsetWidth; requestAnimationFrame(() => tb.classList.remove("noanim"));
     if (!was.size || RM) return;
+    $$("#lb tr.grp").forEach(r => r.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 140, easing: "ease-out", fill: "backwards" }));
     const rows = $$("#lb tr[data-model]");
     rows.forEach(r => { const y = was.get(r.dataset.model);
       if (y == null) { r.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, delay: 80, easing: "ease-out", fill: "backwards" }); return; }
       const dy = y - r.getBoundingClientRect().top;
-      if (Math.abs(dy) > 1) r.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.2, .8, .2, 1)" });
+      if (Math.abs(dy) > 1) r.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 420, easing: "cubic-bezier(.3, .7, .15, 1)" });
     });
   }
   function leaderboardControls() {
+    $("#lb-group").addEventListener("click", e => { T.group = !T.group; e.currentTarget.setAttribute("aria-pressed", T.group); table(); });
     $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk">By domain, one bar each (click one to sort by it):${D.families.map(f => `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("")}</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });

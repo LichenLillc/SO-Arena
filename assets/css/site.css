@@ -1148,3 +1148,9 @@ section[id] { scroll-margin-top: -87px; }
 .gap-r svg text.in { fill: #fff; font-weight: 600; }
 @media (max-width: 760px) { .gap-r svg text .sub { display: none; } }
 .qpic.n { overflow: hidden; }
+/* the leaderboard's grouping toggle (off by default: one ranked list) */
+.gtoggle { display: inline-flex; align-items: center; gap: 7px; margin-left: 4px; }
+.gtoggle svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.gtoggle svg .g { stroke-dasharray: 2 2; opacity: .6; }
+.gtoggle[aria-pressed="true"] svg .g { opacity: 1; stroke-dasharray: none; }
+.lb.flat tbody tr.ref td { background: #fcfbf8; }

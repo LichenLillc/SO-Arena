@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=e2e9ea617a" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=b09a524bd4">
+<link rel="stylesheet" href="assets/css/site.css?v=e14d0d7a1f">
 <script defer src="assets/js/data.js?v=3b1df04363"></script>
-<script defer src="assets/js/app.js?v=f83f74ad0e"></script>
+<script defer src="assets/js/app.js?v=3e9fb82543"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -27,8 +27,8 @@
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="SO-Arena, back to top"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="#2c6aa8" d="M53.70 55.51A32.00 32.00 0 0 1 8.49 10.30L19.31 21.12A16.71 16.71 0 0 0 42.88 44.69Z"/><path fill="#a83a52" d="M10.30 8.49A32.00 32.00 0 0 1 55.51 53.70L44.69 42.88A16.71 16.71 0 0 0 21.12 19.31Z"/></svg>SO-Arena</a>
     <nav class="nav-links" aria-label="Sections">
-      <a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#reliability">Reliability</a>
-      <a href="#findings">Findings</a><a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
+      <a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a>
+      <a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
     </nav>
     <div class="nav-end">
       <a class="ext" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="t">GitHub</span></a>
@@ -37,8 +37,8 @@
     </div>
   </div>
   <nav class="wrap sheet-nav" id="sheet-nav" aria-label="Sections">
-    <a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#reliability">Reliability</a>
-    <a href="#findings">Findings</a><a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
+    <a href="#leaderboard">Leaderboard</a><a href="#reliability">Reliability</a><a href="#results">Results</a>
+    <a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
   </nav>
 </header>
 
@@ -51,19 +51,18 @@
           <p class="hero-logo"><img src="assets/img/logo.svg?v=162cf42490" alt="SysOne-Arena (SO-Arena)" width="984" height="190"></p>
           <h1>Benchmarking the <em>capability</em> spectrum and <em class="r">reliability</em> of System One models</h1>
           <p class="hero-text">System One models decide in one forward pass, without reasoning tokens.</p>
-          <ul class="hl" aria-label="Highlights"><li><a href="#benchmark"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#796f50"><circle cx="8" cy="8" r="6.2"/><path d="M5.2 8.2l1.9 1.9 3.8-4.1"/></svg>Verified labels</a></li><li><a href="#insights"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#61847a"><path d="M2 13.5h3.5v-3.4h3.4V6.7h3.4V3.3H14"/></svg>Difficulty tiers</a></li><li><a href="#benchmark"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#8f6556"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 6.6l2 1.6-2 1.6M8.6 10.2h2.6"/></svg>Agent sandboxes</a></li><li><a href="#reliability"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:var(--rel)"><path d="M2.5 5.2h8.8M9.4 3l2.2 2.2-2.2 2.2M13.5 10.8H4.7M6.6 8.6l-2.2 2.2 2.2 2.2"/></svg>Reliability tests</a></li><li><a href="#insights"><svg viewBox="0 0 16 16" aria-hidden="true" style="color:var(--cap)"><circle cx="8" cy="9" r="5.2"/><path d="M8 9V6.3M6.4 2.3h3.2"/></svg>Latency</a></li></ul>
+          <ul class="hl" aria-label="Highlights"><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#796f50"><circle cx="8" cy="8" r="6.2"/><path d="M5.2 8.2l1.9 1.9 3.8-4.1"/></svg>Verified labels</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#61847a"><path d="M2 13.5h3.5v-3.4h3.4V6.7h3.4V3.3H14"/></svg>Difficulty tiers</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:#8f6556"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 6.6l2 1.6-2 1.6M8.6 10.2h2.6"/></svg>Agent sandboxes</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:var(--rel)"><path d="M2.5 5.2h8.8M9.4 3l2.2 2.2-2.2 2.2M13.5 10.8H4.7M6.6 8.6l-2.2 2.2 2.2 2.2"/></svg>Reliability tests</li><li><svg viewBox="0 0 16 16" aria-hidden="true" style="color:var(--cap)"><circle cx="8" cy="9" r="5.2"/><path d="M8 9V6.3M6.4 2.3h3.2"/></svg>Latency</li></ul>
           <p class="authors">Lichen Li<sup>*</sup>, Ziping Dong<sup>*</sup>, Sicheng Feng, Qi Li, Xinchao Wang<sup>†</sup></p>
           <p class="authors-note">* Equal contribution · † Corresponding author</p>
           <div class="cta">
             <a class="btn btn-dark" href="#leaderboard">View the leaderboard <span aria-hidden="true">→</span></a>
             <a class="btn" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>
             <a class="btn" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Dataset <span aria-hidden="true">↗</span></a>
-            <span class="btn" aria-disabled="true">Paper <span class="tagsoon">soon</span></span>
           </div>
         </div>
         <div class="board" id="board" data-anim="0" aria-label="Top System One models"></div>
       </div>
-      <div class="stats" id="stats"></div>
+      <div class="kres" id="kres" aria-label="Key results"></div>
     </div>
   </section>
 
@@ -72,7 +71,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">01 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
-        <p class="sec-lead">The score is the mean of 11 domains, each on its hardest tier.</p>
+        <p class="sec-lead">The score is the mean of 11 domains, each on its hardest tier. Reliability is measured for the 18 System One models.</p>
       </div>
       <div class="toolbar">
         <div class="tools-l">
@@ -97,40 +96,11 @@
     </div>
   </section>
 
-  <!-- 02 Insights -->
-  <section class="sec" id="insights" aria-labelledby="in-h">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><span class="label">02 — Insights</span><h2 id="in-h">Capability against speed, reliability and difficulty</h2></div>
-      </div>
-      <div class="panel">
-        <div class="panel-head">
-          <div><h3 id="ins-title">Performance against latency</h3><p id="ins-sub"></p></div>
-          <div class="seg" role="tablist" aria-label="Chart" id="ins-tabs">
-            <button role="tab" aria-selected="true" data-k="speed" id="k-speed">Speed</button>
-            <button role="tab" aria-selected="false" data-k="rel" id="k-rel" tabindex="-1">Reliability</button>
-            <button role="tab" aria-selected="false" data-k="sn" id="k-sn" tabindex="-1">S and N</button>
-            <button role="tab" aria-selected="false" data-k="tier" id="k-tier" tabindex="-1">Difficulty</button>
-          </div>
-        </div>
-        <div class="insights">
-          <div class="chart-col">
-            <div class="dchips" id="tier-chips" hidden></div>
-            <div class="chart" id="chart" role="img"></div>
-            <div class="legend" id="legend"></div>
-            <p class="note" id="ins-note"></p>
-          </div>
-          <aside class="side" id="side" aria-label="Ranking for the selected chart"></aside>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 03 Reliability -->
+  <!-- 02 Reliability -->
   <section class="sec" id="reliability" aria-labelledby="rl-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">03 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
+        <div><span class="label">02 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
         <p class="sec-lead">Two tests, combined into one reliability score.</p>
       </div>
       <div class="rel rv">
@@ -141,31 +111,43 @@
         </div>
         <div class="demo" id="demo"></div>
       </div>
-      <div class="facts" id="facts"></div>
     </div>
   </section>
 
-  <!-- 04 Findings -->
-  <section class="sec" id="findings" aria-labelledby="fi-h">
+  <!-- 03 Results -->
+  <section class="sec" id="results" aria-labelledby="in-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">04 — Findings</span><h2 id="fi-h">What 21 models tell us</h2></div>
-        <p class="sec-lead">System Two still leads overall; the gap depends on the domain.</p>
+        <div><span class="label">03 — Results</span><h2 id="in-h">How System One models compare</h2></div>
       </div>
-      <div class="kfacts rv" id="kfacts"></div>
-      <div class="panel rv">
-        <div class="panel-head"><div><h3>Where System One models match System Two, and what closes the gap</h3>
-          <p>Difference from GPT-6 Luna on the medium and hard tiers (95% confidence intervals), and the gains from a larger backbone and from thinking.</p></div></div>
-        <div class="gap" id="gap"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3 id="ins-title">Performance against latency</h3><p id="ins-sub"></p></div>
+          <div class="seg" role="tablist" aria-label="Chart" id="ins-tabs">
+            <button role="tab" aria-selected="true" data-k="speed" id="k-speed">Speed</button>
+            <button role="tab" aria-selected="false" data-k="rel" id="k-rel" tabindex="-1">Score vs. reliability</button>
+            <button role="tab" aria-selected="false" data-k="sn" id="k-sn" tabindex="-1">S and N</button>
+            <button role="tab" aria-selected="false" data-k="tier" id="k-tier" tabindex="-1">Difficulty</button>
+            <button role="tab" aria-selected="false" data-k="gap" id="k-gap" tabindex="-1">Gap to GPT-6</button>
+          </div>
+        </div>
+        <div class="insights">
+          <div class="chart-col">
+            <div class="dchips" id="tier-chips" hidden></div>
+            <div class="chart" id="chart" role="img"></div>
+            <div class="legend" id="legend"></div>
+            <p class="note" id="ins-note"></p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- 05 Benchmark -->
+  <!-- 04 Benchmark -->
   <section class="sec" id="benchmark" aria-labelledby="bm-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">05 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
+        <div><span class="label">04 — The benchmark</span><h2 id="bm-h">2,919 tasks in 11 domains</h2></div>
         <p class="sec-lead">Static questions and web and tool sandboxes, posed through one decision interface.</p>
       </div>
       <div class="steps rv" id="steps"></div>
@@ -181,36 +163,36 @@
     </div>
   </section>
 
-  <!-- 06 Evaluate -->
+  <!-- 05 Evaluate -->
   <section class="sec" id="evaluate" aria-labelledby="ev-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">06 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
-        <p class="sec-lead">Any model, through an adapter. Linux x86-64, Python 3.12.</p>
+        <div><span class="label">05 — Evaluate</span><h2 id="ev-h">Evaluate your model</h2></div>
+        <p class="sec-lead">The <span class="mono">jev</span> command evaluates any model through an adapter. Linux x86-64, Python 3.12.</p>
       </div>
       <div class="runs rv">
         <div class="run"><span class="label">Step 01 · Get the data</span>
-          <pre><code>./jev fetch-data --output /path/to/so-arena-data
+          <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>./jev fetch-data --output /path/to/so-arena-data
 export SO_ARENA_DATA=/path/to/so-arena-data
 ./jev verify
-./jev setup</code></pre><p><span class="mono">verify</span> checks every data file against the release.</p></div>
+./jev setup</code></pre></div><p><span class="mono">verify</span> checks every data file against the release.</p></div>
         <div class="run"><span class="label">Step 02 · Run your model</span>
-          <pre><code>export JEV_ENDPOINT=http://localhost:8000
+          <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>export JEV_ENDPOINT=http://localhost:8000
 ./jev run --adapter adapters:http \
-  --model your-model --out /path/to/new-run</code></pre><p><span class="mono">--resume</span> continues a run; <span class="mono">--limit</span> makes a quick check.</p></div>
+  --model your-model --out /path/to/new-run</code></pre></div><p><span class="mono">--resume</span> continues a run; <span class="mono">--limit</span> makes a quick check.</p></div>
         <div class="run"><span class="label">Step 03 · Score</span>
-          <pre><code>./jev score --run /path/to/new-run \
-  --output /path/to/report.json</code></pre><p>The leaderboard score, by domain and tier.</p></div>
+          <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>./jev score --run /path/to/new-run \
+  --output /path/to/report.json</code></pre></div><p>The leaderboard score, by domain and tier.</p></div>
       </div>
       <p class="note">Full instructions: <a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">the SO-Arena repository</a>.</p>
     </div>
   </section>
 
-  <!-- 07 Cite -->
+  <!-- 06 Cite -->
   <section class="sec" id="cite" aria-labelledby="ci-h">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="label">07 — Citation</span><h2 id="ci-h">Cite SO-Arena</h2></div>
+        <div><span class="label">06 — Citation</span><h2 id="ci-h">Cite SO-Arena</h2></div>
         <p class="sec-lead">Correspondence: <a href="mailto:xinchao@nus.edu.sg" style="text-decoration:underline;text-underline-offset:3px">xinchao@nus.edu.sg</a></p>
       </div>
       <div class="bib"><button class="copy" type="button" id="copy">Copy</button>
@@ -228,7 +210,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
   <div class="wrap foot-in">
     <div><a class="brand" href="#top"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="#2c6aa8" d="M53.70 55.51A32.00 32.00 0 0 1 8.49 10.30L19.31 21.12A16.71 16.71 0 0 0 42.88 44.69Z"/><path fill="#a83a52" d="M10.30 8.49A32.00 32.00 0 0 1 55.51 53.70L44.69 42.88A16.71 16.71 0 0 0 21.12 19.31Z"/></svg>SO-Arena</a>
       <p>Results as reported in the paper; no benchmark items. Model names and logos belong to their developers.</p></div>
-    <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#insights">Insights</a><a href="#benchmark">Benchmark</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Hugging Face ↗</a></nav>
+    <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#results">Results</a><a href="#benchmark">Benchmark</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Hugging Face ↗</a></nav>
   </div>
 </footer>
 

@@ -163,7 +163,7 @@ table.lb { border-collapse: separate; border-spacing: 0; width: 100%; font-size:
 .lb td { padding: 0 16px; height: 58px; border-bottom: 1px solid var(--line); text-align: right; color: var(--ink-2); }
 .lb tbody tr:last-child td { border-bottom: 0; }
 .lb tbody tr[data-model] { cursor: pointer; transition: background .12s; }
-.lb tbody tr[data-model]:hover td { background: #fafaf8; }
+@media (hover: hover) { .lb tbody tr[data-model]:hover td { background: #fafaf8; } }
 .lb tr.grp th { text-align: left; padding: 9px 16px 8px; background: var(--soft); border-bottom: 1px solid var(--line); border-top: 1px solid var(--line);
   font: 500 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .lb tbody:first-of-type tr.grp th { border-top: 0; }
@@ -367,7 +367,7 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .bars .bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--bc, var(--ink)); }
 .bars .bar > u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .5; }
 .bars li.ref .bar > i { background: repeating-linear-gradient(135deg, #d9a77f 0 5px, #ecc9ab 5px 10px); }
-.bars li.auto .bar > i { background: #93c1bb; }
+.bars li.auto .bar > i { background: var(--cap-mid); }
 .bars .v { font: 500 12.5px/1 var(--mono); text-align: right; }
 .bars .sw { width: 8px; height: 8px; border-radius: 2px; background: var(--fc); }
 .tg { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed; font: 400 12.5px var(--mono); }
@@ -476,10 +476,10 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .dtable .tiers { white-space: nowrap; }
 .dtable .tk { font-size: 11px; color: var(--muted); margin-right: 3px; }
 /* ---- code blocks with copy buttons ---- */
-.code { position: relative; }
-.code pre { overflow-x: auto; padding-right: 64px; }
-.copy-code { position: absolute; top: 8px; right: 8px; height: 26px; padding: 0 9px; border-radius: 6px; font: 500 11.5px var(--sans); color: #d5d8dc; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16); }
-.copy-code:hover { color: #fff; background: rgba(255, 255, 255, .16); }
+.run { position: relative; }
+.code pre { overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.copy-code { position: absolute; top: 12px; right: 14px; height: 26px; padding: 0 10px; border-radius: 6px; font: 500 12px var(--sans); color: var(--ink-2); background: #fff; border: 1px solid var(--line-2); }
+.copy-code:hover { color: var(--ink); border-color: var(--ink-2); }
 /* ---- domain cards: ties share the badge; hover only where there is a pointer ---- */
 .drows li.first .p { background: var(--ink); border-color: var(--ink); color: #fff; }
 @media (max-width: 1080px) {
@@ -533,3 +533,35 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .ordr .v { font: 500 13px/1 var(--sans); font-variant-numeric: tabular-nums; text-align: right; }
 .dcard.overall { background: var(--soft); }
 @media (hover: hover) { .dcard.overall:hover { background: #f1f1ec; } }
+.msort { display: none; }
+@media (max-width: 760px) { .msort { display: inline-flex; } }
+
+/* ---- chart panels: tabs on their own row, above the title ---- */
+.panel-head { flex-direction: column; align-items: stretch; gap: 14px; }
+.panel-head .tabrow { align-self: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.panel-head .tabrow button { white-space: nowrap; flex: none; }
+.rpanel { margin-top: 20px; }
+@media (max-width: 760px) {
+  .panel-head .tabrow { -webkit-mask: linear-gradient(90deg, #000 85%, transparent); mask: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
+}
+
+/* ---- round 2 polish ---- */
+.lb .rcell { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.lb .rcell .meter { width: 44px; height: 4px; }
+.gap-lg { padding: 0 0 6px; }
+.mr.one { grid-template-columns: 24px minmax(0, 1fr) 24px; }
+.mr.one .ml, .mr.one .mv { font: 400 10.5px var(--mono); color: var(--muted); text-align: center; }
+.mt.dots.big { height: 18px; }
+.mt.dots.big i { width: 9px; height: 9px; margin: -5.5px 0 0 -5.5px; opacity: 1; }
+.kr h3::after { content: " →"; color: var(--faint); transition: color .15s; }
+.dcard .ref { align-items: baseline; }
+.dtable th.src { font: 500 11px/1.2 var(--mono); color: var(--muted); }
+.step .flow { font-family: var(--sans); font-size: 12.5px; }
+.caret::after { font-size: 10.5px; }
+.nav { background: rgba(255, 255, 255, .97); }
+@media (max-width: 1000px) { .fam-key { display: none; } }
+@media (max-width: 760px) {
+  .lb .mcell small { white-space: normal; }
+  .search { width: 100%; } .search input { width: 100%; }
+  .lb td.c-n .rcell .meter { display: none; }
+}

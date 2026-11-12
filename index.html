@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=e2e9ea617a" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=fae0ce624b">
+<link rel="stylesheet" href="assets/css/site.css?v=f312a3f01b">
 <script defer src="assets/js/data.js?v=79cc9fcc40"></script>
-<script defer src="assets/js/app.js?v=a75fc80346"></script>
+<script defer src="assets/js/app.js?v=20b312d152"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -31,8 +31,8 @@
       <a href="#benchmark">Benchmark</a><a href="#evaluate">Evaluate</a><a href="#cite">Cite</a>
     </nav>
     <div class="nav-end">
-      <a class="ext" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="t">GitHub</span></a>
-      <a class="ext" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M4 6.5C4 5.1 7.6 4 12 4s8 1.1 8 2.5S16.4 9 12 9 4 7.9 4 6.5z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M4 6.5v11C4 18.9 7.6 20 12 20s8-1.1 8-2.5v-11M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg><span class="t">Dataset</span></a>
+      <a class="ext" href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="t">GitHub</span></a>
+      <a class="ext" href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener" aria-label="Dataset on Hugging Face"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M4 6.5C4 5.1 7.6 4 12 4s8 1.1 8 2.5S16.4 9 12 9 4 7.9 4 6.5z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M4 6.5v11C4 18.9 7.6 20 12 20s8-1.1 8-2.5v-11M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg><span class="t">Dataset</span></a>
       <button class="burger" type="button" aria-label="Open the section menu" aria-expanded="false" aria-controls="sheet-nav"><span></span><span></span><span></span></button>
     </div>
   </div>
@@ -71,7 +71,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">01 — Leaderboard</span><h2 id="lb-h">Leaderboard</h2></div>
-        <p class="sec-lead">The score is the mean of 11 domains, each on its hardest tier. Reliability is measured for the 18 System One models.</p>
+        <p class="sec-lead">The score is the mean of 11 domains, each on its hardest tier: 1,232 of the 2,919 tasks. Reliability is measured for the 18 System One models.</p>
       </div>
       <div class="toolbar">
         <div class="tools-l">
@@ -80,6 +80,7 @@
             <button role="tab" aria-selected="false" aria-controls="v-domains" id="t-domains" tabindex="-1">By domain</button>
           </div>
           <div class="tools-filters" id="filters" role="group" aria-label="Show models" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+          <div class="seg msort" id="msort" role="group" aria-label="Sort by"><button type="button" data-ms="score" aria-pressed="true">Score</button><button type="button" data-ms="R" aria-pressed="false">Reliability</button><button type="button" data-ms="lat" aria-pressed="false">Latency</button></div>
         </div>
         <div class="tools-r">
           <label class="search"><span class="sr-only">Find a model</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Find a model" autocomplete="off"></label>
@@ -87,7 +88,7 @@
       </div>
       <div id="v-table" role="tabpanel" aria-labelledby="t-table">
         <div class="tbl-wrap" tabindex="0" aria-label="Leaderboard table; scrolls sideways"><table class="lb" id="lb"></table></div>
-        <div class="lb-foot"><span class="fam-key" id="fam-key" aria-label="Domain families"></span><p class="note">Latency: mean per task, one H100 GPU; APIs end to end. <a href="data/arena.json" download>All results (JSON)</a></p></div>
+        <div class="lb-foot"><span class="fam-key" id="fam-key" aria-label="Domain families"></span><p class="note">Latency: mean per task, one H100 GPU; APIs end to end. GLiDE and KnowLine-31B differ by 0.02 points, less than option order alone moves their accuracy (<a href="#reliability" data-chart-link="order">Reliability → Option order</a>). <a href="data/arena.json" download>All results (JSON)</a></p></div>
       </div>
       <div id="v-domains" role="tabpanel" aria-labelledby="t-domains" hidden>
         <div class="dgrid" id="dgrid"></div>
@@ -101,7 +102,7 @@
     <div class="wrap">
       <div class="sec-head">
         <div><span class="label">02 — Decision reliability</span><h2 id="rl-h">Does a decision hold when the <em>options</em> change?</h2></div>
-        <p class="sec-lead">Two tests, combined into one reliability score.</p>
+        <p class="sec-lead">Two tests, combined into one reliability score R; the charts below show the results.</p>
       </div>
       <div class="rel rv">
         <div class="defs">
@@ -110,6 +111,23 @@
           <div class="def"><span class="sym" aria-hidden="true">R</span><div><h3>Reliability</h3><p><i>R</i> = √(<i>S</i>·<i>N</i>), as a percentage.</p></div></div>
         </div>
         <div class="demo" id="demo"></div>
+      </div>
+      <div class="panel rpanel">
+        <div class="panel-head">
+          <div class="seg tabrow" role="tablist" aria-label="Reliability chart" id="rel-tabs">
+            <button role="tab" aria-selected="true" data-k="rel" id="k-rel">Score vs. reliability</button>
+            <button role="tab" aria-selected="false" data-k="sn" id="k-sn" tabindex="-1">Order stability vs. null discrimination</button>
+            <button role="tab" aria-selected="false" data-k="order" id="k-order" tabindex="-1">Option order</button>
+          </div>
+          <div><h3 id="r-title">Reliability against score</h3><p id="r-sub"></p></div>
+        </div>
+        <div class="insights">
+          <div class="chart-col">
+            <div class="chart" id="rchart" role="img"></div>
+            <div class="legend" id="rlegend"></div>
+            <p class="note" id="r-note"></p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -122,15 +140,12 @@
       </div>
       <div class="panel">
         <div class="panel-head">
-          <div><h3 id="ins-title">Performance against latency</h3><p id="ins-sub"></p></div>
-          <div class="seg" role="tablist" aria-label="Chart" id="ins-tabs">
+          <div class="seg tabrow" role="tablist" aria-label="Chart" id="ins-tabs">
             <button role="tab" aria-selected="true" data-k="speed" id="k-speed">Speed</button>
-            <button role="tab" aria-selected="false" data-k="rel" id="k-rel" tabindex="-1">Score vs. reliability</button>
-            <button role="tab" aria-selected="false" data-k="sn" id="k-sn" tabindex="-1">S and N</button>
-            <button role="tab" aria-selected="false" data-k="order" id="k-order" tabindex="-1">Option order</button>
             <button role="tab" aria-selected="false" data-k="tier" id="k-tier" tabindex="-1">Difficulty</button>
             <button role="tab" aria-selected="false" data-k="gap" id="k-gap" tabindex="-1">Gap to GPT-6</button>
           </div>
+          <div><h3 id="ins-title">Score against latency</h3><p id="ins-sub"></p></div>
         </div>
         <div class="insights">
           <div class="chart-col">
@@ -155,7 +170,7 @@
       <table class="dtable rv" id="dtable"></table>
       <div class="score-box rv">
         <div><h3>How the leaderboard is scored</h3>
-          <p>Domains count equally, each on its hardest tier (Math: hard and very hard; untiered domains: all tasks): 1,232 tasks.</p></div>
+          <p>Domains count equally whatever their size (20 to 200 leaderboard tasks), each on its hardest tier (Math: hard and very hard; untiered domains: all tasks): 1,232 tasks.</p></div>
         <div class="formula" aria-label="C of m equals 100 over D times the sum over domains of the mean credit on the domain's leaderboard tasks">
           <math display="block"><mrow><mi>C</mi><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>100</mn><mi>D</mi></mfrac><munderover><mo>∑</mo><mrow><mi>d</mi><mo>=</mo><mn>1</mn></mrow><mi>D</mi></munderover><mfrac><mn>1</mn><mrow><mo>|</mo><msub><mi>T</mi><mi>d</mi></msub><mo>|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>T</mi><mi>d</mi></msub></mrow></munder><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></math>
           <p class="note"><i>c<sub>i</sub>(m)</i> ∈ [0, 1] is model <i>m</i>'s credit on task <i>i</i>; <i>T<sub>d</sub></i> holds domain <i>d</i>'s leaderboard tasks; <i>D</i> = 11.</p>
@@ -180,7 +195,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
         <div class="run"><span class="label">Step 02 · Run your model</span>
           <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>export JEV_ENDPOINT=http://localhost:8000
 ./jev run --adapter adapters:http \
-  --model your-model --out /path/to/new-run</code></pre></div><p><span class="mono">--resume</span> continues a run; <span class="mono">--limit</span> makes a quick check.</p></div>
+  --model your-model --out /path/to/new-run</code></pre></div><p>Your server answers <span class="mono">POST /predict</span> with the decision (an option, yes/no, a grade or option probabilities) and <span class="mono">POST /measure</span> with token counts. Web and tool tasks arrive as a series of one-step decisions.</p></div>
         <div class="run"><span class="label">Step 03 · Score</span>
           <div class="code"><button class="copy-code" type="button">Copy</button><pre><code>./jev score --run /path/to/new-run \
   --output /path/to/report.json</code></pre></div><p>The leaderboard score, by domain and tier.</p></div>
@@ -211,7 +226,7 @@ export SO_ARENA_DATA=/path/to/so-arena-data
   <div class="wrap foot-in">
     <div><a class="brand" href="#top"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path fill="#2c6aa8" d="M53.70 55.51A32.00 32.00 0 0 1 8.49 10.30L19.31 21.12A16.71 16.71 0 0 0 42.88 44.69Z"/><path fill="#a83a52" d="M10.30 8.49A32.00 32.00 0 0 1 55.51 53.70L44.69 42.88A16.71 16.71 0 0 0 21.12 19.31Z"/></svg>SO-Arena</a>
       <p>Results as reported in the paper; no benchmark items. Model names and logos belong to their developers.</p></div>
-    <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#results">Results</a><a href="#benchmark">Benchmark</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Hugging Face ↗</a></nav>
+    <nav aria-label="Footer"><a href="#leaderboard">Leaderboard</a><a href="#results">Results</a><a href="#benchmark">Benchmark</a><a href="https://github.com/holdrain/SO-Arena" target="_blank" rel="noopener">GitHub ↗</a><a href="https://huggingface.co/SO-Arena" target="_blank" rel="noopener">Dataset ↗</a></nav>
   </div>
 </footer>
 

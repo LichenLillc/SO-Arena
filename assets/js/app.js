@@ -31,10 +31,12 @@
   const S1 = M.filter(isS1);
   const REFS = M.filter(m => m.group === "s2").sort((a, b) => b.score - a.score);
   const LUNA = M.find(m => m.name === "GPT-6 Luna");
-  const SIZE = { "0.4B": "#a3cf9b", "4B": "#4fa39b", "9B": "#6a8fc4", "27B": "#8a74b8", "31B": "#433d6e" };
-  const API = "#d4a24e";
+  // Hue carries meaning (wine score, blue reliability, orange System Two, family hues for domains); model size is a
+  // neutral lightness ramp and access is a shape (diamond = closed API).
+  const SIZE = { "0.4B": "#c9cdd2", "4B": "#a0a7ae", "9B": "#7a828b", "27B": "#525a63", "31B": "#272c32" };
+  const API = "#8d949b", S2C = "#b0652d";
   const closed = m => m.group === "api" || m.group === "s2";
-  const colorOf = m => closed(m) ? API : SIZE[m.size];
+  const colorOf = m => m.group === "s2" ? S2C : closed(m) ? API : SIZE[m.size];
   const slug = m => m.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const BY = Object.fromEntries(M.map(m => [slug(m), m]));
   const R_ = m => m.reliability ? m.reliability.R : null;
@@ -43,7 +45,7 @@
     for (const m of list) { const v = val(m); if (v != null) out.set(m.key, 1 + list.filter(o => val(o) != null && val(o) > v + 1e-9).length); }
     return out;
   }
-  const RANK = ranksOf(S1, m => m.score), RANK_R = ranksOf(S1, R_);
+  const RANK = ranksOf(S1, m => m.score), RANK_R = ranksOf(S1, R_), RANK_L = ranksOf(S1, m => -m.latency.mean_ms);
   const top = (list, val, n) => list.filter(m => val(m) != null).sort((a, b) => val(b) - val(a)).slice(0, n);
 
   function initials(m) {
@@ -122,17 +124,16 @@
     const [r1, r2] = top(S1, R_, 2), gaps = D.analysis.map(a => a.gap_glide), lo = Math.min(...gaps), hi = Math.max(...gaps);
     const sec = v => `${(v / 1000).toFixed(v >= 1000 ? 1 : 2)} s`, sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v));
     const gx = v => (v + 32) / 42 * 100;
-    const dots = `<div class="mini">${[["direct", "Semantic"], ["grounded", "Grounded"], ["derivation", "Derivation"]].map(([id, l]) =>
-      `<div class="mr"><span class="ml">${l}</span><span class="mt dots"><b style="left:${gx(0).toFixed(1)}%"></b>${D.analysis.filter(a => a.category === id).map(a =>
-        `<i style="left:${gx(a.gap_glide).toFixed(1)}%" title="${esc(DOM[a.domain].short)}: ${sg(a.gap_glide)}"></i>`).join("")}</span><span class="mv"></span></div>`).join("")}</div>`;
+    const dots = `<div class="mini"><div class="mr one"><span class="ml">−30</span><span class="mt dots big"><b style="left:${gx(0).toFixed(1)}%"></b>${D.analysis.map(a =>
+        `<i style="left:${gx(a.gap_glide).toFixed(1)}%;background:${FAM[DOM[a.domain].family].color}" title="${esc(DOM[a.domain].short)}: ${sg(a.gap_glide)}"></i>`).join("")}</span><span class="mv">+10</span></div></div>`;
     const tiles = [
-      ["leaderboard", "", `${f1(best.score)}<small> vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna by about ten points.",
+      ["leaderboard", "", `${f1(best.score)}<small> vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna, our System Two reference, by about ten points.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
-      ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open model, per task on one H100: tens of times faster than GPT-6.",
+      ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model, per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
-      ["results", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
+      ["reliability", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
-      ["results", "gap", `${sg(lo)}<small> to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna, one dot per domain (medium and hard tiers).`, dots],
+      ["results", "gap", `${sg(lo)}<small> to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna, one dot per domain, coloured by family (medium and hard tiers).`, dots],
     ];
     $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz]) => `<a class="kr" href="#${sec_}"${k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3><p>${p}</p>${viz}</a>`).join("");
   }
@@ -150,7 +151,7 @@
     return hit;
   };
   const COLS = [
-    { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true },
+    { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true, title: "Rank among the 18 System One models, by the sorted column" },
     { id: "model", label: "Model", cls: "c-m l", val: m => m.name, asc: true },
     { id: "score", label: "Score", cls: "c-score", val: m => m.score, title: "Mean of the 11 domain scores" },
     { id: "R", label: "Reliability", cls: "c-n", val: R_, title: "Reliability R, 0-100: keeps its answer when the options are reordered, and notices when the correct option is missing. System One models only." },
@@ -165,10 +166,10 @@
   const row = m => {
     const ref = m.group === "s2";
     return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
-      <td class="c-rk">${RANK.get(m.key) ?? (ref ? "" : "–")}</td>
+      <td class="c-rk">${(T.sort === "R" ? RANK_R : T.sort === "lat" ? RANK_L : RANK).get(m.key) ?? (ref ? "" : "–")}</td>
       <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}</small></div></div></td>
       <td class="c-score${T.sort === "score" ? " sorted" : ""}" data-l="Score"><div class="scell"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span>${f2(m.score)}</span></div></td>
-      <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? f1(R_(m)) : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
+      <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? `<span class="rcell"><span class="meter" aria-hidden="true"><i style="--w:${R_(m)}%;--c:var(--rel)"></i></span>${f1(R_(m))}</span>` : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
       <td class="c-n${T.sort === "lat" ? " sorted" : ""}" data-l="Latency">${m.latency ? ms(m.latency.mean_ms) : '<span class="dim">—</span>'}</td>
       <td class="c-prof">${prof(m)}</td></tr>`;
   };
@@ -208,6 +209,8 @@
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
+    $("#msort").addEventListener("click", e => { const b = e.target.closest("[data-ms]"); if (!b) return; const c = COLS.find(o => o.id === b.dataset.ms);
+      T.sort = c.id; T.dir = c.asc ? 1 : -1; $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     let onBar = false;                                          // profile bars: domain, score and System One rank
     $("#lb").addEventListener("pointermove", e => {
       const b = e.target.closest(".pb");
@@ -318,7 +321,7 @@
     if (yT) S("text", { class: "axis-t", x: m.l, y: m.t - 14, "text-anchor": "start" }, svg).textContent = yT;
   }
   function mark(g, m, x, y, r = 6) {
-    if (closed(m)) { const k = r * 1.22; S("path", { class: "mk", d: `M${x} ${y - k}L${x + k} ${y}L${x} ${y + k}L${x - k} ${y}Z`, fill: m.group === "s2" ? "#c9822f" : API, stroke: "#fff", "stroke-width": 1.5 }, g); }
+    if (closed(m)) { const k = r * 1.22; S("path", { class: "mk", d: `M${x} ${y - k}L${x + k} ${y}L${x} ${y + k}L${x - k} ${y}Z`, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g); }
     else S("circle", { class: "mk", cx: x, cy: y, r, fill: m.group === "auto" ? "#fff" : colorOf(m), stroke: m.group === "auto" ? colorOf(m) : "#fff", "stroke-width": m.group === "auto" ? 2.2 : 1.5 }, g);
   }
   function labels(svg, items, bounds) {
@@ -359,7 +362,8 @@
     }
   }
   const sizeLegend = (auto = true, extra = "") => Object.entries(SIZE).map(([s, c]) => `<span><i style="background:${c}"></i>${s}</span>`).join("") +
-    `<span><i class="dia" style="background:${API}"></i>Closed API</span>` + (auto ? `<span><i class="ring" style="--c:${SIZE["4B"]}"></i>Hybrid</span>` : "") + extra;
+    `<span><i class="dia" style="background:${API}"></i>Closed API</span>` + (auto ? `<span><i class="ring" style="--c:${SIZE["4B"]}"></i>Hybrid</span>` : "") +
+    `<span><i class="dia" style="background:${S2C}"></i>GPT-6 (System Two)</span>` + extra;
 
   const INS = {
     speed: { title: "Score against latency", sub: "The line is the Pareto frontier of System One models.",
@@ -367,15 +371,19 @@
     rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
     sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
-    order: { title: "How accuracy moves with the option order", sub: "The same 939 items in 12 reorderings, as the change from their original order. A wider spread: answers depend more on the order.", note: "Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
-    gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals; and what closes the gap.", note: "Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
+    order: { title: "How accuracy moves with the option order", sub: "939 reliability items with a correct answer, in 12 reorderings, as the change from their original order. A wider spread: answers depend more on the order.", note: "Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
+    gap: { title: "Gap to GPT-6 Luna, by domain", sub: "On the medium and hard tiers (not only the leaderboard tier), with 95% confidence intervals. Domains are grouped by how the gap behaves.", note: "Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
-  let insKey = "speed", tierDom = "math";
-  function insights() {
-    const c = INS[insKey];
-    $("#ins-title").textContent = c.title; $("#ins-sub").textContent = c.sub; $("#ins-note").textContent = c.note;
-    $("#tier-chips").hidden = insKey !== "tier";
-    const host = $("#chart");
+  let tierDom = "math";
+  // Two chart panels share this routine: Results (speed, difficulty, gap) and the Reliability section's evidence.
+  const PANELS = [{ key: "speed", tabs: "#ins-tabs", host: "#chart", lg: "#legend", title: "#ins-title", sub: "#ins-sub", note: "#ins-note" },
+                  { key: "rel", tabs: "#rel-tabs", host: "#rchart", lg: "#rlegend", title: "#r-title", sub: "#r-sub", note: "#r-note" }];
+  const insights = () => PANELS.forEach(drawPanel);
+  function drawPanel(P) {
+    const insKey = P.key, c = INS[insKey], LG = $(P.lg);
+    $(P.title).textContent = c.title; $(P.sub).textContent = c.sub; $(P.note).textContent = c.note;
+    if (P.host === "#chart") $("#tier-chips").hidden = insKey !== "tier";
+    const host = $(P.host);
     host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" ? "region" : "img");
     if (insKey === "speed") {
       const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
@@ -388,7 +396,7 @@
       const pts = M.map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
       points(svg, pts, o => mtip(o, `<br><span class="m">${ms(o.latency.mean_ms)}</span> <span class="s">mean latency (${o.latency.timing}${o.key === "SII-Decision-4B" ? ", with flash-linear-attention" : ""})</span>`));
       labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b });
-      $("#legend").innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
+      LG.innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
     } else if (insKey === "rel" || insKey === "sn") {
       const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
       const RL = S1.filter(o => o.reliability);
@@ -410,13 +418,13 @@
       }
       points(svg, pts, o => mtip(o, `<br><span class="m">${f1(o.reliability.R)}</span> <span class="s">R · #${RANK_R.get(o.key)} of 18 · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)}</span>`));
       labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b });
-      $("#legend").innerHTML = sizeLegend(false);
+      LG.innerHTML = sizeLegend(false);
     } else if (insKey === "order") {
-      orderChart(host, $("#legend"));
+      orderChart(host, LG);
     } else if (insKey === "tier") {
-      tierChart(host, tierDom, $("#legend"));
+      tierChart(host, tierDom, LG);
     } else {
-      gap(host, $("#legend"));
+      gap(host, LG);
     }
   }
   function orderChart(host, lg) {
@@ -456,10 +464,12 @@
     const xs = i => m.l + i / (ks.length - 1) * (W - m.l - m.r), ys = v => H - m.b - v / 100 * (H - m.t - m.b);
     axes(svg, W, H, m, xs, ys, ks.map((k, i) => [i, names[k]]), [0, 20, 40, 60, 80, 100].map(v => [v, v]), "", "↑ Score");
     const val = o => o.domains[id];
-    const hi = new Set([...top(S1, val, compact ? 3 : 1).map(o => o.key), ...(compact ? [] : ["StartLux-4B-Instant"]), LUNA.key]);
+    const tops = top(S1, val, compact ? 3 : 1), hi = new Set([...tops.map(o => o.key), ...(compact ? [] : ["StartLux-4B-Instant"]), LUNA.key]);
+    const SHADES = ["#8e2c43", "#c4687c", "#e2a7b4"];
+    const lineCol = o => o.group === "s2" ? "var(--s2)" : tops.includes(o) ? SHADES[tops.indexOf(o)] : colorOf(o);
     const g = S("g", {}, svg), ends = [];
     for (const o of [...M].sort((a, b) => hi.has(a.key) - hi.has(b.key))) {
-      const t = o.tiers[id], pts = ks.map((k, i) => [xs(i), ys(t[k])]), on = hi.has(o.key), col = o.group === "s2" ? "var(--s2)" : colorOf(o);
+      const t = o.tiers[id], pts = ks.map((k, i) => [xs(i), ys(t[k])]), on = hi.has(o.key), col = lineCol(o);
       const dd = pts.map((p, i) => `${i ? "L" : "M"}${p[0]} ${p[1]}`).join("");
       const a = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${o.name}: ${ks.map(k => `${names[k]} ${t[k]}`).join(", ")}` }, g);
       S("path", { d: dd, fill: "none", stroke: "transparent", "stroke-width": 12 }, a);
@@ -474,10 +484,11 @@
     ends.sort((a, b) => a.y - b.y);
     for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
     for (const e of ends) S("text", { class: "lbl", x: e.x + 9, y: e.y + 4 }, svg).textContent = e.label;
-    if (lgHost) lgHost.innerHTML = M.filter(o => hi.has(o.key)).map(o => `<span><i class="${o.group === "s2" ? "dash" : ""}" style="${o.group === "s2" ? "" : `background:${colorOf(o)}`}"></i>${esc(o.name)}</span>`).join("") + `<span><i class="ln" style="background:#d9d7ce"></i>Other models</span>`;
+    if (lgHost) lgHost.innerHTML = [...tops, ...M.filter(o => hi.has(o.key) && !tops.includes(o))].map(o => `<span><i class="${o.group === "s2" ? "dash" : ""}" style="${o.group === "s2" ? "" : `background:${lineCol(o)}`}"></i>${esc(o.name)}</span>`).join("") + `<span><i class="ln" style="background:#d9d7ce"></i>Other models</span>`;
   }
+  const showChart = k => { const t = document.getElementById("k-" + k); if (t) t.closest('[role="tablist"]')._sel(t.id); };
   function insightsControls() {
-    tabs($("#ins-tabs"), (id, t) => { insKey = t.dataset.k; insights(); });
+    PANELS.forEach(P => tabs($(P.tabs), (id, t) => { P.key = t.dataset.k; drawPanel(P); }));
     const TD = D.domains.filter(d => d.tiers);
     $("#tier-chips").innerHTML = TD.map(d => `<button type="button" class="chip" data-td="${d.id}" aria-pressed="${d.id === tierDom}">${esc(d.short)}</button>`).join("");
     $("#tier-chips").addEventListener("click", e => { const b = e.target.closest("[data-td]"); if (!b) return; tierDom = b.dataset.td; $$("[data-td]").forEach(o => o.setAttribute("aria-pressed", o === b)); insights(); });
@@ -486,7 +497,7 @@
   // ---- reliability demo and facts -----------------------------------------------------------------------------------
   function demo() {
     const host = $("#demo");
-    const sc = [["One fixed option set", "Other benchmarks score a single decision.", "Correct"],
+    const sc = [["Baseline: one option set", "Other benchmarks score a single decision.", "Correct"],
       ["Options reordered", "Does the model choose the same option?", "Same choice"],
       ["Correct option missing", "Does it see that no option is correct?", "No valid option"]];
     host.innerHTML = `<div class="demo-top"><span class="label">The two tests</span><button class="btn" type="button" id="replay" style="height:32px;font-size:13px">Replay</button></div>` +
@@ -531,26 +542,29 @@
     const CATS = [["direct", "Direct semantic judgment", "System One models perform comparably to System Two."],
       ["grounded", "Fine-grained grounded decision", "Only the larger, more capable backbone comes close."],
       ["derivation", "Multi-step derivation", "Both System One models fall far behind."]];
-    const G1 = SIZE["27B"], G2 = SIZE["4B"], BB = "#4a535c", TH = "#a3a8ae";
+    const G1 = "#8e2c43", G2 = "#dba1ae", BB = "#4a535c", TH = "#a3a8ae";
     const gx = v => 4 + (v + 50) / 65 * 90, bx = v => 4 + v / 30 * 88, tx = v => 4 + (v + 5) / 50 * 88;
     const rect = (x0, x1, y, h, c) => `<rect x="${Math.min(x0, x1)}%" y="${y}" width="${Math.max(.4, Math.abs(x1 - x0))}%" height="${h}" rx="2" fill="${c}"/>`;
     const ci = (c, y) => `<line x1="${gx(c[0])}%" x2="${gx(c[1])}%" y1="${y}" y2="${y}" stroke="var(--ink-2)" stroke-width="1.6" opacity=".75"/>`;
-    const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v));
+    const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v)), lgHtml = gapLegend(G1, G2, BB, TH);
     const vgrid = (f, vals, y1, y2) => vals.map(v => `<line x1="${f(v)}%" x2="${f(v)}%" y1="${y1}" y2="${y2}" stroke="${v === 0 ? "#b9b7ad" : "#efeee9"}"/>`).join("");
     const head = (f, vals, title) => `<svg class="gap-ticks" aria-hidden="true">${vals.map(v => `<text x="${f(v)}%" y="27" text-anchor="middle">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}<text class="t" x="${f(0) - 1}%" y="11" text-anchor="end">${title}</text></svg>`;
     const row = a => {
       const d = DOM[a.domain], z = gx(0);
       return `<div class="gap-r"><span class="dn">${esc(d.name.replace("Text-based ", ""))}</span>
-        <div><span class="cl">Gap to GPT-6 Luna</span><svg role="img" aria-label="Gap to GPT-6 Luna: GLiDE ${sg(a.gap_glide)}, StartLux Instant ${sg(a.gap_startlux)}">${vgrid(gx, [-40, -20, 0], 0, 34)}
+        <div><span class="cl">Gap to GPT-6 Luna</span><svg role="img" aria-label="Gap to GPT-6 Luna: GLiDE ${sg(a.gap_glide)}, StartLux Instant ${sg(a.gap_startlux)}">${vgrid(gx, [-40, -20, 0, 10], 0, 34)}
           ${rect(z, gx(a.gap_glide), 6, 9, G1)}${ci(a.gap_glide_ci, 10.5)}${rect(z, gx(a.gap_startlux), 19, 9, G2)}${ci(a.gap_startlux_ci, 23.5)}
           <text x="${gx(Math.max(a.gap_glide_ci[1], 0)) + 1.2}%" y="14">${sg(a.gap_glide)}</text><text x="${gx(Math.max(a.gap_startlux_ci[1], 0)) + 1.2}%" y="27.5">${sg(a.gap_startlux)}</text></svg></div>
         <div class="gain"><span class="cl">Backbone gain</span><svg role="img" aria-label="Backbone gain ${sg(a.backbone_gain)}">${vgrid(bx, [0], 6, 28)}${rect(bx(0), bx(a.backbone_gain), 11, 12, BB)}<text x="${bx(a.backbone_gain) + 1.5}%" y="21">${sg(a.backbone_gain)}</text></svg></div>
         <div class="gain"><span class="cl">Thinking gain</span><svg role="img" aria-label="Thinking gain ${sg(a.thinking_gain)}">${vgrid(tx, [0], 6, 28)}${rect(tx(0), tx(a.thinking_gain), 11, 12, TH)}<text x="${tx(Math.max(0, a.thinking_gain)) + 1.5}%" y="21">${sg(a.thinking_gain)}</text></svg></div></div>`;
     };
-    host.innerHTML = `<div class="gap"><div class="gap-h label"><span>Domain</span>${head(gx, [-40, -20, 0], "Gap to GPT-6 Luna")}<span class="gain">Backbone gain</span><span class="gain">Thinking gain</span></div>` +
+    host.innerHTML = `<div class="gap"><div class="legend gap-lg">${lgHtml}</div><div class="gap-h label"><span>Domain</span>${head(gx, [-40, -20, 0, 10], "Gap to GPT-6 Luna")}<span class="gain">Backbone gain</span><span class="gain">Thinking gain</span></div>` +
       CATS.map(([id, h, t]) => `<div class="gap-c"><h4>${h}</h4><span>${t}</span></div>` + D.analysis.filter(a => a.category === id).map(row).join("")).join("") + `</div>`;
-    lg.innerHTML = `<span><i style="background:${G1}"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span><span><i class="ln" style="background:var(--ink-2)"></i>95% confidence interval</span>
-      <span><i style="background:${BB}"></i>Backbone gain: smaller → 27B, mean of four families</span><span><i style="background:${TH}"></i>Thinking gain: StartLux Auto, always vs. never</span>`;
+    lg.innerHTML = "";
+  }
+  function gapLegend(G1, G2, BB, TH) {
+    return `<span><i style="background:${G1}"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span><span><i class="ln" style="background:var(--ink-2)"></i>95% confidence interval</span>
+      <span><i style="background:${BB}"></i>Backbone gain: smaller → 27B model of the same line, mean of four lines</span><span><i style="background:${TH}"></i>Thinking gain: StartLux Auto, always vs. never thinking</span>`;
   }
 
   // ---- benchmark ---------------------------------------------------------------------------------------------------
@@ -580,7 +594,7 @@
   // ---- wiring ------------------------------------------------------------------------------------------------------
   function wire() {
     document.addEventListener("click", e => {
-      const kr = e.target.closest(".kr[data-chart]"); if (kr) $("#ins-tabs")._sel("k-" + kr.dataset.chart);
+      const kr = e.target.closest(".kr[data-chart], [data-chart-link]"); if (kr) showChart(kr.dataset.chart || kr.dataset.chartLink);
       const dv = e.target.closest("[data-view]"); if (dv) { $("#lb-view")._sel(dv.dataset.view); $("#leaderboard").scrollIntoView(); return; }
       const bm = e.target.closest("[data-bm]"); if (bm) { boardMode = bm.dataset.bm; board(); return; }
       const dm = e.target.closest("[data-domain]"); if (dm) { openDomain(dm.dataset.domain); return; }
@@ -609,7 +623,7 @@
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));
     else if (q.get("model") && BY[q.get("model")]) openModel(BY[q.get("model")]);
-    window.SOA = { openDomain, openModel: k => openModel(BY[k] || M.find(m => m.key === k)), view: id => $("#lb-view")._sel(id), chart: k => $("#ins-tabs")._sel("k-" + k), board: k => { boardMode = k; board(); } };
+    window.SOA = { openDomain, openModel: k => openModel(BY[k] || M.find(m => m.key === k)), view: id => $("#lb-view")._sel(id), chart: showChart, board: k => { boardMode = k; board(); } };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

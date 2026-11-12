@@ -189,8 +189,13 @@
       (refs.length + s1.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`);
   }
   function dgrid() {
-    const ids = D.domains.map(d => d.id);
-    $("#dgrid").innerHTML = ids.map(id => {
+    const ids = D.domains.map(d => d.id), t3 = top(S1, o => o.score, 3);
+    const overall = `<button type="button" class="dcard overall" data-view="t-table"><div class="dcard-top"><span class="label">All 11 domains</span><span class="label">${D.totals.leaderboard_tasks.toLocaleString("en-US")} tasks</span></div>
+        <h3>Overall score</h3><div class="meta">Mean of the 11 domain scores</div>
+        <ol class="drows">${t3.map(m => `<li class="${RANK.get(m.key) === 1 ? "first" : ""}"><span class="p">${RANK.get(m.key)}</span>${logo(m, 22)}<span class="n">${esc(m.name)}</span><span class="meter"><i style="--w:${m.score}%;--c:var(--cap)"></i></span><span class="v">${f2(m.score)}</span></li>`).join("")}</ol>
+        <div class="ref"><span>GPT-6 Luna (System Two)</span><b>${f2(LUNA.score)}</b></div>
+        <span class="go">Full table →</span></button>`;
+    $("#dgrid").innerHTML = overall + ids.map(id => {
       const d = DOM[id], f = FAM[d.family], val = m => m.domains[id], rk = TOPD[id], l = top(S1, val, 3);
       return `<button type="button" class="dcard" data-domain="${id}" style="--fc:${f.color}"><div class="dcard-top"><span class="label"><i></i>${esc(f.name.split(" ")[0])}</span><span class="label">${d.leaderboard_tasks} tasks</span></div>
         <h3>${esc(d.name)}</h3><div class="meta">${d.leaderboard_tier === "All tasks" ? "All tasks (untiered)" : d.leaderboard_tier + " tier"}</div>
@@ -362,7 +367,7 @@
     rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
     sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
-    order: { title: "Accuracy across 13 option orders", sub: "The same 939 items, in their original option order (◆) and 12 reorderings (●). A longer line: answers depend more on the order.", note: "From the reliability runs, separate from the leaderboard score." },
+    order: { title: "How accuracy moves with the option order", sub: "The same 939 items in 12 reorderings, as the change from their original order. A wider spread: answers depend more on the order.", note: "Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
     gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals; and what closes the gap.", note: "Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
   let insKey = "speed", tierDom = "math";
@@ -415,34 +420,33 @@
     }
   }
   function orderChart(host, lg) {
-    const L = S1.filter(o => o.order_acc).sort((a, b) => (b.order_acc.max + b.order_acc.min) - (a.order_acc.max + a.order_acc.min));
-    const lo = Math.floor(Math.min(...L.map(o => o.order_acc.min)) / 5) * 5, hi = Math.ceil(Math.max(...L.map(o => o.order_acc.max)) / 5) * 5;
-    const rowH = 24, m = { l: 150, r: 64, t: 26, b: 40 };
+    // Change from the original option order, per reordering; rows in leaderboard order; the original accuracy at the right.
+    const L = S1.filter(o => o.order_acc).sort((a, b) => b.score - a.score);
+    const dev = L.flatMap(o => o.order_acc.runs.map(v => Math.abs(v - o.order_acc.original))), X = Math.max(2, Math.ceil(Math.max(...dev)));
+    const rowH = 24, m = { l: 150, r: 92, t: 30, b: 42 };
     host.innerHTML = "";
     const W = Math.max(320, host.clientWidth), H = m.t + m.b + rowH * L.length;
     const svg = S("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, host);
-    const xs = v => m.l + (v - lo) / (hi - lo) * (W - m.l - m.r);
+    const xs = v => m.l + (v + X) / (2 * X) * (W - m.l - m.r);
     const g = S("g", { class: "grid" }, svg);
-    for (let v = lo; v <= hi; v += 5) {
-      S("line", { x1: xs(v), x2: xs(v), y1: m.t - 8, y2: H - m.b }, g);
-      S("text", { class: "tick", x: xs(v), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = v;
+    for (let v = -X; v <= X; v++) {
+      S("line", { x1: xs(v), x2: xs(v), y1: m.t - 8, y2: H - m.b, stroke: v === 0 ? "#b9b7ad" : null }, g);
+      S("text", { class: "tick", x: xs(v), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = v > 0 ? `+${v}` : v < 0 ? `−${-v}` : "0";
     }
-    S("text", { class: "axis-t", x: W - m.r, y: H - 6, "text-anchor": "end" }, svg).textContent = "Accuracy on the 939 items (%) →";
+    S("text", { class: "axis-t", x: xs(0), y: H - 6, "text-anchor": "middle" }, svg).textContent = "Change from the original order (points)";
+    S("text", { class: "tick", x: W - 10, y: m.t - 12, "text-anchor": "end" }, svg).textContent = "original";
     L.forEach((o, i) => {
-      const a = o.order_acc, y = m.t + rowH * i + rowH / 2, c = colorOf(o);
-      const r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${o.name}: original order ${f1(a.original)}, range ${f1(a.min)} to ${f1(a.max)}` }, svg);
+      const a = o.order_acc, y = m.t + rowH * i + rowH / 2, c = colorOf(o), d = a.runs.map(v => v - a.original);
+      const r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${o.name}: original order ${f1(a.original)}; 12 reorderings from ${f1(a.min)} to ${f1(a.max)}` }, svg);
       S("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent" }, r);
       S("text", { class: "lbl", x: m.l - 12, y: y + 4, "text-anchor": "end" }, r).textContent = o.name;
-      S("line", { x1: xs(a.min), x2: xs(a.max), y1: y, y2: y, stroke: c, "stroke-width": 3, "stroke-linecap": "round", opacity: .35 }, r);
-      for (const v of a.runs) S("circle", { cx: xs(v), cy: y, r: 2.6, fill: c, opacity: .8 }, r);
-      const d = 5.5, x0 = xs(a.original);
-      S("path", { d: `M${x0} ${y - d}L${x0 + d} ${y}L${x0} ${y + d}L${x0 - d} ${y}Z`, fill: "var(--ink)", stroke: "#fff", "stroke-width": 1.2 }, r);
-      S("text", { class: "tick", x: W - m.r + 8, y: y + 4 }, r).textContent = `±${f1((a.max - a.min) / 2)}`;
-      bindTip(r, () => `<b>${esc(o.name)}</b><br><span class="m">${f1(a.original)}</span> <span class="s">original order · range ${f1(a.min)}–${f1(a.max)} over 13 orders</span>`);
+      S("line", { x1: xs(Math.min(0, ...d)), x2: xs(Math.max(0, ...d)), y1: y, y2: y, stroke: c, "stroke-width": 4, "stroke-linecap": "round", opacity: .3 }, r);
+      for (const v of d) S("circle", { cx: xs(v), cy: y, r: 3, fill: c, opacity: .85 }, r);
+      S("text", { class: "tick", x: W - 10, y: y + 4, "text-anchor": "end" }, r).textContent = f1(a.original);
+      bindTip(r, () => `<b>${esc(o.name)}</b><br><span class="m">${f1(a.original)}</span> <span class="s">original order · ${f1(a.min)}–${f1(a.max)} over all 13 orders</span>`);
       r.addEventListener("click", () => openModel(o));
     });
-    S("text", { class: "tick", x: W - m.r + 8, y: m.t - 10 }, svg).textContent = "half-range";
-    lg.innerHTML = `<span><i class="dia" style="background:var(--ink)"></i>Original order</span><span><i style="background:var(--muted)"></i>12 reorderings</span>` +
+    lg.innerHTML = `<span><i style="background:var(--muted)"></i>One reordering</span>` +
       Object.entries(SIZE).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join("") + `<span><i class="dia" style="background:${API}"></i>Closed API</span>`;
   }
   function tierChart(host, id, lgHost, compact = false) {
@@ -577,6 +581,7 @@
   function wire() {
     document.addEventListener("click", e => {
       const kr = e.target.closest(".kr[data-chart]"); if (kr) $("#ins-tabs")._sel("k-" + kr.dataset.chart);
+      const dv = e.target.closest("[data-view]"); if (dv) { $("#lb-view")._sel(dv.dataset.view); $("#leaderboard").scrollIntoView(); return; }
       const bm = e.target.closest("[data-bm]"); if (bm) { boardMode = bm.dataset.bm; board(); return; }
       const dm = e.target.closest("[data-domain]"); if (dm) { openDomain(dm.dataset.domain); return; }
       const md = e.target.closest("[data-model]:not(tr)"); if (md) { openModel(BY[md.dataset.model]); return; }

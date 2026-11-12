@@ -531,3 +531,5 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .ordr .tr i { position: absolute; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--cap); opacity: .7; }
 .ordr .tr u { position: absolute; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; background: var(--ink); transform: rotate(45deg); }
 .ordr .v { font: 500 13px/1 var(--sans); font-variant-numeric: tabular-nums; text-align: right; }
+.dcard.overall { background: var(--soft); }
+@media (hover: hover) { .dcard.overall:hover { background: #f1f1ec; } }

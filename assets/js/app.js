@@ -166,8 +166,11 @@
     const [r1, r2] = top(S1, R_, 2), gaps = D.domains.map(d => best.domains[d.id] - LUNA.domains[d.id]), lo = Math.min(...gaps), hi = Math.max(...gaps);
     const sec = v => `${(v / 1000).toFixed(v >= 1000 ? 1 : 2)} s`, sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v));
     const gx = v => (v + 50) / 60 * 100;
+    // the domains far behind, named under their dots (one label per cluster 8 points apart)
+    const fb = D.domains.map((d, i) => [d.short, gaps[i]]).filter(([, v]) => v < -15).sort((a, b) => a[1] - b[1]);
     const dots = `<div class="mini"><div class="mr one"><span class="ml">−50</span><span class="mt dots big"><b style="left:${gx(0).toFixed(1)}%"></b>${D.domains.map((d, i) =>
-        `<i style="left:${gx(gaps[i]).toFixed(1)}%;background:${FAM[d.family].color}" title="${esc(d.short)}: ${sg(gaps[i])}"></i>`).join("")}</span><span class="mv">+10</span></div></div>`;
+        `<i style="left:${gx(gaps[i]).toFixed(1)}%;background:${FAM[d.family].color}" title="${esc(d.short)}: ${sg(gaps[i])}"></i>`).join("")}</span><span class="mv">+10</span></div>
+      <div class="mr one"><span></span><span class="mt dl">${fb.length ? `<span class="fb" style="left:${gx(fb[0][1]).toFixed(1)}%">${fb.map(x => x[0]).join(", ")}</span>` : ""}<span class="lu" style="left:${gx(0).toFixed(1)}%">Luna</span></span><span></span></div></div>`;
     const tiles = [
       ["leaderboard", "", `${f1(best.score)}<small>&nbsp;vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna by about ten points. Luna is strong enough to serve as the System Two reference, and one reference keeps the charts clear; GPT-6 Sol scores 82.3.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
@@ -175,9 +178,9 @@
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([r1, r2, best].map(o => [`<span class="rkn">#${RANK_R.get(o.key)}</span>${esc(o.name)}`, R_(o), "var(--rel)"]), 100, f1)],
-      ["leaderboard", "view:t-domains", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each of the 11 domains (leaderboard tier); dots coloured by domain family.`, dots],
+      ["leaderboard", "view:t-domains", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "Gap to Luna varies by domain", `${esc(best.name)}, the top System One model, minus GPT-6 Luna in each of the 11 domains (leaderboard tier). Left of the Luna line: behind Luna. Dots coloured by domain family.`, dots],
     ];
-    const CAP = ["Score", "Mean time per task", "Reliability R", "Per domain, by family"];
+    const CAP = ["Score", "Mean time per task", "Reliability R", `${esc(best.name)} minus GPT-6 Luna, per domain`];
     $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz], i) => `<div class="kr"><a class="krl" href="#${sec_}"${k.startsWith("view:") ? ` data-view="${k.slice(5)}"` : k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3></a>
       <button class="info" type="button" data-info="${esc(p)}">i</button>${viz}<span class="kcap">${CAP[i]}</span></div>`).join("");
   }
@@ -263,24 +266,42 @@
       if (Math.abs(dy) > 1) r.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.2, .8, .2, 1)" });
     });
   }
+  // By domain: one row per domain, grouped by family. The three best System One models, GPT-6 Luna, and a strip with
+  // every System One model's score on 0-100 (the top three solid, Luna as a diamond). A row opens the domain's drawer.
   function dgrid() {
-    const ids = D.domains.map(d => d.id), t3 = top(S1, o => o.score, 3);
-    const overall = `<button type="button" class="dcard overall" data-view="t-table"><div class="dcard-top"><span class="label">All 11 domains</span><span class="label">${D.totals.leaderboard_tasks.toLocaleString("en-US")} tasks</span></div>
-        <h3>Overall score</h3><div class="meta">Mean of the 11 domain scores</div>
-        <ol class="drows">${t3.map(m => `<li class="${RANK.get(m.key) === 1 ? "first" : ""}"><span class="p">${RANK.get(m.key)}</span>${logo(m, 22)}<span class="n">${esc(m.name)}</span><span class="meter"><i style="--w:${m.score}%;--c:var(--cap)"></i></span><span class="v">${f2(m.score)}</span></li>`).join("")}</ol>
-        <div class="ref"><span>GPT-6 Luna (System Two)</span><b>${f2(LUNA.score)}</b></div>
-        <span class="go">Full table →</span></button>`;
-    $("#dgrid").innerHTML = overall + ids.map(id => {
-      const d = DOM[id], f = FAM[d.family], val = m => m.domains[id], rk = TOPD[id], l = top(S1, val, 3);
-      return `<button type="button" class="dcard" data-domain="${id}" style="--fc:${f.color}"><div class="dcard-top"><span class="label"><i></i>${esc(f.name.split(" ")[0])}</span><span class="label">${d.leaderboard_tasks} tasks</span></div>
-        <h3>${esc(d.name)}</h3><p class="desc">${DESC[id]}</p><div class="meta">${d.leaderboard_tier === "All tasks" ? "All tasks (untiered)" : d.leaderboard_tier + " tier"}</div>
-        <ol class="drows">${l.map(m => `<li class="${rk.get(m.key) === 1 ? "first" : ""}"><span class="p">${rk.get(m.key)}</span>${logo(m, 22)}<span class="n">${esc(m.name)}</span><span class="meter"><i style="--w:${val(m)}%;--c:var(--cap)"></i></span><span class="v">${f1(val(m))}</span></li>`).join("")}</ol>
-        <div class="ref"><span>GPT-6 Luna (System Two)</span><b>${f1(val(LUNA))}</b></div>
-        <span class="go">Full ranking and tiers →</span></button>`;
-    }).join("");
+    const ov = { id: "overall", val: m => m.score, rk: RANK };
+    const cell = (o, m, i, list) => { const v = o.val(m), tie = i && (o.id === "overall" ? f2 : f1)(v) === (o.id === "overall" ? f2 : f1)(o.val(list[i - 1]));
+      return `<div class="pc p${i + 1}" role="cell"><span class="pcw">${logo(m, 22)}<span class="nm"><span class="n">${esc(m.name)}</span><span class="v">${(o.id === "overall" ? f2 : f1)(v)}${tie ? '<span class="tie">tie</span>' : ""}</span></span></span></div>`; };
+    const strip = (o, c) => { const l3 = new Set(top(S1, o.val, 3).map(m => m.key));
+      return `<div class="c-sp" role="cell"><span class="sp" data-sp="${o.id}" style="--fc:${c}"><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b>` +
+        [...S1].sort((x, y) => l3.has(x.key) - l3.has(y.key)).map(m => `<i class="${l3.has(m.key) ? "t" : ""}" style="left:${o.val(m).toFixed(1)}%"></i>`).join("") +
+        `<em style="left:${o.val(LUNA).toFixed(1)}%"></em></span></div>`; };
+    const line = (o, c, name, meta, attrs) => { const l = top(S1, o.val, 3);
+      return `<div ${attrs} role="row" tabindex="0"><div class="dn" role="rowheader"><b>${name}</b><small>${meta}</small></div>${l.map((m, i) => cell(o, m, i, l)).join("")}` +
+        `<div class="lu" role="cell">${(o.id === "overall" ? f2 : f1)(o.val(LUNA))}</div>${strip(o, c)}</div>`; };
+    const head = `<div class="dr dh" role="row"><div role="columnheader">Domain</div><div role="columnheader">1st</div><div role="columnheader" class="p2">2nd</div><div role="columnheader" class="p3">3rd</div>` +
+      `<div role="columnheader" class="lu"><span class="lf">GPT-6 </span>Luna</div><div role="columnheader" class="c-sp">All 18 System One<span class="spk"><span><i class="t"></i>top 3</span><span><i></i>others</span><span><em></em>GPT-6 Luna</span></span></div></div>`;
+    const body = `${line(ov, "var(--ink-2)", "Overall", `Mean of the 11 domains · ${D.totals.leaderboard_tasks.toLocaleString("en-US")} tasks`, 'class="dr ov" data-view="t-table" aria-label="Overall: open the full table"')}` +
+      FAMS.map(({ f, ds }) => `<div class="dfam" role="row"><div role="rowheader"><i style="background:${f.color}"></i>${esc(f.name)}</div></div>` +
+        ds.map(d => line({ id: d.id, val: m => m.domains[d.id] }, f.color, esc(d.name), `${d.leaderboard_tasks} tasks · ${d.leaderboard_tier === "All tasks" ? "untiered" : d.leaderboard_tier.toLowerCase() + " tier"}`,
+          `class="dr" data-domain="${d.id}" title="${esc(DESC[d.id])}" aria-label="${esc(d.name)}: full ranking and tiers"`)).join("")).join("");
+    $("#dgrid").innerHTML = `<div class="dtab" role="table" aria-label="Top three System One models and GPT-6 Luna in each domain">${head}${body}</div><p class="dtab-note">Scores on each domain's leaderboard tier. A row opens the full ranking and the tiers.</p>`;
+  }
+  function dgridControls() {
+    const g = $("#dgrid"); let on = false;
+    g.addEventListener("keydown", e => { const r = e.target.closest(".dr[tabindex]"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); } });
+    // the strip: the model nearest the pointer, with its score and rank in that domain
+    g.addEventListener("pointermove", e => {
+      const sp = e.target.closest(".sp"); if (!sp) { if (on) { untip(); on = false; } return; }
+      const id = sp.dataset.sp, val = id === "overall" ? m => m.score : m => m.domains[id], rk = id === "overall" ? RANK : TOPD[id];
+      const r = sp.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 100;
+      const m = [...S1, LUNA].reduce((p, q) => Math.abs(val(q) - x) < Math.abs(val(p) - x) ? q : p);
+      tip(`<b>${esc(m.name)}</b> <span class="m">${f1(val(m))}</span> <span class="s">${m === LUNA ? "System Two reference" : `#${rk.get(m.key)} of ${S1.length}`}</span>`, e.clientX, e.clientY); on = true;
+    });
+    g.addEventListener("pointerleave", () => { if (on) { untip(); on = false; } });
   }
   function leaderboardControls() {
-    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk"><i class="k-prof"><b></b><b></b><b></b></i>By domain: point at the bars for all 11 scores</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
+    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk">By domain, one bar each:${D.families.map(f => `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("")}</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
@@ -1011,7 +1032,7 @@
   }
 
   function init() {
-    nav(); board(); kres(); leaderboardControls(); table(); dgrid(); insightsControls(); insights();
+    nav(); board(); kres(); leaderboardControls(); table(); dgrid(); dgridControls(); insightsControls(); insights();
     demo(); benchmark(); wire(); infos(); logoMotion(); systemOne(); highlights();
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));

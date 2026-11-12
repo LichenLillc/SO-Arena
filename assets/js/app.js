@@ -651,7 +651,7 @@
     null: { title: "Noticing a missing answer, against score", sub: "Models with similar scores differ widely in N; the score says little about it. Dashed: trend; band: 90% of the models.",
       note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the 16 System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
     sn: { title: "Decision reliability", sub: "Option-order stability S against null discrimination N; dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
-    scale: { title: "Does a bigger backbone close the gap?", sub: "Gain from the smaller to the 27B model of the same family, mean of four families, on the medium and hard tiers.",
+    scale: { title: "Does a larger, more capable backbone close the gap?", sub: "Gain from the smaller model (on Qwen3.5) to the 27B model (on the newer Qwen3.8-27B) of the same family, mean of four families, on the medium and hard tiers.",
       note: "The four families released in a smaller and a 27B size: every smaller model builds on Qwen3.5, every larger one on Qwen3.8-27B." },
     think: { title: "Does thinking before answering close the gap?", sub: "Gain of StartLux Auto with thinking always on over never on, on the medium and hard tiers.",
       note: "StartLux Auto can think before it answers; the two settings are compared on the same tasks." },
@@ -943,7 +943,7 @@
     if ("IntersectionObserver" in window) new IntersectionObserver(es => { const v = es.some(e => e.isIntersecting); if (v === inView) return; inView = v; if (v) start(); else reset(); }, { threshold: .35 }).observe(host);
     else { inView = true; start(); }
   }
-  // Section 04, one tab per question: the gap to System Two by domain, the gain from a bigger backbone, the gain from
+  // Section 04, one tab per question: the gap to System Two by domain, the gain from a stronger backbone, the gain from
   // thinking. Each tab opens with its question and a small picture of it, then the chart answers it by domain.
   const R1 = v => +v.toFixed(1);
   const robo = (x, y, sc, c = "#1b2129", cls = "", st = "") => { const dk = "#1b2129", ln = c === dk ? "" : ` stroke="${dk}" stroke-width="1.4"`;
@@ -1005,8 +1005,8 @@
     // what each kind of domain shows, in this view (the paper's Sec. 5.2.1); ranges from the data
     const TXT = {
       gap: { direct: "System One models perform comparably to System Two.", grounded: "Only the larger, more capable backbone comes close.", derivation: "Both System One models fall far behind." },
-      scale: { direct: `A bigger backbone adds little (${rng("backbone_gain", "direct")}).`, grounded: `A bigger backbone adds the most (${rng("backbone_gain", "grounded")}), far more than thinking.`, derivation: `It helps (${rng("backbone_gain", "derivation")}), but the gap stays large.` },
-      think: { direct: `Thinking adds little (${rng("thinking_gain", "direct")}).`, grounded: `Thinking adds little (${rng("thinking_gain", "grounded")}), far less than a bigger backbone.`, derivation: `Thinking helps most here: in Math, ${f1(D.analysis.find(a => a.domain === "math").thinking_never)} → ${f1(D.analysis.find(a => a.domain === "math").thinking_always)}.` },
+      scale: { direct: `A stronger backbone adds little (${rng("backbone_gain", "direct")}).`, grounded: `A stronger backbone adds the most (${rng("backbone_gain", "grounded")}), far more than thinking.`, derivation: `It helps (${rng("backbone_gain", "derivation")}), but the gap stays large.` },
+      think: { direct: `Thinking adds little (${rng("thinking_gain", "direct")}).`, grounded: `Thinking adds little (${rng("thinking_gain", "grounded")}), far less than a stronger backbone.`, derivation: `Thinking helps most here: in Math, ${f1(D.analysis.find(a => a.domain === "math").thinking_never)} → ${f1(D.analysis.find(a => a.domain === "math").thinking_always)}.` },
     }[mode];
     const row = a => { const d = DOM[a.domain];
       if (mode === "gap") { const z = gx(0);
@@ -1021,7 +1021,7 @@
       return `<div class="gap-r"><span class="dn">${esc(d.name)}</span><div><svg role="img" aria-label="${mode === "scale" ? "Backbone" : "Thinking"} gain ${sgn(v)}${extra ? `, ${extra.trim()}` : ""}">${vgrid(bx, [0, 10, 20, 30, 40, 50], 4, 30)}${rect(bx(0), bx(v), 10, 14, c)}${lab}</svg></div></div>`;
     };
     const legend = mode === "gap" ? `<span><i style="background:${G1}"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span><span><i class="ln" style="background:var(--ink-2)"></i>95% confidence interval</span><span><i class="ln" style="background:#b9b7ad"></i>0 = GPT-6 Luna</span>`
-      : mode === "scale" ? `<span><i style="background:${BB}"></i>Gain from the smaller to the 27B model of the same family, mean of four families</span>`
+      : mode === "scale" ? `<span><i style="background:${BB}"></i>Gain from the smaller model (Qwen3.5) to the 27B model (Qwen3.8-27B) of the same family, mean of four families</span>`
       : `<span><i style="background:${TH}"></i>Gain of StartLux Auto from always thinking over never thinking (right: never → always)</span>`;
     const H = mode === "gap" ? ticks(gx, [-40, -30, -20, -10, 0, 10], "Gap to GPT-6 Luna") : ticks(bx, [0, 10, 20, 30, 40, 50], mode === "scale" ? "Backbone gain" : "Thinking gain");
     host.innerHTML = `<div class="qa">${qaPic(mode, host.clientWidth < 560)}</div><div class="gap one"><div class="legend gap-lg">${legend}</div><div class="gap-h label"><span>Domain</span>${H}</div>` +

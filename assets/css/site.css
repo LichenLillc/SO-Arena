@@ -1154,3 +1154,6 @@ section[id] { scroll-margin-top: -87px; }
 .gtoggle svg .g { stroke-dasharray: 2 2; opacity: .6; }
 .gtoggle[aria-pressed="true"] svg .g { opacity: 1; stroke-dasharray: none; }
 .lb.flat tbody tr.ref td { background: #fcfbf8; }
+/* the whole word is centred: the drawing shifts between the resting and the open centre with the letters (user) */
+.logo-anim .lg-all { transform-box: view-box; transform: translateX(var(--c-rest, 0px)); transition: transform var(--t) var(--move); }
+.logo-anim.open .lg-all { transform: translateX(var(--c-open, 0px)); }

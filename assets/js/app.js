@@ -611,13 +611,13 @@
     const host = $("#demo");
     const SC = [["Original options", "", "Correct"], ["Shuffled", "s", "Same answer"], ["Correct option missing", "n", "Picks Null"]];
     host.innerHTML = SC.map(([h, k, v], i) => `<div class="scene2" data-i="${i}"><div class="sh">${k ? `<b class="sym ${k}">${k.toUpperCase()}</b>` : ""}<span>${h}</span></div>
-        <div class="stage2"><span class="bt"><span class="bt-b">${ROBOT}</span><i class="shd"></i></span></div>
+        <div class="stage2"><span class="rbt"><span class="rbt-b">${ROBOT}</span><i class="shd"></i></span></div>
         <div class="verdict"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.5" fill="#e3f1e9"/><path d="M4.5 8.2l2.3 2.3 4.7-5" fill="none" stroke="#2f7d57" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>${v}</div></div>`).join("") +
       `<button class="replay" type="button" id="dpause" aria-label="Pause the demo" aria-pressed="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="pz" d="M5.5 3.5v9M10.5 3.5v9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="pl" d="M5 3.2l8 4.8-8 4.8z" fill="currentColor"/></svg></button>`;
     const BW = 40, GAP = 10, NW = 56, SW = 206;
     const scenes = $$(".scene2", host).map(s => {
       const st = $(".stage2", s), mk = (t, w = BW) => { const b = document.createElement("span"); b.className = "op" + (t === "Null" ? " nul" : ""); b.textContent = t; b.style.width = w + "px"; st.appendChild(b); return b; };
-      const o = { s, st, A: mk("A"), B: mk("B"), C: mk("C"), bot: $(".bt", s), v: $(".verdict", s) };
+      const o = { s, st, A: mk("A"), B: mk("B"), C: mk("C"), bot: $(".rbt", s), v: $(".verdict", s) };
       if (s.dataset.i === "2") o.N = mk("Null", NW);
       o.x0 = o.N ? 0 : (SW - 3 * BW - 2 * GAP) / 2;
       return o;

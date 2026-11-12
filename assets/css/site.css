@@ -926,25 +926,25 @@ dialog.drawer.out::backdrop { animation: fadeout .18s ease-in forwards; }
 .op.gone { border-style: dashed; border-color: #c4c8cd; background: transparent; color: transparent; box-shadow: none; animation: op-gone .7s ease both; }
 @keyframes op-gone { 0% { opacity: 1; transform: none; border-style: solid; border-color: #1b2129; background: #fff; color: #1b2129; }
   45% { opacity: 0; transform: translateY(18px) rotate(6deg); } 55% { opacity: 0; transform: none; } 100% { opacity: 1; transform: none; } }
-.bt { position: absolute; top: 56px; left: -30px; width: 28px; height: 38px; transition: left .62s cubic-bezier(.45, 0, .25, 1), opacity .25s; }
-.bt.fade { opacity: 0; }
-.bt-b { display: block; transform-origin: 50% 100%; }
-.bt-b svg { display: block; width: 28px; height: 34px; }
-.bt .shd { position: absolute; left: 4px; right: 4px; bottom: 0; height: 4px; border-radius: 50%; background: rgba(15, 18, 22, .16); transform-origin: center; }
-.bt.walk .bt-b { animation: bob .3s ease-in-out infinite; }
+.rbt { position: absolute; top: 56px; left: -30px; width: 28px; height: 38px; transition: left .62s cubic-bezier(.45, 0, .25, 1), opacity .25s; }
+.rbt.fade { opacity: 0; }
+.rbt-b { display: block; transform-origin: 50% 100%; }
+.rbt-b svg { display: block; width: 28px; height: 34px; }
+.rbt .shd { position: absolute; left: 4px; right: 4px; bottom: 0; height: 4px; border-radius: 50%; background: rgba(15, 18, 22, .16); transform-origin: center; }
+.rbt.walk .rbt-b { animation: bob .3s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(-1.6px); } }
-.bt.jump .bt-b { animation: hop .62s cubic-bezier(.3, 0, .3, 1); }
-.bt.jump .shd { animation: hop-shd .62s cubic-bezier(.3, 0, .3, 1); }
+.rbt.jump .rbt-b { animation: hop .62s cubic-bezier(.3, 0, .3, 1); }
+.rbt.jump .shd { animation: hop-shd .62s cubic-bezier(.3, 0, .3, 1); }
 @keyframes hop { 0% { transform: none; } 14% { transform: scale(1.08, .88); } 37% { transform: translateY(-13px) scale(.96, 1.06); }
   60% { transform: translateY(0) scale(1, 1); } 72% { transform: scale(1.06, .92); } 100% { transform: none; } }
 @keyframes hop-shd { 37% { transform: scaleX(.55); opacity: .5; } 60% { transform: none; opacity: 1; } }
-.bt .eyes { transform-box: fill-box; transform-origin: center; animation: blink 3.6s infinite; }
+.rbt .eyes { transform-box: fill-box; transform-origin: center; animation: blink 3.6s infinite; }
 @keyframes blink { 0%, 92%, 100% { transform: none; } 95% { transform: scaleY(.15); } }
 .scene2 .verdict { opacity: 0; transform: translateY(4px); transition: opacity .2s ease, transform .2s ease; }
 .scene2 .verdict.on { opacity: 1; transform: none; }
 .replay .pl { display: none; }
 .replay[aria-pressed="true"] .pl { display: inline; } .replay[aria-pressed="true"] .pz { display: none; }
-@media (prefers-reduced-motion: reduce) { .op, .bt, .scene2 .verdict { transition: none; } .bt .eyes, .op.gone { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .op, .rbt, .scene2 .verdict { transition: none; } .rbt .eyes, .op.gone { animation: none; } }
 /* the domain profile tooltip lists all 11 domains */
 .prof-tip { display: grid; grid-template-columns: auto auto auto; column-gap: 12px; row-gap: 1px; margin-top: 6px; font-size: 12px; }
 .prof-tip .pr { display: contents; }

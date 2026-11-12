@@ -1109,3 +1109,42 @@ section[id] { scroll-margin-top: -87px; }
 .legend .lgt { font-weight: 600; color: var(--ink-2); }
 @media (max-width: 520px) { .tabrow .sym { display: none; } }
 .legend i.band { width: 14px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, rgba(55, 61, 69, .1), rgba(55, 61, 69, .2)); }
+
+/* ---- section 04 (user, 2026-11-12): one question per tab, a picture of it, then the chart by domain ---- */
+.gap.one .gap-h, .gap.one .gap-r { grid-template-columns: 230px minmax(0, 1fr); }
+.gap.one .gap-r svg text .sub { fill: var(--muted); }
+.qa { margin: 2px 22px 8px; padding: 12px 16px 8px; border-radius: 12px; background: var(--soft); }
+.qpic { display: block; width: 100%; max-width: 720px; height: auto; overflow: visible; }
+.qpic text { font-family: var(--sans); }
+.qpic .qh { font-size: 12.5px; font-weight: 650; fill: var(--ink); }
+.qpic .qs { font-size: 10.5px; fill: var(--muted); }
+.qpic .qn { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
+.qpic .qv { font: 500 11px var(--mono); fill: var(--ink); white-space: pre; }
+.qpic .lv { fill: none; stroke: var(--s2); stroke-width: 1.3; stroke-dasharray: 3 3; }
+.qpic .th circle { fill: #9aa1a9; }
+.qpic .arw { fill: none; stroke: #8a9096; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.qpic .clk circle { fill: #fff; stroke: #8a9096; stroke-width: 1.4; } .qpic .clk .hand { stroke: #4a535c; stroke-width: 1.5; stroke-linecap: round; }
+.qpic .bar, .qpic .rb, .qpic .a-in, .qpic .a-pop, .qpic .big { transform-box: fill-box; transform-origin: 50% 100%; }
+.qpic .hbar { transform-box: fill-box; transform-origin: 0 50%; }
+.qpic .a-pop { transform-origin: center; }
+.qpic .clk .hand { transform-box: view-box; transform-origin: 178px 62px; }
+.qa:not(.go) .bar, .qa:not(.go) .hbar, .qa:not(.go) .a-in, .qa:not(.go) .a-pop, .qa:not(.go) .big { opacity: 0; }
+.qa.go .bar { animation: qa-rise .65s cubic-bezier(.2, .8, .2, 1) var(--d) both; }
+.qa.go .hbar { animation: qa-grow .65s cubic-bezier(.2, .8, .2, 1) var(--d) both; }
+.qa.go .a-in { animation: hv-in .35s ease-out var(--d, 0s) both; }
+.qa.go .a-pop { animation: hv-pop .4s cubic-bezier(.3, 1.5, .5, 1) var(--d) both; }
+.qa.go .big { animation: qa-big .7s cubic-bezier(.3, 1.35, .5, 1) var(--d) both; }
+.qa.go .th circle { animation: qa-dot 1.2s ease-in-out infinite; } .qa.go .th circle:nth-child(2) { animation-delay: .2s; } .qa.go .th circle:nth-child(3) { animation-delay: .4s; }
+.qa.go .clk .hand { animation: qa-spin 1.6s linear infinite; }
+.qa .eyes { transform-box: fill-box; transform-origin: center; animation: blink 3.6s infinite; }
+@keyframes qa-rise { from { transform: scaleY(0); } }
+@keyframes qa-grow { from { transform: scaleX(0); } }
+@keyframes qa-big { from { opacity: 0; transform: scale(.5); } 60% { opacity: 1; } }
+@keyframes qa-dot { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes qa-spin { to { transform: rotate(360deg); } }
+@media (max-width: 760px) { .qa { margin: 2px 0 8px; padding: 10px; } .gap.one .gap-h { display: none; } .gap.one .gap-r { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .qa *, .qa.go * { animation: none !important; opacity: 1 !important; } }
+.qpic.n .qh { font-size: 15px; } .qpic.n .qs { font-size: 13px; } .qpic.n .qn { font-size: 14px; } .qpic.n .qv { font-size: 13.5px; }
+.gap-r svg text.in { fill: #fff; font-weight: 600; }
+@media (max-width: 760px) { .gap-r svg text .sub { display: none; } }
+.qpic.n { overflow: hidden; }

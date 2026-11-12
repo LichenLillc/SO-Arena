@@ -647,10 +647,14 @@
     null: { title: "Noticing a missing answer, against score", sub: "Models with similar scores differ widely in N; the score says little about it. Dashed: trend; band: 90% of the models.",
       note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the 16 System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
     sn: { title: "Decision reliability", sub: "Option-order stability S against null discrimination N; dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
+    scale: { title: "Does a bigger backbone close the gap?", sub: "Gain from the smaller to the 27B model of the same family, mean of four families, on the medium and hard tiers.",
+      note: "The four families released in a smaller and a 27B size: every smaller model builds on Qwen3.5, every larger one on Qwen3.8-27B." },
+    think: { title: "Does thinking before answering close the gap?", sub: "Gain of StartLux Auto with thinking always on over never on, on the medium and hard tiers.",
+      note: "StartLux Auto can think before it answers; the two settings are compared on the same tasks." },
     tier: { title: "How scores fall with difficulty", sub: "In every tiered domain, the median System One model scores lower on each harder tier. Tiers are defined within each domain.",
       note: "Lines: the domain's best System One model, StartLux Instant (the best 4B model) and GPT-6 Luna. The band spans all 18 System One models; point at it for any model's line." },
     order: { title: "How accuracy moves with the option order", sub: "Each dot: one of 12 shuffles, against the original order. Ranked by the range over all 13 orders, most stable first.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher option-order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
-    gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals.", note: "Not only the leaderboard tier, so the gaps differ from the domain cards. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
+    gap: { title: "How far behind System Two is System One, and where?", sub: "Score difference from GPT-6 Luna on the medium and hard tiers, for the best System One models of two sizes, with 95% confidence intervals.", note: "Medium and hard tiers, not only the leaderboard tier, so the gaps differ from the leaderboard's domain scores. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
   let tierDom = "math";
   // Two chart panels share this routine: Results (speed, difficulty, gap) and the Reliability section's evidence.
@@ -671,9 +675,8 @@
   function drawPanel(P) {
     const insKey = P.key, c = INS[insKey], LG = $(P.lg);
     $(P.title).innerHTML = esc(c.title) + (c.note ? ` <button class="info" type="button" data-info="${esc(c.note)}">i</button>` : ""); $(P.sub).textContent = c.sub; $(P.note).textContent = "";
-    if (P.host === "#chart") $("#tier-chips").hidden = insKey !== "tier";
     const host = $(P.host);
-    host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" || insKey === "rrank" ? "region" : "img");
+    host.classList.toggle("html", ["gap", "scale", "think"].includes(insKey)); host.setAttribute("role", ["gap", "scale", "think", "order", "rrank"].includes(insKey) ? "region" : "img");
     if (insKey === "speed") {
       const { svg, W, H } = frame(host, P.pair ? .9 : .56, host.clientWidth < 460 ? 400 : 340, 540), m = { l: 44, r: 20, t: 30, b: 40 };
       const lx = v => Math.log10(v), X0 = lx(4), X1 = lx(5000);
@@ -729,7 +732,7 @@
     } else if (insKey === "tier") {
       tierChart(host, tierDom, LG);
     } else {
-      gap(host, LG);
+      gap(host, LG, insKey);
     }
   }
   // least squares y = a x² + b x + c (centred x, for a well-conditioned solve)
@@ -844,9 +847,6 @@
   const showChart = k => { const t = document.getElementById("k-" + k); if (t) t.closest('[role="tablist"]')._sel(t.id); };
   function insightsControls() {
     PANELS.filter(P => P.tabs).forEach(P => tabs($(P.tabs), (id, t) => switchPanel(P, t.dataset.k)));
-    const TD = D.domains.filter(d => d.tiers);
-    $("#tier-chips").innerHTML = TD.map(d => `<button type="button" class="chip" data-td="${d.id}" aria-pressed="${d.id === tierDom}">${esc(d.short)}</button>`).join("");
-    $("#tier-chips").addEventListener("click", e => { const b = e.target.closest("[data-td]"); if (!b) return; tierDom = b.dataset.td; $$("[data-td]").forEach(o => o.setAttribute("aria-pressed", o === b)); insights(); });
   }
 
   // ---- reliability demo and facts -----------------------------------------------------------------------------------
@@ -939,34 +939,91 @@
     if ("IntersectionObserver" in window) new IntersectionObserver(es => { const v = es.some(e => e.isIntersecting); if (v === inView) return; inView = v; if (v) start(); else reset(); }, { threshold: .35 }).observe(host);
     else { inView = true; start(); }
   }
-  function gap(host, lg) {
-    const CATS = [["direct", "Direct semantic judgment", "System One models perform comparably to System Two."],
-      ["grounded", "Fine-grained grounded decision", "Only the larger, more capable backbone comes close."],
-      ["derivation", "Multi-step derivation", "Both System One models fall far behind."]];
+  // Section 04, one tab per question: the gap to System Two by domain, the gain from a bigger backbone, the gain from
+  // thinking. Each tab opens with its question and a small picture of it, then the chart answers it by domain.
+  const R1 = v => +v.toFixed(1);
+  const robo = (x, y, sc, c = "#1b2129", cls = "", st = "") => { const dk = "#1b2129", ln = c === dk ? "" : ` stroke="${dk}" stroke-width="1.4"`;
+    return `<g class="rb ${cls}"${st ? ` style="${st}"` : ""}><g transform="translate(${R1(x - 14 * sc)} ${R1(y - 34 * sc)}) scale(${sc})"><path d="M14 6V2.6" stroke="${dk}" stroke-width="1.6" stroke-linecap="round"/><circle cx="14" cy="2.2" r="2.1" fill="var(--cap)"/>` +
+      `<rect x="1.6" y="11.6" width="2.6" height="5.4" rx="1.3" fill="${dk}"/><rect x="23.8" y="11.6" width="2.6" height="5.4" rx="1.3" fill="${dk}"/><rect x="3.4" y="6" width="21.2" height="15.2" rx="6" fill="${c}"${ln}/>` +
+      `<rect x="6.4" y="9.2" width="15.2" height="8.6" rx="4.3" fill="#2b3442"/><g class="eyes"><circle cx="11" cy="13.5" r="1.75" fill="#9fd4ff"/><circle cx="17" cy="13.5" r="1.75" fill="#9fd4ff"/></g>` +
+      `<rect x="7.6" y="22.2" width="12.8" height="7.4" rx="3" fill="${c}"${ln}/><rect x="9" y="28.8" width="3.6" height="4.8" rx="1.6" fill="${dk}"/><rect x="15.4" y="28.8" width="3.6" height="4.8" rx="1.6" fill="${dk}"/></g></g>`; };
+  const bolt = (x, y, st) => `<path class="a-pop" style="${st}" d="M${x + 3} ${y - 9}L${x - 4} ${y + 1}H${x}L${x - 3} ${y + 9}L${x + 5} ${y - 2}H${x + 1}Z" fill="#e7c35a" stroke="#3d454e" stroke-width="1" stroke-linejoin="round"/>`;
+  const dots = (x, y, st) => `<g class="th a-in" style="${st}"><circle cx="${x}" cy="${y}" r="2.3"/><circle cx="${x + 7}" cy="${y - 3}" r="2.3"/><circle cx="${x + 14}" cy="${y - 6}" r="2.3"/></g>`;
+  const T_ = (x, y, t, c = "", an = "start", st = "") => `<text x="${R1(x)}" y="${R1(y)}" text-anchor="${an}" class="${c}"${st ? ` style="${st}"` : ""}>${t}</text>`;
+  const CATS = [["direct", "Direct semantic judgment", "Direct judgment"], ["grounded", "Fine-grained grounded decision", "Grounded decision"], ["derivation", "Multi-step derivation", "Multi-step derivation"]];
+  const catMean = (k, c) => { const v = D.analysis.filter(a => a.category === c).map(a => a[k]); return v.reduce((s, x) => s + x, 0) / v.length; };
+  const catRange = (k, c) => { const v = D.analysis.filter(a => a.category === c).map(a => a[k]); return [Math.min(...v), Math.max(...v)]; };
+  const sgn = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v));
+  function qaPic(mode, narrow) {
+    const A = Object.fromEntries(D.analysis.map(a => [a.domain, a]));
+    // GPT-6 Luna on the medium and hard tiers (task-weighted), to draw bars; the gaps themselves are the paper's
+    const lunaMH = id => { const t = DOM[id].tiers; if (!t) return LUNA.domains[id]; const ks = ["M", "H"].filter(k => k in t), w = ks.reduce((s, k) => s + t[k], 0); return ks.reduce((s, k) => s + LUNA.tiers[id][k] * t[k], 0) / w; };
+    // narrow screens: the picture keeps its chart part, with larger type
+    const svg = (inner, h, alt) => `<svg class="qpic${narrow ? " n" : ""}" viewBox="${narrow ? "222 0 418" : "0 0 640"} ${h}" role="img" aria-label="${esc(alt)}">${inner}</svg>`;
+    if (mode === "gap") {
+      const ex = [["sentiment", "direct"], ["web", "grounded"], ["math", "derivation"]], base = 122, k = .9, C3 = [S2C, "#8e2c43", "#dba1ae"];
+      const left = robo(36, 64, .72, "#1b2129", "a-in", "--d:.05s") + bolt(58, 32, "--d:.3s") + T_(64, 49, "System One", "qh a-in", "start", "--d:.1s") + T_(64, 63, "answers at once", "qs a-in", "start", "--d:.15s") +
+        robo(36, 128, .72, "#e3a878", "a-in", "--d:.2s") + dots(52, 98, "--d:.35s") + T_(64, 113, "System Two", "qh a-in", "start", "--d:.25s") + T_(64, 127, "thinks first", "qs a-in", "start", "--d:.3s");
+      const lg = [["GPT-6 Luna", C3[0]], ["GLiDE (27B)", C3[1]], ["StartLux Instant (4B)", C3[2]]].map(([t, c], i) => `<rect x="${236 + i * 118}" y="5" width="9" height="9" rx="2" fill="${c}"/>` + T_(249 + i * 118, 13, t, "qs")).join("");
+      const gr = ex.map(([id, cat], gi) => { const a = A[id], L = lunaMH(id), v = [L, L + a.gap_glide, L + a.gap_startlux], cx = 290 + gi * 128, d0 = .55 + gi * .4;
+        return `<path class="lv a-in" style="--d:${R1(d0 + .45)}s" d="M${cx - 42} ${R1(base - L * k)}H${cx + 42}"/>` +
+          v.map((y, j) => `<rect class="bar" style="--d:${R1(d0 + j * .12)}s" x="${cx - 32 + j * 22}" y="${R1(base - y * k)}" width="19" height="${R1(y * k)}" rx="3" fill="${C3[j]}"/>`).join("") +
+          T_(cx, base + 15, esc(DOM[id].short), "qn a-in", "middle", `--d:${R1(d0 + .3)}s`) + T_(cx, base + 28, CATS.find(c => c[0] === cat)[2], "qs a-in", "middle", `--d:${R1(d0 + .35)}s`); }).join("");
+      return svg(left + lg + gr, 156, "System One answers at once, System Two thinks first. GPT-6 Luna against GLiDE (27B) and StartLux Instant (4B) in three domains: in Sentiment all three are level; in Web only GLiDE comes close; in Math both fall far behind.");
+    }
+    // backbone and thinking: a small picture of the change, then the mean gain in each kind of domain
+    const key = mode === "scale" ? "backbone_gain" : "thinking_gain", col = mode === "scale" ? "#4a535c" : "#a3a8ae", sc = 6.2;
+    const rows = CATS.map(([c, , short], i) => { const v = catMean(key, c), y = 50 + i * 36, w = Math.max(2, v * sc);
+      return T_(232, y + 4, short, "qn a-in", "start", `--d:${R1(.7 + i * .2)}s`) + `<rect class="hbar" style="--d:${R1(.8 + i * .2)}s" x="390" y="${y - 7}" width="${R1(w)}" height="14" rx="3" fill="${col}"/>` +
+        T_(396 + w, y + 4, sgn(v) + (mode === "think" && c === "derivation" && !narrow ? `  (Math ${sgn(A.math.thinking_gain)})` : ""), "qv a-in", "start", `--d:${R1(1.2 + i * .2)}s`); }).join("");
+    const head = T_(232, 20, "Mean gain, by kind of domain", "qs a-in", "start", "--d:.6s");
+    const left = mode === "scale"
+      ? robo(34, 118, .5, "#1b2129", "a-in", "--d:.05s") + T_(34, 136, "smaller", "qs a-in", "middle", "--d:.1s") + T_(34, 148, "Qwen3.5", "qs a-in", "middle", "--d:.1s") +
+        `<path class="arw a-in" style="--d:.3s" d="M58 104H92M86 99l6 5-6 5"/>` +
+        robo(132, 118, .95, "#1b2129", "big", "--d:.45s") + T_(132, 136, "27B", "qs a-in", "middle", "--d:.55s") + T_(132, 148, "Qwen3.8-27B", "qs a-in", "middle", "--d:.55s")
+      : robo(40, 112, .72, "#1b2129", "a-in", "--d:.05s") + bolt(62, 80, "--d:.25s") + T_(40, 132, "never thinks", "qs a-in", "middle", "--d:.1s") +
+        robo(140, 112, .72, "#1b2129", "a-in", "--d:.2s") + dots(156, 82, "--d:.35s") + `<g class="clk a-in" style="--d:.45s"><circle cx="178" cy="62" r="8"/><path class="hand" d="M178 62V56.5"/></g>` +
+        T_(140, 132, "always thinks", "qs a-in", "middle", "--d:.25s") + T_(140, 145, "(slower)", "qs a-in", "middle", "--d:.3s");
+    return svg(left + head + rows, 156, mode === "scale"
+      ? `A smaller model grows into the 27B model of its family. Mean gain: ${CATS.map(([c, , s]) => `${s} ${sgn(catMean(key, c))}`).join(", ")}.`
+      : `The same model never thinking or always thinking. Mean gain: ${CATS.map(([c, , s]) => `${s} ${sgn(catMean(key, c))}`).join(", ")}; in Math ${sgn(A.math.thinking_gain)}.`);
+  }
+  // plays when it comes into view (and again when its tab is chosen)
+  const seen = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("go"); seen.unobserve(e.target); } }), { threshold: .4 }) : null;
+  function gap(host, lg, mode = "gap") {
     const G1 = "#8e2c43", G2 = "#dba1ae", BB = "#4a535c", TH = "#a3a8ae";
-    const gx = v => 4 + (v + 50) / 65 * 90, bx = v => 4 + (v + 5) / 50 * 88, tx = bx;      // both gains on one scale
+    const gx = v => 4 + (v + 50) / 65 * 90, bx = v => 4 + (v + 5) / 60 * 88;
     const rect = (x0, x1, y, h, c) => `<rect x="${Math.min(x0, x1)}%" y="${y}" width="${Math.max(.4, Math.abs(x1 - x0))}%" height="${h}" rx="2" fill="${c}"/>`;
     const ci = (c, y) => `<line x1="${gx(c[0])}%" x2="${gx(c[1])}%" y1="${y}" y2="${y}" stroke="var(--ink-2)" stroke-width="1.6" opacity=".75"/>`;
-    const sg = v => (v > 0 ? "+" : v < 0 ? "−" : "") + f1(Math.abs(v)), lgHtml = gapLegend(G1, G2, BB, TH);
     const vgrid = (f, vals, y1, y2) => vals.map(v => `<line x1="${f(v)}%" x2="${f(v)}%" y1="${y1}" y2="${y2}" stroke="${v === 0 ? "#b9b7ad" : "#efeee9"}"/>`).join("");
-    const head = (f, vals, title) => `<svg class="gap-ticks" aria-hidden="true">${vals.map(v => `<text x="${f(v)}%" y="27" text-anchor="middle">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}<text class="t" x="${f(0) - 1}%" y="11" text-anchor="end">${title}</text></svg>`;
-    const headG = t => `<svg class="gap-ticks" aria-hidden="true">${[0, 20, 40].map(v => `<text x="${bx(v)}%" y="27" text-anchor="middle">${v ? "+" + v : 0}</text>`).join("")}<text class="t" x="${bx(0)}%" y="11">${t}</text></svg>`;
-    const row = a => {
-      const d = DOM[a.domain], z = gx(0);
-      return `<div class="gap-r"><span class="dn">${esc(d.name)}</span>
-        <div><span class="cl">Gap to GPT-6 Luna</span><svg role="img" aria-label="Gap to GPT-6 Luna: GLiDE ${sg(a.gap_glide)}, StartLux Instant ${sg(a.gap_startlux)}">${vgrid(gx, [-40, -30, -20, -10, 0, 10], 0, 34)}
+    const ticks = (f, vals, title) => `<svg class="gap-ticks" aria-hidden="true">${vals.map(v => `<text x="${f(v)}%" y="27" text-anchor="middle">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}<text class="t" x="${f(vals[0])}%" y="11">${title}</text></svg>`;
+    const rng = (k, c) => { const [a, b] = catRange(k, c); return `${sgn(a)} to ${sgn(b)}`; };
+    // what each kind of domain shows, in this view (the paper's Sec. 5.2.1); ranges from the data
+    const TXT = {
+      gap: { direct: "System One models perform comparably to System Two.", grounded: "Only the larger, more capable backbone comes close.", derivation: "Both System One models fall far behind." },
+      scale: { direct: `A bigger backbone adds little (${rng("backbone_gain", "direct")}).`, grounded: `A bigger backbone adds the most (${rng("backbone_gain", "grounded")}), far more than thinking.`, derivation: `It helps (${rng("backbone_gain", "derivation")}), but the gap stays large.` },
+      think: { direct: `Thinking adds little (${rng("thinking_gain", "direct")}).`, grounded: `Thinking adds little (${rng("thinking_gain", "grounded")}), far less than a bigger backbone.`, derivation: `Thinking helps most here: in Math, ${f1(D.analysis.find(a => a.domain === "math").thinking_never)} → ${f1(D.analysis.find(a => a.domain === "math").thinking_always)}.` },
+    }[mode];
+    const row = a => { const d = DOM[a.domain];
+      if (mode === "gap") { const z = gx(0);
+        return `<div class="gap-r"><span class="dn">${esc(d.name)}</span><div><svg role="img" aria-label="Gap to GPT-6 Luna: GLiDE ${sgn(a.gap_glide)}, StartLux Instant ${sgn(a.gap_startlux)}">${vgrid(gx, [-40, -30, -20, -10, 0, 10], 0, 34)}
           ${rect(z, gx(a.gap_glide), 6, 9, G1)}${ci(a.gap_glide_ci, 10.5)}${rect(z, gx(a.gap_startlux), 19, 9, G2)}${ci(a.gap_startlux_ci, 23.5)}
-          <text x="${gx(Math.max(a.gap_glide_ci[1], 0)) + 1.2}%" y="14">${sg(a.gap_glide)}</text><text x="${gx(Math.max(a.gap_startlux_ci[1], 0)) + 1.2}%" y="27.5">${sg(a.gap_startlux)}</text></svg></div>
-        <div class="gain"><span class="cl">Backbone gain</span><svg role="img" aria-label="Backbone gain ${sg(a.backbone_gain)}">${vgrid(bx, [0, 20, 40], 6, 28)}${rect(bx(0), bx(a.backbone_gain), 11, 12, BB)}<text x="${bx(a.backbone_gain) + 1.5}%" y="21">${sg(a.backbone_gain)}</text></svg></div>
-        <div class="gain"><span class="cl">Thinking gain</span><svg role="img" aria-label="Thinking gain ${sg(a.thinking_gain)}">${vgrid(tx, [0, 20, 40], 6, 28)}${rect(tx(0), tx(a.thinking_gain), 11, 12, TH)}<text x="${tx(Math.max(0, a.thinking_gain)) + 1.5}%" y="21">${sg(a.thinking_gain)}</text></svg></div></div>`;
+          <text x="${gx(Math.max(a.gap_glide_ci[1], 0)) + 1.2}%" y="14">${sgn(a.gap_glide)}</text><text x="${gx(Math.max(a.gap_startlux_ci[1], 0)) + 1.2}%" y="27.5">${sgn(a.gap_startlux)}</text></svg></div></div>`; }
+      const v = mode === "scale" ? a.backbone_gain : a.thinking_gain, c = mode === "scale" ? BB : TH;
+      const extra = mode === "think" ? `  ${f1(a.thinking_never)} → ${f1(a.thinking_always)}` : "";
+      // a long bar carries its value inside; the never → always scores follow it (wide screens)
+      const lab = v > 30 ? `<text class="in" x="${bx(v) - 1}%" y="21" text-anchor="end">${sgn(v)}</text>${extra ? `<text x="${bx(v) + 1.2}%" y="21"><tspan class="sub">${extra.trim()}</tspan></text>` : ""}`
+        : `<text x="${bx(Math.max(0, v)) + 1.2}%" y="21">${sgn(v)}<tspan class="sub">${extra}</tspan></text>`;
+      return `<div class="gap-r"><span class="dn">${esc(d.name)}</span><div><svg role="img" aria-label="${mode === "scale" ? "Backbone" : "Thinking"} gain ${sgn(v)}${extra ? `, ${extra.trim()}` : ""}">${vgrid(bx, [0, 10, 20, 30, 40, 50], 4, 30)}${rect(bx(0), bx(v), 10, 14, c)}${lab}</svg></div></div>`;
     };
-    host.innerHTML = `<div class="gap"><div class="legend gap-lg">${lgHtml}</div><div class="gap-h label"><span>Domain</span>${head(gx, [-40, -30, -20, -10, 0, 10], "Gap to GPT-6 Luna")}<div class="gain">${headG("Backbone gain")}</div><div class="gain">${headG("Thinking gain")}</div></div>` +
-      CATS.map(([id, h, t]) => `<div class="gap-c"><h4>${h}</h4><span>${t}</span></div>` + D.analysis.filter(a => a.category === id).map(row).join("")).join("") + `</div>`;
+    const legend = mode === "gap" ? `<span><i style="background:${G1}"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span><span><i class="ln" style="background:var(--ink-2)"></i>95% confidence interval</span><span><i class="ln" style="background:#b9b7ad"></i>0 = GPT-6 Luna</span>`
+      : mode === "scale" ? `<span><i style="background:${BB}"></i>Gain from the smaller to the 27B model of the same family, mean of four families</span>`
+      : `<span><i style="background:${TH}"></i>Gain of StartLux Auto from always thinking over never thinking (right: never → always)</span>`;
+    const H = mode === "gap" ? ticks(gx, [-40, -30, -20, -10, 0, 10], "Gap to GPT-6 Luna") : ticks(bx, [0, 10, 20, 30, 40, 50], mode === "scale" ? "Backbone gain" : "Thinking gain");
+    host.innerHTML = `<div class="qa">${qaPic(mode, host.clientWidth < 560)}</div><div class="gap one"><div class="legend gap-lg">${legend}</div><div class="gap-h label"><span>Domain</span>${H}</div>` +
+      CATS.map(([id, h]) => `<div class="gap-c"><h4>${h}</h4><span>${TXT[id]}</span></div>` + D.analysis.filter(a => a.category === id).map(row).join("")).join("") + `</div>`;
     lg.innerHTML = "";
-  }
-  function gapLegend(G1, G2, BB, TH) {
-    return `<span><i style="background:${G1}"></i>GLiDE (27B)</span><span><i style="background:${G2}"></i>StartLux Instant (4B)</span><span><i class="ln" style="background:var(--ink-2)"></i>95% confidence interval</span>
-      <span class="gain"><i style="background:${BB}"></i>Backbone gain: smaller → 27B model of the same line, mean of four lines</span><span class="gain"><i style="background:${TH}"></i>Thinking gain: StartLux Auto, always vs. never thinking</span>`;
+    const qa = $(".qa", host); if (RM || !seen) qa.classList.add("go"); else seen.observe(qa);
   }
 
   // ---- benchmark ---------------------------------------------------------------------------------------------------
@@ -1077,7 +1134,7 @@
         more: ['href="#benchmark"', "From 40 established sources"] },
       tiers: { h: "Difficulty tiers", pn: "#e2f1f2", hc: "#61847a", hl: "#86b3b0",
         p: `${tiered} of ${D.domains.length} domains are split into tiers by domain-specific criteria, such as the number of calculation steps in Math. The leaderboard counts each domain's hardest tier.`,
-        more: ['href="#domains" data-chart-link="tier"', "Scores by tier"] },
+        more: ['href="#benchmark"', "How the tiers are built"] },
       agents: { h: "Agent sandboxes", pn: "#f6ebe6", hc: "#8f6556", hl: "#c9a79a",
         p: `In ${t.web.toLocaleString("en-US")} web and ${t.tools.toLocaleString("en-US")} tool tasks, the model works toward a goal step by step, choosing each next action itself.`,
         more: ['href="#benchmark"', "The 11 domains"] },

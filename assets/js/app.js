@@ -100,7 +100,7 @@
   let boardMode = "cap";
   const LATMAX = Math.max(...S1.map(m => m.latency.mean_ms));     // thin latency bars: linear, slowest System One model = full
   const BMAX = 100;                                                 // score and R bars: 0-100, as everywhere on the page
-  const refBand = (() => { const [hi, lo] = REFS.map(r => r.score); return `<b class="ref" style="left:${(100 * lo / BMAX).toFixed(1)}%;width:${(100 * (hi - lo) / BMAX).toFixed(1)}%"></b>`; })();
+  const refBand = `<b class="ref" style="left:calc(${(100 * LUNA.score / BMAX).toFixed(2)}% - 1.5px)"></b>`;   // GPT-6 Luna, the System Two reference
   function board() {
     const host = $("#board"), cap = boardMode === "cap";
     const val = cap ? m => m.score : R_, rk = cap ? RANK : RANK_R, list = top(S1, val, 8);
@@ -111,7 +111,7 @@
         <button type="button" class="who" data-model="${slug(m)}"><b>${esc(m.name)}</b><span>${meta(m)}</span></button>
         <span class="mx"><span class="track"><span class="meter" aria-hidden="true"><i style="--w:${(100 * val(m) / BMAX).toFixed(1)}%;--c:${c}"></i></span>${cap ? refBand : ""}</span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span>
           <span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span></span><span class="chev" aria-hidden="true">›</span></li>`).join("")}</ol>
-      <div class="board-foot"><span class="keys">${cap ? `<span><i class="k-ref"></i>GPT-6 Luna ${f1(REFS[1].score)} – Sol ${f1(REFS[0].score)}</span>` : ""}<span><i class="k-lat"></i>Latency per task</span></span><a href="#leaderboard">Full leaderboard →</a></div>`;
+      <div class="board-foot"><span class="keys">${cap ? `<span><i class="k-ref"></i>GPT-6 Luna ${f1(LUNA.score)} (System Two)</span>` : ""}<span><i class="k-lat"></i>Latency per task</span></span><a href="#leaderboard">Full leaderboard →</a></div>`;
     host.dataset.anim = "0";
     requestAnimationFrame(() => setTimeout(() => { host.dataset.anim = "1"; }, 60));
   }
@@ -127,9 +127,9 @@
         `<i style="left:${gx(a.gap_glide).toFixed(1)}%" title="${esc(DOM[a.domain].short)}: ${sg(a.gap_glide)}"></i>`).join("")}</span><span class="mv"></span></div>`).join("")}</div>`;
     const tiles = [
       ["leaderboard", "", `${f1(best.score)}<small> vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna by about ten points.",
-        mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"], ["GPT-6 Sol", REFS[0].score, "var(--s2)"]], 100, f1)],
+        mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
       ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open model, per task on one H100: tens of times faster than GPT-6.",
-        mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"], ["GPT-6 Sol", REFS[0].latency.mean_ms, "var(--s2)"]], 3000, sec)],
+        mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["results", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
       ["results", "gap", `${sg(lo)}<small> to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna, one dot per domain (medium and hard tiers).`, dots],
@@ -195,7 +195,7 @@
       return `<button type="button" class="dcard" data-domain="${id}" style="--fc:${f.color}"><div class="dcard-top"><span class="label"><i></i>${esc(f.name.split(" ")[0])}</span><span class="label">${d.leaderboard_tasks} tasks</span></div>
         <h3>${esc(d.name)}</h3><div class="meta">${d.leaderboard_tier === "All tasks" ? "All tasks (untiered)" : d.leaderboard_tier + " tier"}</div>
         <ol class="drows">${l.map(m => `<li class="${rk.get(m.key) === 1 ? "first" : ""}"><span class="p">${rk.get(m.key)}</span>${logo(m, 22)}<span class="n">${esc(m.name)}</span><span class="meter"><i style="--w:${val(m)}%;--c:var(--cap)"></i></span><span class="v">${f1(val(m))}</span></li>`).join("")}</ol>
-        <div class="ref"><span>GPT-6 Luna · Sol (System Two)</span><b>${f1(val(LUNA))} · ${f1(val(REFS[0]))}</b></div>
+        <div class="ref"><span>GPT-6 Luna (System Two)</span><b>${f1(val(LUNA))}</b></div>
         <span class="go">Full ranking and tiers →</span></button>`;
     }).join("");
   }
@@ -271,6 +271,10 @@
       </div>
       <h4 class="label">Domain scores <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· leaderboard tier; tick = System One median</span></h4>
       <ul class="bars prof">${prof}</ul>
+      ${m.order_acc ? (() => { const a = m.order_acc, lo = Math.floor(a.min - 2), hi = Math.ceil(a.max + 2), x = v => (100 * (v - lo) / (hi - lo)).toFixed(1);
+        return `<h4 class="label">Accuracy across 13 option orders <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· same 939 items</span></h4>
+        <div class="ordr"><span class="ax">${lo}</span><span class="tr"><b style="left:${x(a.min)}%;width:${(x(a.max) - x(a.min)).toFixed(1)}%"></b>${a.runs.map(v => `<i style="left:${x(v)}%"></i>`).join("")}<u style="left:${x(a.original)}%" title="Original order ${f1(a.original)}"></u></span><span class="ax">${hi}</span>
+        <span class="v">${f1(a.min)}–${f1(a.max)}</span></div>`; })() : ""}
       <h4 class="label">By difficulty tier</h4>
       <table class="tg"><thead><tr><th></th><th>Easy</th><th>Medium</th><th>Hard</th><th>V. hard</th></tr></thead><tbody>${tg}</tbody></table>
       ${m.note ? `<p class="dr-note">${esc(m.note)}</p>` : ""}`, `?model=${slug(m)}`, m.name);
@@ -358,6 +362,7 @@
     rel: { title: "Reliability against score", sub: "A higher score does not always mean higher reliability.", note: "" },
     sn: { title: "Order stability and null discrimination", sub: "Dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     tier: { title: "Scores by difficulty tier", sub: "Tiers are defined within each domain, not across domains.", note: "Highlighted: the domain's best System One model, StartLux Instant and GPT-6 Luna." },
+    order: { title: "Accuracy across 13 option orders", sub: "The same 939 items, in their original option order (◆) and 12 reorderings (●). A longer line: answers depend more on the order.", note: "From the reliability runs, separate from the leaderboard score." },
     gap: { title: "Gap to GPT-6 Luna, by domain", sub: "Medium and hard tiers, with 95% confidence intervals; and what closes the gap.", note: "Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
   let insKey = "speed", tierDom = "math";
@@ -366,7 +371,7 @@
     $("#ins-title").textContent = c.title; $("#ins-sub").textContent = c.sub; $("#ins-note").textContent = c.note;
     $("#tier-chips").hidden = insKey !== "tier";
     const host = $("#chart");
-    host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" ? "region" : "img");
+    host.classList.toggle("html", insKey === "gap"); host.setAttribute("role", insKey === "gap" || insKey === "order" ? "region" : "img");
     if (insKey === "speed") {
       const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
       const lx = v => Math.log10(v), X0 = lx(4), X1 = lx(5000);
@@ -401,11 +406,44 @@
       points(svg, pts, o => mtip(o, `<br><span class="m">${f1(o.reliability.R)}</span> <span class="s">R · #${RANK_R.get(o.key)} of 18 · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)}</span>`));
       labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b });
       $("#legend").innerHTML = sizeLegend(false);
+    } else if (insKey === "order") {
+      orderChart(host, $("#legend"));
     } else if (insKey === "tier") {
       tierChart(host, tierDom, $("#legend"));
     } else {
       gap(host, $("#legend"));
     }
+  }
+  function orderChart(host, lg) {
+    const L = S1.filter(o => o.order_acc).sort((a, b) => (b.order_acc.max + b.order_acc.min) - (a.order_acc.max + a.order_acc.min));
+    const lo = Math.floor(Math.min(...L.map(o => o.order_acc.min)) / 5) * 5, hi = Math.ceil(Math.max(...L.map(o => o.order_acc.max)) / 5) * 5;
+    const rowH = 24, m = { l: 150, r: 64, t: 26, b: 40 };
+    host.innerHTML = "";
+    const W = Math.max(320, host.clientWidth), H = m.t + m.b + rowH * L.length;
+    const svg = S("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, host);
+    const xs = v => m.l + (v - lo) / (hi - lo) * (W - m.l - m.r);
+    const g = S("g", { class: "grid" }, svg);
+    for (let v = lo; v <= hi; v += 5) {
+      S("line", { x1: xs(v), x2: xs(v), y1: m.t - 8, y2: H - m.b }, g);
+      S("text", { class: "tick", x: xs(v), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = v;
+    }
+    S("text", { class: "axis-t", x: W - m.r, y: H - 6, "text-anchor": "end" }, svg).textContent = "Accuracy on the 939 items (%) →";
+    L.forEach((o, i) => {
+      const a = o.order_acc, y = m.t + rowH * i + rowH / 2, c = colorOf(o);
+      const r = S("g", { class: "pt", tabindex: 0, role: "button", "aria-label": `${o.name}: original order ${f1(a.original)}, range ${f1(a.min)} to ${f1(a.max)}` }, svg);
+      S("rect", { x: 0, y: y - rowH / 2, width: W, height: rowH, fill: "transparent" }, r);
+      S("text", { class: "lbl", x: m.l - 12, y: y + 4, "text-anchor": "end" }, r).textContent = o.name;
+      S("line", { x1: xs(a.min), x2: xs(a.max), y1: y, y2: y, stroke: c, "stroke-width": 3, "stroke-linecap": "round", opacity: .35 }, r);
+      for (const v of a.runs) S("circle", { cx: xs(v), cy: y, r: 2.6, fill: c, opacity: .8 }, r);
+      const d = 5.5, x0 = xs(a.original);
+      S("path", { d: `M${x0} ${y - d}L${x0 + d} ${y}L${x0} ${y + d}L${x0 - d} ${y}Z`, fill: "var(--ink)", stroke: "#fff", "stroke-width": 1.2 }, r);
+      S("text", { class: "tick", x: W - m.r + 8, y: y + 4 }, r).textContent = `±${f1((a.max - a.min) / 2)}`;
+      bindTip(r, () => `<b>${esc(o.name)}</b><br><span class="m">${f1(a.original)}</span> <span class="s">original order · range ${f1(a.min)}–${f1(a.max)} over 13 orders</span>`);
+      r.addEventListener("click", () => openModel(o));
+    });
+    S("text", { class: "tick", x: W - m.r + 8, y: m.t - 10 }, svg).textContent = "half-range";
+    lg.innerHTML = `<span><i class="dia" style="background:var(--ink)"></i>Original order</span><span><i style="background:var(--muted)"></i>12 reorderings</span>` +
+      Object.entries(SIZE).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join("") + `<span><i class="dia" style="background:${API}"></i>Closed API</span>`;
   }
   function tierChart(host, id, lgHost, compact = false) {
     const d = DOM[id], ks = Object.keys(d.tiers), names = { E: "Easy", M: "Medium", H: "Hard", V: "Very hard" };

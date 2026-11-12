@@ -303,9 +303,9 @@
     const did = DSORT(), cmp = cmpRows(), order = list => list.sort(cmp);
     // One ranked list by default; grouped (the toggle) as in the paper's score table: the System Two references, the
     // closed APIs, then open weights by size. # is always the rank among the 18 System One models; the GPT-6 rows are
-    // references without a rank. StartLux Auto (hybrid) is not listed (user, 2026-11-12).
+    // references without a rank. StartLux Auto (hybrid) is listed among the 4B models without a rank (user, 2026-11-12).
     const refs = order(M.filter(m => m.group === "s2" && pass(m))), apis = order(M.filter(m => m.group === "api" && pass(m)));
-    const opens = ["31B", "27B", "9B", "4B", "0.4B"].map(z => [z, order(M.filter(m => m.group === "open" && m.size === z && pass(m)))]);
+    const opens = ["31B", "27B", "9B", "4B", "0.4B"].map(z => [z, order(M.filter(m => (m.group === "open" || m.group === "auto") && m.size === z && pass(m)))]);
     const n1 = apis.length + opens.reduce((a, [, l]) => a + l.length, 0);
     const grp = (label, list) => list.length ? `<tbody><tr class="grp"><th colspan="${COLS.length}" scope="rowgroup">${label}</th></tr>${list.map(row).join("")}</tbody>` : "";
     // FLIP: after a sort or filter, rows that stay slide from their old place to the new one (300 ms); new rows fade in
@@ -528,7 +528,7 @@
 
   function openDomain(id) {
     const d = DOM[id], f = FAM[d.family], val = m => m.domains[id], rk = TOPD[id];
-    const list = M.filter(m => m.group !== "auto").sort((a, b) => val(b) - val(a));
+    const list = [...M].sort((a, b) => val(b) - val(a));
     const counts = d.tiers ? Object.entries(d.tiers).map(([k, v]) => `${({ E: "easy", M: "medium", H: "hard", V: "very hard" })[k]} ${v}`).join(", ") : "no tiers";
     const bars = list.map(m => { const ref = m.group === "s2", a = m.group === "auto";
       return `<li class="${ref ? "ref" : a ? "auto" : ""}"><span class="rk">${isS1(m) ? rk.get(m.key) : ref ? "ref" : "–"}</span>${logo(m, 22)}<button type="button" class="n" data-model="${slug(m)}">${esc(m.name)}</button>
@@ -538,7 +538,7 @@
       <p class="dr-sub">${d.tasks} tasks (${counts}). The leaderboard uses ${d.leaderboard_tier === "All tasks" ? "all tasks" : id === "math" ? "the hard and very hard tiers" : "the hard tier"} (${d.leaderboard_tasks} tasks).
         Sources${d.sources_by_tier ? ", easy to hard" : ""}: ${esc(d.sources.join(d.sources_by_tier ? " → " : ", "))}.</p>
       <h4 class="label" style="margin-top:24px">Ranking</h4><ul class="bars">${bars}</ul>
-      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references. Right column: mean latency per task.</p>
+      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references; StartLux Auto (hybrid) is not ranked. Right column: mean latency per task.</p>
       ${d.tiers ? `<h4 class="label" style="margin-top:28px">By difficulty tier</h4><div class="chart" id="dr-tier"></div><div class="legend" id="dr-tier-lg"></div>` : ""}`,
       `?domain=${id}`, d.name);
     if (d.tiers) requestAnimationFrame(() => tierChart($("#dr-tier"), id, $("#dr-tier-lg"), true));

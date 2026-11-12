@@ -559,7 +559,7 @@
           S("path", { d: d.join(""), fill: "none", stroke: "#c9c7bd", "stroke-dasharray": "4 4", "stroke-width": 1.1 }, g);
           const s0 = Math.max(.3, r * r / .85);            // label where the curve enters the plot (top or left), away from the points
           S("text", { class: "tick", x: xs(s0) + 6, y: ys(r * r / s0) + 14, "text-anchor": "start" }, g).textContent = `R = ${r * 100}`;
-          rb.push({ x0: xs(s0) + 2, x1: xs(s0) + 56, y0: ys(r * r / s0) + 2, y1: ys(r * r / s0) + 18 });
+          rb.push({ x0: xs(s0) + 2, x1: xs(s0) + 56, y0: ys(r * r / s0) + 2, y1: ys(r * r / s0) + 18, w: 1e4 });   // never covered
         }
         pts = RL.map(o => ({ m: o, x: xs(o.reliability.S), y: ys(o.reliability.N), label: o.name, aria: `S ${o.reliability.S.toFixed(2)}, N ${o.reliability.N.toFixed(2)}` }));
       }

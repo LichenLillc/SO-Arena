@@ -132,7 +132,7 @@
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
       ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
-      ["reliability", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
+      ["reliability", "rel", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
       ["leaderboard", "view:t-domains", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each of the 11 domains (leaderboard tier); dots coloured by domain family.`, dots],
     ];

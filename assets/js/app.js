@@ -830,57 +830,63 @@
     const bot = (x, y, sc, c = DK, cls = "", st = "") => `<g class="rb ${cls}"${st ? ` style="${st}"` : ""}><g transform="translate(${r1(x - 14 * sc)} ${r1(y - 34 * sc)}) scale(${sc})">${BOTG(c)}</g></g>`;
     const tick = (x, y, z, c = "", st = "") => `<path class="tk ${c}" pathLength="1"${st ? ` style="${st}"` : ""} d="M${r1(x - .5 * z)} ${r1(y)}L${r1(x - .12 * z)} ${r1(y + .4 * z)}L${r1(x + .55 * z)} ${r1(y - .45 * z)}"/>`;
     const xmk = (x, y, z, c = "", st = "") => { const d = .38 * z; return `<path class="xk ${c}"${st ? ` style="${st}"` : ""} d="M${r1(x - d)} ${r1(y - d)}L${r1(x + d)} ${r1(y + d)}M${r1(x + d)} ${r1(y - d)}L${r1(x - d)} ${r1(y + d)}"/>`; };
-    const blk = (x, y, t, c = "", st = "", w = 20) => `<g class="bk ${c}"${st ? ` style="${st}"` : ""}><rect x="${x}" y="${y}" width="${w}" height="20" rx="4.5"/><text x="${x + w / 2}" y="${y + 14.2}" text-anchor="middle">${t}</text></g>`;
-    const arw = (x1, y1, x2, y2, c = "", st = "") => { const t = Math.atan2(y2 - y1, x2 - x1), h = 5.5, bx = x2 - h * Math.cos(t), by = y2 - h * Math.sin(t), px = -Math.sin(t) * h * .6, py = Math.cos(t) * h * .6;
+    const blk = (x, y, t, c = "", st = "", w = 16, h = 16) => `<g class="bk ${c}"${st ? ` style="${st}"` : ""}><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4"/><text x="${x + w / 2}" y="${r1(y + h / 2 + 3.6)}" text-anchor="middle">${t}</text></g>`;
+    const arw = (x1, y1, x2, y2, c = "", st = "") => { const t = Math.atan2(y2 - y1, x2 - x1), h = 5, bx = x2 - h * Math.cos(t), by = y2 - h * Math.sin(t), px = -Math.sin(t) * h * .6, py = Math.cos(t) * h * .6;
       return `<g class="ar ${c}"${st ? ` style="${st}"` : ""}><path d="M${x1} ${y1}L${r1(bx)} ${r1(by)}"/><path class="ah" d="M${x2} ${y2}L${r1(bx + px)} ${r1(by + py)}L${r1(bx - px)} ${r1(by - py)}Z"/></g>`; };
     const star = (x, y, r, on, st) => `<path class="st${on ? " on" : ""}"${on ? ` style="${st}"` : ""} d="M${Array.from({ length: 10 }, (_, k) => { const t = (-90 + 36 * k) * Math.PI / 180, q = k % 2 ? r * .45 : r; return `${r1(x + q * Math.cos(t))} ${r1(y + q * Math.sin(t))}`; }).join("L")}Z"/>`;
-    const pic = (H, sp, alt, L, R, cL, cR) => { const cr = (sp + 6 + 380) / 2;
-      return `<svg class="hv" viewBox="0 0 380 ${H}" role="img" aria-label="${esc(alt)}">${tx(sp / 2, 13, "Other benchmarks", "hh")}${tx(cr, 13, "SO-Arena", "hh hs")}` +
-        `<path class="dv" d="M${sp + 3} 3V${H - 4}"/>${L}${R}${cL ? tx(sp / 2, H - 5, cL, "cap") : ""}${cR ? tx(cr, H - 5, cR, "cap") : ""}</svg>`; };
-    const review = (x, y, w, q1, q2, n, d0) => `<rect class="card" x="${x}" y="${y}" width="${w}" height="80" rx="7"/>` +
-      `<circle class="ico" cx="${x + 12}" cy="${y + 12}" r="5.6"/><circle class="ico" cx="${x + 12}" cy="${y + 10.6}" r="1.9"/><path class="ico" d="M${x + 8.4} ${y + 16.2}q3.6 -3.4 7.2 0"/>` +
-      tx(x + 22, y + 15.6, "Review", "ct", "start") + tx(x + 8, y + 35, q1, "q", "start") + tx(x + 8, y + 49, q2, "q", "start") +
-      tx(x + 8, y + 70.5, "Label", "ct", "start") + [0, 1, 2, 3, 4].map(k => star(x + 47 + 12.4 * k, y + 66.5, 5.3, k < n, `--d:${r1(d0 + k * .12)}s`)).join("");
+    // One frame for all four: two equal panels, "Other benchmarks" (grey) and "SO-Arena" (white, the highlight's
+    // colour), a mono label on top, a one-line verdict below. Verdict badges as in the reliability demo.
+    const PW = 194, X1 = 206, HH = 160, SC = .62;
+    const badge = (x, y, k, c = "", st = "") => `<g class="bd ${k} ${c}"${st ? ` style="${st}"` : ""}><circle cx="${x}" cy="${y}" r="8"/>` +
+      (k === "ok" ? `<path d="M${r1(x - 3.7)} ${r1(y + .2)}l2.5 2.5 4.9 -5.2"/>` : `<text x="${x}" y="${r1(y + 3.9)}" text-anchor="middle">?</text>`) + `</g>`;
+    const pic = (alt, L, R, cL, cR) => `<svg class="hv" viewBox="0 0 400 ${HH}" role="img" aria-label="${esc(alt)}">` +
+      `<rect class="pn" x="0" y="0" width="${PW}" height="${HH}" rx="10"/><rect class="pn so" x="${X1 + .6}" y=".6" width="${PW - 1.2}" height="${HH - 1.2}" rx="9.5"/>` +
+      tx(12, 20, "OTHER BENCHMARKS", "ph", "start") + tx(X1 + 12, 20, "SO-ARENA", "ph so", "start") + L + R +
+      tx(12, HH - 13, cL, "pc", "start") + tick(X1 + 17, HH - 17, 9, "pt") + tx(X1 + 27, HH - 13, cR, "pc so", "start") + `</svg>`;
+    const review = (x, q1, q2, n, d0) => `<rect class="cd" x="${x + 12}" y="30" width="170" height="62" rx="7"/>` +
+      tx(x + 22, 48, q1, "q", "start") + tx(x + 22, 62, q2, "q", "start") + tx(x + 22, 82.5, "LABEL", "lk", "start") +
+      [0, 1, 2, 3, 4].map(k => star(x + 62 + 11.5 * k, 79, 4.6, k < n, `--d:${r1(d0 + k * .1)}s`)).join("");
+    const MC = ["#4fa39b", "#8a74b8", "#d4a24e"];                          // three different models
     const V = {
-      labels: () => pic(170, 146, "Other benchmarks: a review that says 'Bought it for my parents' carries a five-star label the text does not support. SO-Arena: 'Fake product. Don't buy!' carries one star, checked against a reliable source and by human review.",
-        review(6, 26, 112, "“Bought it for", "my parents.”", 5, .15) + bot(134, 106, .78, DK, "a-hop", "--d:.85s") + tx(134, 72, "?", "qm a-pop", "middle", "--d:1s"),
-        review(155, 26, 118, "“Fake product.", "Don't buy!”", 1, .9) + `<g class="mag"><circle r="8.5"/><path d="M6 6l5.5 5.5"/></g>` +
-          tick(161, 121, 11, "a-draw", "--d:1.75s") + tx(171, 125, "Reliable source", "ck a-in", "start", "--d:1.75s") +
-          tick(161, 139, 11, "a-draw", "--d:2s") + tx(171, 143, "Human review", "ck a-in", "start", "--d:2s") +
-          bot(318, 106, .78, DK, "a-hop", "--d:2.35s") + tick(318, 68, 17, "a-draw", "--d:2.45s"),
-        "Ambiguous label", "Grounded label"),
-      tiers: () => pic(162, 146, "Other benchmarks: three models all pass tasks of one uniform difficulty, so they tie. SO-Arena: easy, medium and hard tiers; the three models stop at different steps, so they separate.",
-        `<path class="fl" d="M8 104H140"/>` + [[30, BLUE], [74, OCHRE], [118, ROSE]].map(([x, c], i) => bot(x, 104, .74, c, "a-in", `--d:${r1(.1 + i * .12)}s`) + tick(x, 121, 13, "a-draw", `--d:${r1(.55 + i * .15)}s`)).join("") +
-          tx(52, 90, "=", "eq a-in", "middle", "--d:1.1s") + tx(96, 90, "=", "eq a-in", "middle", "--d:1.1s"),
-        `<path class="fl" d="M154 128H218V102H284V76H376"/>` + tx(186, 143, "Easy", "tl") + tx(251, 117, "Medium", "tl") + tx(330, 91, "Hard", "tl") +
-          bot(186, 128, .74, BLUE, "c0") + bot(251, 102, .74, OCHRE, "c1") + bot(330, 76, .74, ROSE, "c2"),
+      labels: () => pic("Other benchmarks: a review saying 'Bought it for my parents' carries a five-star label the text does not support. SO-Arena: 'Fake product. Don't buy!' carries one star, checked against a reliable source and by human review.",
+        review(0, "“Bought it for", "my parents.”", 5, .1) + bot(30, 128, SC, DK, "a-hop", "--d:.7s") + badge(51, 106, "q", "a-pop", "--d:.85s"),
+        review(X1, "“Fake product.", "Don't buy!”", 1, 1.2) + `<g class="mag"><circle r="7.5"/><path d="M5.3 5.3l4.6 4.6"/></g>` +
+          tick(X1 + 78, 108, 8, "a-draw", "--d:1.95s") + tx(X1 + 86, 111.5, "Reliable source", "ck a-in", "start", "--d:1.95s") +
+          tick(X1 + 78, 123, 8, "a-draw", "--d:2.2s") + tx(X1 + 86, 126.5, "Human review", "ck a-in", "start", "--d:2.2s") +
+          bot(X1 + 30, 128, SC, DK, "a-hop", "--d:2.4s") + badge(X1 + 51, 106, "ok", "a-pop", "--d:2.55s"),
+        "Ambiguous label", "Verified label"),
+      tiers: () => pic("Other benchmarks: three models all pass tasks of one uniform difficulty, so they tie. SO-Arena: easy, medium and hard tiers; the three models stop at different steps, so they separate.",
+        `<path class="fl0" d="M14 118H180"/>` + [52, 97, 142].map((x, i) => bot(x, 118, SC, MC[i], "a-in", `--d:${r1(.1 + .1 * i)}s`) + badge(x, 85, "ok", "a-pop", `--d:${r1(.5 + .15 * i)}s`)).join(""),
+        `<path class="fl" d="M${X1 + 12} 118H${X1 + 66}V94H${X1 + 122}V70H${X1 + 182}"/>` +
+          tx(X1 + 39, 130, "EASY", "lk", "middle") + tx(X1 + 94, 106, "MEDIUM", "lk", "middle") + tx(X1 + 152, 82, "HARD", "lk", "middle") +
+          bot(X1 + 39, 118, SC, MC[0], "c0") + bot(X1 + 94, 94, SC, MC[1], "c1") + bot(X1 + 152, 70, SC, MC[2], "c2"),
         "Uniform difficulty", "Stratified difficulty"),
-      agents: () => pic(170, 140, "Other benchmarks: one question, one answer. SO-Arena: in a sandbox the model chooses one action after another (click, type, back) and the episode is scored by progress: three steps done, the fourth failed, the goal not reached.",
-        `<rect class="card" x="6" y="40" width="50" height="42" rx="5"/><path class="bar" d="M6 49.5H56"/><circle class="dot" cx="11.5" cy="44.8" r="1.5"/><circle class="dot" cx="16" cy="44.8" r="1.5"/><circle class="dot" cx="20.5" cy="44.8" r="1.5"/>` +
-          `<path class="ln" d="M12 60H44M12 67.5H34"/>` + tx(47, 77.5, "?", "pq") + arw(60, 61, 75, 61, "a-in", "--d:.25s") + bot(91, 82, .74, DK, "a-hop", "--d:.5s") +
-          blk(108, 51, "B", "pk a-pop", "--d:.8s") + tick(118, 85, 12, "a-draw", "--d:1s"),
-        `<rect class="sbx" x="149" y="27" width="227" height="89" rx="10"/><rect class="sbl" x="238" y="21" width="50" height="12"/>` + tx(263, 30.5, "Sandbox", "sb") +
-          `<rect class="card" x="158" y="43" width="50" height="44" rx="5"/><path class="bar" d="M158 52.5H208"/><circle class="dot" cx="163.5" cy="47.8" r="1.5"/><circle class="dot" cx="168" cy="47.8" r="1.5"/><circle class="dot" cx="172.5" cy="47.8" r="1.5"/>` +
-          `<rect class="pgh" x="163" y="59" width="38" height="8" rx="2.5"/><path class="ln" d="M164 74H198M164 81H186"/>` + arw(212, 65, 227, 65) +
-          bot(243, 92, .74, DK, "a-hop4") +
-          [["click", 42, "f1"], ["type", 62, "f2"], ["back", 82, "f3"]].map(([t, y, f]) => `<g class="ch ${f}"><rect x="261" y="${y}" width="48" height="16" rx="8"/>${tx(285, y + 11.6, t)}</g>`).join("") +
-          `<path class="lp" d="M309 50C333 50 333 107 309 107H183V94"/><path class="ah2" d="M183 90l-3.3 5.5h6.6z"/>` +
-          [0, 1, 2, 3, 4].map(k => { const x = 160 + 34 * k, d = `--d:${r1(.85 + .8 * k)}s`;
-            return `<rect class="sg${k < 3 ? " ok" : k === 3 ? " bad" : ""}" x="${x}" y="126" width="28" height="12" rx="4"${k < 4 ? ` style="${d}"` : ""}/>` +
-              (k < 3 ? tick(x + 14, 132, 7.5, "sgm a-draw", d) : k === 3 ? xmk(x + 14, 132, 7.5, "a-pop", d) : ""); }).join("") +
-          `<path class="fp" d="M346 143V117"/><path class="ff" d="M346 117.5l12 4.2l-12 4.2z"/>`,
-        "Single-turn evaluation", "Many steps, scored by progress"),
-      rel: () => pic(168, 128, "Other benchmarks: one option order, scored on accuracy only. SO-Arena: the model keeps answer B when the options are reordered, and picks Null when the correct option is removed.",
-        blk(31, 58, "A") + blk(54, 58, "B", "pk a-pick", "--d:.9s") + blk(77, 58, "C") + bot(64, 108, .66, DK, "a-wh", "--d:.15s;--h:.75s") + tick(110, 67, 14, "a-draw", "--d:1.1s"),
-        `<rect class="syc s" x="138" y="20" width="13" height="13" rx="3.5"/>` + tx(144.5, 30.4, "S", "sy") + tx(156, 30, "Options reordered", "rl", "start") +
-          blk(138, 37, "A") + blk(161, 37, "B", "pk a-pick", "--d:.45s") + blk(184, 37, "C") + bot(171, 81, .6, DK, "a-hop", "--d:.3s") +
-          arw(209, 43, 229, 43, "a-in", "--d:.75s") + arw(229, 51, 209, 51, "a-in", "--d:.75s") +
-          `<g class="a-in" style="--d:.95s">${blk(235, 37, "C") + blk(258, 37, "A") + blk(281, 37, "B", "pk a-pick", "--d:1.45s")}</g>` + bot(291, 81, .6, DK, "a-wh", "--d:1.05s;--h:1.3s") +
-          tick(318, 47, 14, "a-draw", "--d:1.65s") +
-          `<rect class="syc n" x="138" y="93" width="13" height="13" rx="3.5"/>` + tx(144.5, 103.4, "N", "sy") + tx(156, 103, "Correct option missing", "rl", "start") +
-          blk(138, 110, "A") + blk(161, 110, "B", "gone a-gone", "--d:2.2s") + blk(184, 110, "C") + blk(207, 110, "Null", "pk nul a-sl", "--d:2.5s", 40) +
-          bot(227, 154, .6, DK, "a-mv", "--d:2.75s") + tick(264, 120, 14, "a-draw", "--d:3.65s"),
-        "Accuracy only", ""),
+      agents: () => pic("Other benchmarks: one question, one answer. SO-Arena: in a sandbox the model chooses one action after another (click, type, back), and the episode is scored by progress: three steps done, the fourth failed, the goal not reached.",
+        `<g transform="translate(0 8)"><rect class="cd" x="14" y="46" width="58" height="46" rx="6"/><path class="cb" d="M14 56.5H72"/>` +
+          [19.5, 24, 28.5].map(x => `<circle class="dot" cx="${x}" cy="51.3" r="1.4"/>`).join("") + `<path class="ln" d="M21 67H53M21 75H43"/>` + tx(62, 86, "?", "pq") +
+          arw(78, 69, 93, 69, "a-in", "--d:.2s") + bot(108, 80, SC, DK, "a-hop", "--d:.4s") + blk(126, 60, "B", "pk a-pop", "--d:.65s", 18, 18) + badge(165, 69, "ok", "a-pop", "--d:.85s") + `</g>`,
+        `<rect class="sbx" x="${X1 + 8}" y="29" width="178" height="72" rx="8"/>` + tx(X1 + 182, 20, "SANDBOX", "lk sb", "end") +
+          `<rect class="cd" x="${X1 + 16}" y="38" width="46" height="40" rx="5"/><path class="cb" d="M${X1 + 16} 47H${X1 + 62}"/>` +
+          [21, 25, 29].map(x => `<circle class="dot" cx="${X1 + x}" cy="42.5" r="1.3"/>`).join("") +
+          `<rect class="pgh" x="${X1 + 21}" y="53" width="34" height="6" rx="2"/><path class="ln" d="M${X1 + 22} 66H${X1 + 52}M${X1 + 22} 72H${X1 + 44}"/>` +
+          arw(X1 + 66, 58, X1 + 78, 58) + bot(X1 + 92, 70, SC, DK, "a-hop4") +
+          [["click", 36, "f1"], ["type", 52, "f2"], ["back", 68, "f3"]].map(([t, y, f]) => `<g class="ch ${f}"><rect x="${X1 + 108}" y="${y}" width="48" height="14" rx="7"/>${tx(X1 + 132, y + 10.2, t)}</g>`).join("") +
+          `<path class="lp" d="M${X1 + 156} 43C${X1 + 176} 43 ${X1 + 176} 92 ${X1 + 156} 92H${X1 + 39}V83"/><path class="ah2" d="M${X1 + 39} 78.5l-3.2 5.2h6.4z"/>` +
+          [0, 1, 2, 3, 4].map(k => { const x = X1 + 12 + 28 * k, d = `--d:${r1(.85 + .8 * k)}s`;
+            return `<rect class="sg${k < 3 ? " ok" : k === 3 ? " bad" : ""}" x="${x}" y="111" width="22" height="10" rx="3.5"${k < 4 ? ` style="${d}"` : ""}/>` +
+              (k < 3 ? tick(x + 11, 116, 6, "sgm a-draw", d) : k === 3 ? xmk(x + 11, 116, 6.5, "a-pop", d) : ""); }).join("") +
+          `<path class="fp" d="M${X1 + 166} 124V104"/><path class="ff" d="M${X1 + 166} 104.5l10 3.6l-10 3.6z"/>`,
+        "Single turn", "Scored by progress"),
+      rel: () => pic("Other benchmarks: one option order, scored on accuracy only. SO-Arena: the model keeps answer B when the options are shuffled (S), and picks Null when the correct option is removed (N).",
+        `<g transform="translate(0 8)">` + blk(57, 52, "A") + blk(76, 52, "B", "pk a-pick", "--d:.55s") + blk(95, 52, "C") + bot(84, 94, SC, DK, "a-wh", "--d:.1s;--h:.4s") + badge(134, 60, "ok", "a-pop", "--d:.75s") + `</g>`,
+        `<rect class="syc s" x="${X1 + 12}" y="33" width="14" height="14" rx="3.5"/>` + tx(X1 + 19, 43.6, "S", "sy") +
+          blk(X1 + 32, 32, "A") + blk(X1 + 50, 32, "B", "pk a-pick", "--d:1s") + blk(X1 + 68, 32, "C") + arw(X1 + 89, 40, X1 + 102, 40, "a-in", "--d:1.2s") +
+          `<g class="a-in" style="--d:1.35s">${blk(X1 + 107, 32, "C") + blk(X1 + 125, 32, "A") + blk(X1 + 143, 32, "B", "pk a-pick", "--d:1.65s")}</g>` +
+          bot(X1 + 58, 70, .5, DK, "a-hop", "--d:.85s") + bot(X1 + 151, 70, .5, DK, "a-wh", "--d:1.4s;--h:1.55s") + badge(X1 + 178, 40, "ok", "a-pop", "--d:1.85s") +
+          `<rect class="syc n" x="${X1 + 12}" y="85" width="14" height="14" rx="3.5"/>` + tx(X1 + 19, 95.6, "N", "sy") +
+          blk(X1 + 32, 84, "A") + blk(X1 + 50, 84, "B", "gone a-gone", "--d:2.2s") + blk(X1 + 68, 84, "C") + blk(X1 + 86, 84, "Null", "pk nul a-sl", "--d:2.45s", 32) +
+          bot(X1 + 102, 122, .5, DK, "a-mv") + badge(X1 + 134, 92, "ok", "a-pop", "--d:3.4s"),
+        "Accuracy only", "Accuracy + reliability"),
     };
     const C = {
       labels: { h: "Verified labels", pn: "#f5f6e8", hc: "#796f50", hl: "#a3a982",

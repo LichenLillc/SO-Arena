@@ -824,3 +824,19 @@ dialog.drawer.out::backdrop { animation: fadeout .18s ease-in forwards; }
 .lb-keys .k-prof { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 11px; }
 .lb-keys .k-prof b { width: 3px; border-radius: 1px; background: var(--cap); opacity: .5; }
 .lb-keys .k-prof b:nth-child(1) { height: 7px; } .lb-keys .k-prof b:nth-child(2) { height: 11px; } .lb-keys .k-prof b:nth-child(3) { height: 5px; }
+
+/* ---- round 5: phone polish ---- */
+.kv i.nw { font-style: normal; white-space: nowrap; }
+@media (max-width: 760px) {
+  .board-foot { flex-wrap: wrap; row-gap: 6px; }
+  .board-foot .keys { flex: 1 1 100%; gap: 6px 14px; }
+  .board-foot > a { margin-left: auto; }
+  /* leaderboard controls: view and sort on one row, filters on the next, then search */
+  .tools-l { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+  #lb-view { order: 1; } #msort { order: 2; margin-left: auto; } #filters { order: 3; flex: 1 1 100%; }
+  #lb-view button, #msort button { padding: 0 8px; font-size: 12px; }
+}
+/* scatter hover: the pointed model stays in focus, the rest step back */
+.chart .pt, .chart .lbl, .chart .lead { transition: opacity .14s ease; }
+.chart svg:has(.pt:hover) .pt:not(:hover) { opacity: .35; }
+.chart svg:has(.pt:hover) .lbl, .chart svg:has(.pt:hover) .lead { opacity: .5; }

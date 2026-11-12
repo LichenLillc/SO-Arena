@@ -60,7 +60,9 @@
   // ---- tooltip ---------------------------------------------------------------------------------------------------
   const tipEl = $("#tip");
   function tip(html, x, y) {
+    const was = tipEl.hidden;
     tipEl.innerHTML = html; tipEl.hidden = false;
+    if (was && !RM) tipEl.animate([{ opacity: 0, transform: "translateY(3px)" }, { opacity: 1, transform: "none" }], { duration: 120, easing: "ease-out" });
     const r = tipEl.getBoundingClientRect();
     let l = x + 16, t = y + 16;
     if (l + r.width > innerWidth - 10) l = x - r.width - 16;
@@ -243,8 +245,17 @@
     });
     const refs = order(M.filter(m => m.group === "s2" && pass(m))), s1 = order(M.filter(m => isS1(m) && pass(m))), hy = order(M.filter(m => m.group === "auto" && pass(m)));
     const grp = (label, list) => list.length ? `<tbody><tr class="grp"><th colspan="${COLS.length}" scope="rowgroup">${label}</th></tr>${list.map(row).join("")}</tbody>` : "";
+    // FLIP: after a sort or filter, rows that stay slide from their old place to the new one (300 ms); new rows fade in
+    const was = new Map($$("#lb tr[data-model]").map(r => [r.dataset.model, r.getBoundingClientRect().top]));
     $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) + grp("Hybrid: switches to System Two, not ranked", hy) +
       (refs.length + s1.length + hy.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`);
+    if (!was.size || RM) return;
+    const rows = $$("#lb tr[data-model]");
+    rows.forEach(r => { const y = was.get(r.dataset.model);
+      if (y == null) { r.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, delay: 80, easing: "ease-out", fill: "backwards" }); return; }
+      const dy = y - r.getBoundingClientRect().top;
+      if (Math.abs(dy) > 1) r.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.2, .8, .2, 1)" });
+    });
   }
   function dgrid() {
     const ids = D.domains.map(d => d.id), t3 = top(S1, o => o.score, 3);
@@ -340,9 +351,9 @@
       <div style="display:flex;gap:14px;align-items:center">${logo(m, 52)}<div><h2 id="dr-title">${esc(m.name)}</h2></div></div>
       <p class="dr-sub">${meta(m)} · ${closed(m) ? "closed API" : "open weights"} · reasoning: ${esc(m.reasoning.toLowerCase())} · ${m.release_url ? `<a href="${m.release_url}" target="_blank" rel="noopener">${esc(m.release)} ↗</a>` : `<span class="mono">${esc(m.release)}</span>`}</p>
       <div class="kv">
-        <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · #${rk} of 18` : m.group === "s2" ? " · System Two" : " · not ranked"}</span></div>
-        <div><b class="num">${r ? f1(r.R) : "—"}</b><span>Reliability R${rr ? ` · #${rr} of 18` : " · measured for System One models only"}</span></div>
-        <div><b class="num">${l ? ms(l.mean_ms) : "—"}</b><span>Mean latency · ${l ? l.timing : ""}</span></div>
+        <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · <i class="nw">#${rk} of 18</i>` : m.group === "s2" ? " · System Two" : " · not ranked"}</span></div>
+        <div><b class="num">${r ? f1(r.R) : "—"}</b><span><i class="nw">Reliability R</i>${rr ? ` · <i class="nw">#${rr} of 18</i>` : " · measured for System One models only"}</span></div>
+        <div><b class="num">${l ? ms(l.mean_ms) : "—"}</b><span>Mean latency · <i class="nw">${l ? l.timing : ""}</i></span></div>
         <div><b class="num">${r ? `${r.S.toFixed(2)} · ${r.N.toFixed(2)}` : l && l.p99_ms ? ms(l.p99_ms) : "—"}</b><span>${r ? "Order stability S · null discrimination N" : "99th percentile latency"}</span></div>
       </div>
       <h4 class="label">Domain scores <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· leaderboard tier; tick = System One median</span></h4>

@@ -16,9 +16,9 @@
 <link rel="icon" href="assets/img/favicon.svg?v=9d2ac14038" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/site.css?v=91e2bcbbd2">
+<link rel="stylesheet" href="assets/css/site.css?v=2592038e04">
 <script defer src="assets/js/data.js?v=79cc9fcc40"></script>
-<script defer src="assets/js/app.js?v=439f104bde"></script>
+<script defer src="assets/js/app.js?v=57c6d5fc8b"></script>
 </head>
 <body>
 <a class="skip" href="#leaderboard">Skip to the leaderboard</a>
@@ -101,24 +101,18 @@
       </div>
       <div class="toolbar">
         <div class="tools-l">
-          <div class="seg" role="tablist" aria-label="Leaderboard view" id="lb-view">
-            <button role="tab" aria-selected="true" aria-controls="v-table" id="t-table">Overall</button>
-            <button role="tab" aria-selected="false" aria-controls="v-domains" id="t-domains" tabindex="-1">By domain</button>
-          </div>
           <div class="tools-filters" id="filters" role="group" aria-label="Show models" style="display:flex;gap:6px;flex-wrap:wrap"></div>
           <div class="seg msort" id="msort" role="group" aria-label="Sort by"><button type="button" data-ms="score" aria-pressed="true">Score</button><button type="button" data-ms="R" aria-pressed="false">Reliability</button><button type="button" data-ms="lat" aria-pressed="false">Latency</button></div>
         </div>
         <div class="tools-r">
+          <label class="dpick"><span class="sr-only">Sort by domain</span><select id="dpick"></select></label>
           <label class="search"><span class="sr-only">Find a model</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="Find a model" autocomplete="off"></label>
         </div>
       </div>
-      <div id="v-table" role="tabpanel" aria-labelledby="t-table">
+      <div id="v-table">
+        <div class="dsel" id="dsel" hidden></div>
         <div class="tbl-wrap" tabindex="0" aria-label="Leaderboard table; scrolls sideways"><table class="lb" id="lb"></table></div>
         <div class="lb-foot"><p class="keys lb-keys" id="lb-keys"></p><p class="note"><a href="data/arena.json" download>All results (JSON)</a> <button class="info" type="button" data-info="Latency: mean time per task; open weights on one H100 GPU, APIs end to end. GLiDE and KnowLine-31B differ by 0.02 points, less than option order alone moves their accuracy (see Reliability, Option order).">i</button></p></div>
-      </div>
-      <div id="v-domains" role="tabpanel" aria-labelledby="t-domains" hidden>
-        <div class="dgrid" id="dgrid"></div>
-        
       </div>
     </div>
   </section>

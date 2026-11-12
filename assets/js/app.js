@@ -178,7 +178,7 @@
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK.get(best.key))}<span class="arr">→</span>${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([r1, r2, best].map(o => [`<span class="rkn">#${RANK_R.get(o.key)}</span>${esc(o.name)}`, R_(o), "var(--rel)"]), 100, f1)],
-      ["leaderboard", "view:t-domains", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "Gap to Luna varies by domain", `${esc(best.name)}, the top System One model, minus GPT-6 Luna in each of the 11 domains (leaderboard tier). Left of the Luna line: behind Luna. Dots coloured by domain family.`, dots],
+      ["results", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "Gap to Luna varies by domain", `${esc(best.name)}, the top System One model, minus GPT-6 Luna in each of the 11 domains (leaderboard tier). Left of the Luna line: behind Luna. Dots coloured by domain family.`, dots],
     ];
     const CAP = ["Score", "Mean time per task", "Reliability R", `${esc(best.name)} minus GPT-6 Luna, per domain`];
     $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz], i) => `<div class="kr"><a class="krl" href="#${sec_}"${k.startsWith("view:") ? ` data-view="${k.slice(5)}"` : k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3></a>
@@ -224,23 +224,41 @@
   };
   const prof = m => `<div class="dprof" role="img" aria-label="${esc(D.domains.map(d => `${d.short || d.name} ${f1(m.domains[d.id])}`).join(", "))}">${FAMS.map(({ f, ds }) =>
     `<span class="pg" style="--n:${ds.length}">${ds.map(d => `<span class="pb" data-d="${d.id}" style="--h:${m.domains[d.id].toFixed(1)}%;--fc:${f.color}"></span>`).join("")}</span>`).join("")}</div>`;
+  // one domain as one bar, in its family's colour, with GPT-6 Luna's score in that domain as a tick
+  const dbar = (m, id) => { const v = m.domains[id], c = FAM[DOM[id].family].color;
+    return `<div class="dbar" style="--fc:${c}" role="img" aria-label="${esc(DOM[id].short)} ${f1(v)}"><span class="t"><i style="--w:${v.toFixed(1)}%"></i>${m.group === "s2" ? "" : `<b class="ref" style="left:calc(${LUNA.domains[id].toFixed(1)}% - 1px)"></b>`}</span><span class="v">${f1(v)}</span></div>`; };
   // latency bars share one linear scale up to the slowest System One model; slower models get a broken bar
   const latCell = v => `<span class="lcell"><span class="meter${v > LATMAX ? " over" : ""}" aria-hidden="true"><i style="--w:${Math.min(100, 100 * v / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="num">${ms(v)}</span></span>`;
   const row = m => {
     const ref = m.group === "s2";
     return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
-      <td class="c-rk">${(T.sort === "R" ? RANK_R : T.sort === "lat" ? RANK_L : RANK).get(m.key) ?? (ref ? "" : "–")}</td>
+      <td class="c-rk">${(T.sort === "R" ? RANK_R : T.sort === "lat" ? RANK_L : DSORT() ? TOPD[DSORT()] : RANK).get(m.key) ?? (ref ? "" : "–")}</td>
       <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}</small></div></div></td>
       <td class="c-score l${T.sort === "score" ? " sorted" : ""}" data-l="Score"><div class="scell"><span class="track bt"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span>${ref ? "" : refBand}</span><span class="num">${f2(m.score)}</span></div></td>
-      <td class="c-prof l">${prof(m)}</td>
+      <td class="c-prof l${DSORT() ? " sorted" : ""}">${DSORT() ? dbar(m, DSORT()) : prof(m)}</td>
       <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? `<span class="rcell"><span class="meter" aria-hidden="true"><i style="--w:${R_(m)}%;--c:var(--rel)"></i></span><span class="num">${f1(R_(m))}</span></span>` : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
       <td class="c-n${T.sort === "lat" ? " sorted" : ""}" data-l="Latency">${m.latency ? latCell(m.latency.mean_ms) : '<span class="dim">—</span>'}</td>
 </tr>`;
   };
+  // Sorting by one domain (T.sort = "d:<id>"): the By-domain column widens and shows that domain as one bar per model;
+  // the score column narrows. The header stays in place between renders, so its column widths can ease.
+  const DSORT = () => T.sort.startsWith("d:") ? T.sort.slice(2) : null;
+  const CHEV = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8 5 6.3 7.5 3.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function head() {
+    const tb = $("#lb");
+    if (!$("thead", tb)) tb.innerHTML = `<thead><tr>${COLS.map(c => c.id === "prof" ? `<th class="${c.cls}" scope="col"></th>`
+      : `<th class="${c.cls}" scope="col"><button type="button" data-sort="${c.id}" title="${esc(c.title || "Sort by " + c.label)}">${esc(c.label)}</button></th>`).join("")}</tr></thead>`;
+    const did = DSORT();
+    $$("thead th", tb).forEach((th, i) => { const c = COLS[i], on = c.id === T.sort || (c.id === "prof" && did);
+      if (on) th.setAttribute("aria-sort", T.dir > 0 ? "ascending" : "descending"); else th.removeAttribute("aria-sort"); });
+    const ph = $("thead th.c-prof", tb), d = did && DOM[did];
+    ph.innerHTML = d ? `<span class="phd"><button type="button" class="dh-btn" data-dock aria-haspopup="listbox" aria-expanded="false" title="Sorted by ${esc(d.name)}; choose another domain"><i style="background:${FAM[d.family].color}"></i>${esc(d.short)} <span class="ar">${T.dir > 0 ? "↑" : "↓"}</span>${CHEV}</button><button type="button" class="dx" data-dclear aria-label="Back to the overall score" title="Back to the overall score">×</button></span>`
+      : `<span class="phd"><button type="button" class="dh-btn" data-dock aria-haspopup="listbox" aria-expanded="false" title="${esc(COLS.find(c => c.id === "prof").title)}">${esc(COLS.find(c => c.id === "prof").label)}${CHEV}</button></span>`;
+  }
   function table() {
-    const head = `<thead><tr>${COLS.map(c => c.id === "prof" ? `<th class="${c.cls}" scope="col"><span class="th" title="${esc(c.title)}">${c.label}</span></th>`
-      : `<th class="${c.cls}" scope="col"${T.sort === c.id ? ` aria-sort="${T.dir > 0 ? "ascending" : "descending"}"` : ""}><button type="button" data-sort="${c.id}" title="${esc(c.title || "Sort by " + c.label)}">${esc(c.label)}</button></th>`).join("")}</tr></thead>`;
-    const col = COLS.find(c => c.id === T.sort);
+    const did = DSORT(), wasD = $("#lb").classList.contains("dmode"), d0 = $("#lb").dataset.d || "";
+    const col = did ? { id: T.sort, val: m => m.domains[did] } : COLS.find(c => c.id === T.sort);
+    const btW = (() => { const b = $("#lb .scell .bt"); return b ? b.getBoundingClientRect().width : 0; })();
     const order = list => list.sort((a, b) => {
       const va = col.val(a), vb = col.val(b);
       if (va == null && vb == null) return b.score - a.score;
@@ -261,8 +279,17 @@
     const fl = (FILTERS.find(f => f[0] === T.filter) || [, ""])[1];
     const note = !n1 && hidden ? `<tbody><tr><td colspan="${COLS.length}" class="l empty">No match in ${esc(fl)}. <button type="button" class="showall" data-showall>Show ${hidden} in All</button></td></tr></tbody>`
       : refs.length + n1 ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`;
-    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One · closed APIs", apis) +
-      opens.map(([z, l]) => grp(`System One · open weights · ${z}`, l)).join("") + note;
+    head(); $$("#lb tbody").forEach(n => n.remove());
+    const tb = $("#lb"); tb.classList.toggle("dmode", !!did); tb.dataset.d = did || "";
+    tb.insertAdjacentHTML("beforeend", grp("System Two reference", refs) + grp("System One · closed APIs", apis) +
+      opens.map(([z, l]) => grp(`System One · open weights · ${z}`, l)).join("") + note);
+    // the morph between the overall view and one domain: score bars ease to their new width, the domain bars grow
+    if (!RM && (did || "") !== d0) {
+      tb.classList.remove("dgrow", "pgrow"); void tb.offsetWidth; tb.classList.add(did ? "dgrow" : "pgrow");
+      clearTimeout(tb._g); tb._g = setTimeout(() => tb.classList.remove("dgrow", "pgrow"), 700);
+      if (!!did !== wasD && btW) { const b1 = $("#lb .scell .bt"), w1 = b1 ? b1.getBoundingClientRect().width : 0;
+        if (w1) $$("#lb .scell .bt").forEach(b => b.animate([{ flex: `0 0 ${btW}px`, minWidth: "0px", maxWidth: "none" }, { flex: `0 0 ${w1}px`, minWidth: "0px", maxWidth: "none" }], { duration: 450, easing: "cubic-bezier(.2, .8, .2, 1)" })); }
+    }
     if (!was.size || RM) return;
     const rows = $$("#lb tr[data-model]");
     rows.forEach(r => { const y = was.get(r.dataset.model);
@@ -271,67 +298,128 @@
       if (Math.abs(dy) > 1) r.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.2, .8, .2, 1)" });
     });
   }
-  // By domain: one row per domain, grouped by family. The three best System One models, GPT-6 Luna, and a strip with
-  // every System One model's score on 0-100 (the top three solid, Luna as a diamond). A row opens the domain's drawer.
-  function dgrid() {
-    const ov = { id: "overall", val: m => m.score, rk: RANK };
-    const cell = (o, m, i, list) => { const v = o.val(m), tie = i && (o.id === "overall" ? f2 : f1)(v) === (o.id === "overall" ? f2 : f1)(o.val(list[i - 1]));
-      return `<div class="pc p${i + 1}" role="cell"><span class="pcw">${logo(m, 22)}<span class="nm"><span class="n">${esc(m.name)}</span><span class="v">${(o.id === "overall" ? f2 : f1)(v)}${tie ? '<span class="tie">tie</span>' : ""}</span></span></span></div>`; };
-    const strip = (o, c) => { const l3 = new Set(top(S1, o.val, 3).map(m => m.key));
-      return `<div class="c-sp" role="cell"><span class="sp" data-sp="${o.id}" style="--fc:${c}"><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b>` +
-        [...S1].sort((x, y) => l3.has(x.key) - l3.has(y.key)).map(m => `<i class="${l3.has(m.key) ? "t" : ""}" style="left:${o.val(m).toFixed(1)}%"></i>`).join("") +
-        `<em style="left:${o.val(LUNA).toFixed(1)}%"></em></span></div>`; };
-    const line = (o, c, name, meta, attrs) => { const l = top(S1, o.val, 3);
-      return `<div ${attrs} role="row" tabindex="0"><div class="dn" role="rowheader"><b>${name}</b><small>${meta}</small></div>${l.map((m, i) => cell(o, m, i, l)).join("")}` +
-        `<div class="lu" role="cell">${(o.id === "overall" ? f2 : f1)(o.val(LUNA))}</div>${strip(o, c)}</div>`; };
-    const head = `<div class="dr dh" role="row"><div role="columnheader">Domain</div><div role="columnheader">1st</div><div role="columnheader" class="p2">2nd</div><div role="columnheader" class="p3">3rd</div>` +
-      `<div role="columnheader" class="lu"><span class="lf">GPT-6 </span>Luna</div><div role="columnheader" class="c-sp">All 18 System One<span class="spk"><span><i class="t"></i>top 3</span><span><i></i>others</span><span><em></em>GPT-6 Luna</span></span></div></div>`;
-    const body = `${line(ov, "var(--ink-2)", "Overall", `Mean of the 11 domains · ${D.totals.leaderboard_tasks.toLocaleString("en-US")} tasks`, 'class="dr ov" data-view="t-table" aria-label="Overall: open the full table"')}` +
-      FAMS.map(({ f, ds }) => `<div class="dfam" role="row"><div role="rowheader"><i style="background:${f.color}"></i>${esc(f.name)}</div></div>` +
-        ds.map(d => line({ id: d.id, val: m => m.domains[d.id] }, f.color, esc(d.name), `${d.leaderboard_tasks} tasks · ${d.leaderboard_tier === "All tasks" ? "untiered" : d.leaderboard_tier.toLowerCase() + " tier"}`,
-          `class="dr" data-domain="${d.id}" title="${esc(DESC[d.id])}" aria-label="${esc(d.name)}: full ranking and tiers"`)).join("")).join("");
-    $("#dgrid").innerHTML = `<div class="dtab" role="table" aria-label="Top three System One models and GPT-6 Luna in each domain">${head}${body}</div><p class="dtab-note">Scores on each domain's leaderboard tier. A row opens the full ranking and the tiers.</p>`;
-  }
-  function dgridControls() {
-    const g = $("#dgrid"); let on = false;
-    g.addEventListener("keydown", e => { const r = e.target.closest(".dr[tabindex]"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); } });
-    // the strip: the model nearest the pointer, with its score and rank in that domain
-    g.addEventListener("pointermove", e => {
-      const sp = e.target.closest(".sp"); if (!sp) { if (on) { untip(); on = false; } return; }
-      const id = sp.dataset.sp, val = id === "overall" ? m => m.score : m => m.domains[id], rk = id === "overall" ? RANK : TOPD[id];
-      const r = sp.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 100;
-      const m = [...S1, LUNA].reduce((p, q) => Math.abs(val(q) - x) < Math.abs(val(p) - x) ? q : p);
-      tip(`<b>${esc(m.name)}</b> <span class="m">${f1(val(m))}</span> <span class="s">${m === LUNA ? "System Two reference" : `#${rk.get(m.key)} of ${S1.length}`}</span>`, e.clientX, e.clientY); on = true;
-    });
-    g.addEventListener("pointerleave", () => { if (on) { untip(); on = false; } });
-  }
   function leaderboardControls() {
-    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk">By domain, one bar each:${D.families.map(f => `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("")}</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
+    $("#lb-keys").innerHTML = `<span><i class="k-ref"></i>GPT-6 Luna (System Two)</span><span class="fk">By domain, one bar each (click one to sort by it):${D.families.map(f => `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name.split(" ")[0])}</span>`).join("")}</span><span>Latency: mean per task, open weights on one H100, APIs end to end</span>`;
     $("#filters").innerHTML = FILTERS.map(([id, l]) => `<button type="button" class="chip" data-f="${id}" aria-pressed="${T.filter === id}">${l}</button>`).join("");
     $("#filters").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; T.filter = b.dataset.f; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
     $("#q").addEventListener("input", e => { T.q = e.target.value; table(); });
     $("#msort").addEventListener("click", e => { const b = e.target.closest("[data-ms]"); if (!b) return; const c = COLS.find(o => o.id === b.dataset.ms);
-      T.sort = c.id; T.dir = c.asc ? 1 : -1; $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); });
+      T.sort = c.id; T.dir = c.asc ? 1 : -1; $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", o === b)); table(); $("#dsel").hidden = true; $("#dpick").value = "overall"; });
     let onBar = false;                                          // profile bars: domain, score and System One rank
     $("#lb").addEventListener("pointermove", e => {
       // the whole profile at once: all 11 domains with score and System One rank; the pointed domain stands out
-      const pf = e.target.closest(".dprof");
+      const pf = e.target.closest(".dprof, .dbar");
       if (!pf) { if (onBar) { untip(); onBar = false; } return; }
-      const b = e.target.closest(".pb"), m = BY[pf.closest("tr").dataset.model];
+      const sel = DSORT(), b = pf.classList.contains("dbar") ? { dataset: { d: sel } } : e.target.closest(".pb") || nearBar(pf, e.clientX), m = BY[pf.closest("tr").dataset.model];
       const rows = D.domains.map(d => { const k = isS1(m) ? TOPD[d.id].get(m.key) : null;
         return `<span class="pr${b && b.dataset.d === d.id ? " on" : ""}"><span>${esc(d.short || d.name)}</span><span class="m">${f1(m.domains[d.id])}</span><span class="s">${k ? `#${k}` : ""}</span></span>`; }).join("");
-      tip(`<b>${esc(m.name)}</b> <span class="s">by domain${isS1(m) ? ` · rank of ${S1.length}` : ""}</span><span class="prof-tip">${rows}</span>${HINT}`, e.clientX, e.clientY);
+      const cta = pf.classList.contains("dbar") ? "" : `<span class="tip-cta"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2.5v7l2-2 1.3 2.8 1.2-.6-1.3-2.7h2.8z" fill="currentColor"/></svg>${TOUCH ? "Tap" : "Click"} to sort by ${esc(DOM[b.dataset.d].short)}</span>`;
+      tip(`<b>${esc(m.name)}</b> <span class="s">by domain${isS1(m) ? ` · rank of ${S1.length}` : ""}</span><span class="prof-tip">${rows}</span>${cta}`, e.clientX, e.clientY);
       onBar = true;
     });
     $("#lb").addEventListener("pointerleave", () => { if (onBar) { untip(); onBar = false; } });
     $("#lb").addEventListener("click", e => {
       const s = e.target.closest("[data-sort]");
-      if (s) { const c = COLS.find(o => o.id === s.dataset.sort); if (T.sort === c.id) T.dir = -T.dir; else { T.sort = c.id; T.dir = c.asc ? 1 : -1; } table(); const nb = $(`[data-sort="${c.id}"]`); if (nb) nb.focus(); return; }
+      if (s) { const c = COLS.find(o => o.id === s.dataset.sort); if (T.sort === c.id) T.dir = -T.dir; else { T.sort = c.id; T.dir = c.asc ? 1 : -1; } table(); $("#dsel").hidden = true; $("#dpick").value = "overall"; const nb = $(`[data-sort="${c.id}"]`); if (nb) nb.focus(); return; }
       if (e.target.closest("[data-showall]")) { T.filter = "all"; $$("[data-f]").forEach(o => o.setAttribute("aria-pressed", o.dataset.f === "all")); table(); return; }
+      if (e.target.closest("[data-dclear]")) { sortBy("overall"); return; }
+      if (e.target.closest("[data-dock]")) return;                       // the dock handles its own button
+      // the eleven bars: a click sorts by the domain under the pointer (no drawer); the single bar does nothing
+      const pf = e.target.closest(".dprof"); if (pf) { untip(); onBar = false; sortBy((e.target.closest(".pb") || nearBar(pf, e.clientX)).dataset.d); return; }
+      if (e.target.closest(".dbar")) return;
       const r = e.target.closest("tr[data-model]"); if (r) openModel(BY[r.dataset.model]);
     });
     $("#lb").addEventListener("keydown", e => { const r = e.target.closest("tr[data-model]"); if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openModel(BY[r.dataset.model]); } });
-    tabs($("#lb-view"), id => { const dom = id === "t-domains"; $("#filters").style.display = dom ? "none" : "flex"; $(".tools-r").style.visibility = dom ? "hidden" : "visible"; $("#msort").classList.toggle("off", dom); });
+    // narrow screens: the By-domain column is hidden, so a select chooses the domain
+    $("#dpick").innerHTML = `<option value="overall">Sort: overall score</option>` + FAMS.map(({ f, ds }) => `<optgroup label="${esc(f.name)}">${ds.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join("")}</optgroup>`).join("");
+    $("#dpick").addEventListener("change", e => sortBy(e.target.value));
+    $("#dsel").addEventListener("click", e => { if (e.target.closest("[data-dclear]")) sortBy("overall"); });
+    dock();
+  }
+  const nearBar = (pf, x) => $$(".pb", pf).reduce((p, q) => { const a = q.getBoundingClientRect(), b = p.getBoundingClientRect(); return Math.abs(a.left + a.width / 2 - x) < Math.abs(b.left + b.width / 2 - x) ? q : p; });
+  // Choose a domain (or "overall"): the table re-sorts and morphs; a strip above it names the domain, its tier and Luna.
+  function sortBy(id) {
+    if (id === "overall") { T.sort = "score"; T.dir = -1; } else { T.sort = "d:" + id; T.dir = -1; }
+    const hd = $("#lb thead"), y0 = hd ? hd.getBoundingClientRect().top : 0;        // the header stays where it is on screen
+    table();
+    const ds = $("#dsel"), d = DOM[id];
+    if (d) { const f = FAM[d.family];
+      ds.innerHTML = `<span class="fam"><i style="background:${f.color}"></i>${esc(f.name)}</span><b>${esc(d.name)}</b><span class="dm">${d.leaderboard_tasks} tasks · ${d.leaderboard_tier === "All tasks" ? "untiered" : d.leaderboard_tier.toLowerCase() + " tier"}</span>` +
+        `<span class="lu">GPT-6 Luna ${f1(LUNA.domains[id])}</span><button type="button" class="lk" data-domain="${id}">Full ranking and tiers <span class="arr">→</span></button><button type="button" class="x" data-dclear>× Overall score</button>`;
+      if (ds.hidden && !RM) ds.animate([{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }], { duration: 220, easing: "ease-out" });
+      ds.hidden = false;
+    } else ds.hidden = true;
+    const dy = hd ? hd.getBoundingClientRect().top - y0 : 0;
+    if (Math.abs(dy) > 1 && y0 > 0 && y0 < innerHeight) scrollBy({ top: dy, behavior: "instant" });
+    $("#dpick").value = d ? id : "overall";
+    $$("[data-ms]").forEach(o => o.setAttribute("aria-pressed", !d && o.dataset.ms === T.sort));
+  }
+  // The domain dock, under the By-domain header: one tile per domain (grouped by family) and "Overall" first. As the
+  // pointer moves along it the tiles magnify, as in the macOS Dock; a click sorts the table by that domain.
+  const DICON = {
+    overall: '<path d="M3.5 12.5V8.5M8 12.5V3.5M12.5 12.5V6.5"/>',
+    sentiment: '<circle cx="8" cy="8" r="5.6"/><path d="M5.6 9.4c1.2 1.6 3.6 1.6 4.8 0"/><path d="M6 6.4v.1M10 6.4v.1"/>',
+    intent: '<path d="M8 13.5V8.6M8 8.6 4.4 5M8 8.6 11.6 5M3.8 7.6V4.4H7M12.2 7.6V4.4H9"/>',
+    math: '<path d="M11.8 3.6H4.4L8.6 8 4.4 12.4h7.4"/>',
+    code: '<path d="M6 4.4 2.6 8 6 11.6M10 4.4 13.4 8 10 11.6"/>',
+    science: '<path d="M6.4 2.6h3.2M7 2.6v4.2L3.6 12.4c-.4.7.1 1.2.8 1.2h7.2c.7 0 1.2-.5.8-1.2L9 6.8V2.6M5 10.4h6"/>',
+    knowledge: '<path d="M2.6 3.6h3.8c.9 0 1.6.7 1.6 1.6v8.2c0-.8-.7-1.4-1.5-1.4H2.6zM13.4 3.6H9.6c-.9 0-1.6.7-1.6 1.6v8.2c0-.8.7-1.4 1.5-1.4h3.9z"/>',
+    safety: '<path d="M8 2.2 13 4v3.9c0 3-2.1 5.1-5 6-2.9-.9-5-3-5-6V4z"/><path d="M5.8 8.1 7.4 9.7 10.4 6.5"/>',
+    retrieval: '<circle cx="7" cy="7" r="4.2"/><path d="M10.2 10.2 13.4 13.4"/>',
+    verification: '<rect x="3" y="2.6" width="10" height="11" rx="1.8"/><path d="M5.6 8.4 7.3 10.1 10.6 6.4"/>',
+    tools: '<path d="M10.4 2.6a3.1 3.1 0 0 0-3 4L2.9 11.1a1.4 1.4 0 0 0 2 2l4.5-4.5a3.1 3.1 0 0 0 4-3l-1.9 1.9-1.8-.3-.3-1.8z"/>',
+    web: '<circle cx="8" cy="8" r="5.6"/><path d="M2.4 8h11.2M8 2.4c-2.2 2.4-2.2 8.8 0 11.2M8 2.4c2.2 2.4 2.2 8.8 0 11.2"/>',
+  };
+  function dock() {
+    const th = $("#lb thead th.c-prof"); if (!th) return;
+    const dk = document.createElement("div"); dk.className = "dock"; dk.hidden = true; dk.setAttribute("role", "listbox"); dk.setAttribute("aria-label", "Sort the leaderboard by a domain");
+    const tile = (id, name, c) => `<button type="button" class="di" role="option" data-dk="${id}" style="--fc:${c}" aria-label="${esc(name)}" aria-selected="false" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true">${DICON[id]}</svg></button>`;
+    dk.innerHTML = tile("overall", "Overall score", "#4a5260") + '<span class="sep"></span>' +
+      FAMS.map(({ f, ds }) => ds.map(d => tile(d.id, d.name, f.color)).join("")).join('<span class="sep"></span>') + '<span class="dl" aria-hidden="true"></span>';
+    document.body.appendChild(dk);
+    const items = $$(".di", dk), lab = $(".dl", dk), BASE = 32, MAX = 56, SIG = 40;
+    let open = false, base = [], left0 = 0, leave, intent, raf = 0, px = null, calm = 0;
+    const size = x => items.forEach((it, i) => { const s = x == null ? 1 : 1 + (MAX / BASE - 1) * Math.exp(-((x - base[i]) ** 2) / (2 * SIG * SIG));
+      const z = (BASE * s).toFixed(1); it.style.width = it.style.height = z + "px"; it.style.borderRadius = (BASE * s * .27).toFixed(1) + "px"; });
+    const label = it => { if (!it) { lab.classList.remove("on"); return; }
+      lab.textContent = it.getAttribute("aria-label"); const r = it.getBoundingClientRect(), d = dk.getBoundingClientRect();
+      lab.style.left = (r.left - d.left + r.width / 2).toFixed(1) + "px"; lab.style.top = (r.bottom - d.top + 7).toFixed(1) + "px"; lab.classList.add("on"); };
+    const btn = () => $("[data-dock]", th);
+    const show = (focus) => {
+      clearTimeout(leave); if (open) return; open = true;
+      const cur = DSORT() || "overall";
+      items.forEach(it => { const on = it.dataset.dk === cur; it.classList.toggle("cur", on); it.setAttribute("aria-selected", on); });
+      dk.classList.add("settle"); size(null); dk.hidden = false;
+      const r = th.getBoundingClientRect(), w = dk.offsetWidth, cx = Math.min(Math.max(r.left + r.width / 2, w / 2 + 12), innerWidth - w / 2 - 12);
+      dk.style.left = cx + scrollX + "px"; dk.style.top = r.bottom + scrollY + 6 + "px";
+      left0 = cx - w / 2; base = items.map(it => it.offsetLeft + BASE / 2);
+      requestAnimationFrame(() => { dk.classList.add("on"); dk.classList.remove("settle"); });
+      if (btn()) btn().setAttribute("aria-expanded", "true");
+      if (focus) { const it = items.find(o => o.classList.contains("cur")) || items[0]; it.focus(); }
+    };
+    const hide = () => { clearTimeout(intent); if (!open) return; open = false; dk.classList.add("settle"); dk.classList.remove("on"); label(null); size(null);
+      if (btn()) btn().setAttribute("aria-expanded", "false"); setTimeout(() => { if (!open) dk.hidden = true; }, 160); };
+    const pick = it => { hide(); calm = Date.now() + 900; sortBy(it.dataset.dk); const b = btn(); if (b) b.focus({ preventScroll: true }); };
+    th.addEventListener("pointerenter", e => { if (e.pointerType !== "mouse" || Date.now() < calm) return; clearTimeout(leave); intent = setTimeout(() => show(false), open ? 0 : 120); });
+    th.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse") return; clearTimeout(intent); leave = setTimeout(hide, 220); });
+    th.addEventListener("click", e => { if (!e.target.closest("[data-dock]")) return; open && e.pointerType !== "mouse" ? hide() : show(e.detail === 0); });
+    th.addEventListener("keydown", e => { if (e.target.closest("[data-dock]") && (e.key === "ArrowDown")) { e.preventDefault(); show(true); } });
+    dk.addEventListener("pointerenter", () => clearTimeout(leave));
+    dk.addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; px = e.clientX - left0; dk.classList.remove("settle");
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (px == null) return; size(px);
+        const it = items.reduce((p, q, i) => Math.abs(base[i] - px) < Math.abs(base[items.indexOf(p)] - px) ? q : p, items[0]); label(it); }); });
+    dk.addEventListener("pointerleave", e => { if (e.pointerType !== "mouse") return; px = null; dk.classList.add("settle"); size(null); label(null); leave = setTimeout(hide, 220); });
+    dk.addEventListener("click", e => { const it = e.target.closest(".di"); if (it) pick(it); });
+    dk.addEventListener("keydown", e => {
+      const i = items.indexOf(document.activeElement);
+      if (e.key === "Escape") { e.preventDefault(); hide(); if (btn()) btn().focus(); return; }
+      const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (k && i >= 0) { e.preventDefault(); const it = items[(i + k + items.length) % items.length]; it.focus(); }
+    });
+    dk.addEventListener("focusin", e => { const it = e.target.closest(".di"); if (!it) return; dk.classList.add("settle"); size(base[items.indexOf(it)]); requestAnimationFrame(() => label(it)); });
+    dk.addEventListener("focusout", e => { if (!dk.contains(e.relatedTarget) && !th.contains(e.relatedTarget)) hide(); });
+    document.addEventListener("pointerdown", e => { if (open && !dk.contains(e.target) && !th.contains(e.target)) hide(); });
+    addEventListener("scroll", () => { if (open) hide(); }, { passive: true });
   }
 
   // ---- tabs (ARIA) -------------------------------------------------------------------------------------------------
@@ -1018,7 +1106,6 @@
   function wire() {
     document.addEventListener("click", e => {
       const kr = e.target.closest(".krl[data-chart], [data-chart-link]"); if (kr) showChart(kr.dataset.chart || kr.dataset.chartLink);
-      const dv = e.target.closest("[data-view]"); if (dv) { $("#lb-view")._sel(dv.dataset.view); $("#leaderboard").scrollIntoView(); return; }
       const bm = e.target.closest("[data-bm]"); if (bm) { boardMode = bm.dataset.bm; board(); return; }
       const dm = e.target.closest("[data-domain]"); if (dm) { openDomain(dm.dataset.domain); return; }
       const md = e.target.closest("[data-model]:not(tr)"); if (md) { openModel(BY[md.dataset.model]); return; }
@@ -1043,12 +1130,12 @@
   }
 
   function init() {
-    nav(); board(); kres(); leaderboardControls(); table(); dgrid(); dgridControls(); insightsControls(); insights();
+    nav(); board(); kres(); table(); leaderboardControls(); insightsControls(); insights();
     demo(); benchmark(); wire(); infos(); logoMotion(); systemOne(); highlights();
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));
     else if (q.get("model") && BY[q.get("model")]) openModel(BY[q.get("model")]);
-    window.SOA = { openDomain, openModel: k => openModel(BY[k] || M.find(m => m.key === k)), view: id => $("#lb-view")._sel(id), chart: showChart, board: k => { boardMode = k; board(); } };
+    window.SOA = { openDomain, openModel: k => openModel(BY[k] || M.find(m => m.key === k)), sortBy, chart: showChart, board: k => { boardMode = k; board(); } };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

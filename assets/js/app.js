@@ -592,6 +592,29 @@
     $("#dtable").innerHTML = `<thead><tr><th>Family</th><th>Domain</th><th>Tasks</th><th class="tiers">Tasks per tier</th><th class="src">Sources</th></tr></thead><tbody>${rows}</tbody>`;
   }
 
+  // ---- logo: the O unfolds the full name when the pointer comes near it ---------------------------------------------
+  function logoMotion() {
+    const svg = $(".logo-anim"); if (!svg) return;
+    const ring = svg.querySelector(".lg-ring-rot");
+    let open = false, raf = 0, px = 0, py = 0;
+    const set = o => { if (o !== open) { open = o; svg.classList.toggle("open", o); } };
+    addEventListener("pointermove", e => {
+      if (e.pointerType !== "mouse") return;
+      px = e.clientX; py = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = ring.getBoundingClientRect(), d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height / 2));
+        const b = svg.getBoundingClientRect(), m = 36;            // stays open while the pointer is over the name
+        if (!open && d < r.width * .85) set(true);
+        else if (open && (px < b.left - m || px > b.right + m || py < b.top - m || py > b.bottom + m)) set(false);
+      });
+    }, { passive: true });
+    svg.addEventListener("click", e => { if (e.pointerType !== "mouse") set(!open); });
+    svg.addEventListener("focus", () => set(true)); svg.addEventListener("blur", () => set(false));
+    svg.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); set(!open); } });
+  }
+
   // ---- wiring ------------------------------------------------------------------------------------------------------
   function wire() {
     document.addEventListener("click", e => {
@@ -620,7 +643,7 @@
 
   function init() {
     nav(); board(); kres(); leaderboardControls(); table(); dgrid(); insightsControls(); insights();
-    demo(); benchmark(); wire();
+    demo(); benchmark(); wire(); logoMotion();
     const q = new URLSearchParams(location.search);
     if (q.get("domain") && DOM[q.get("domain")]) openDomain(q.get("domain"));
     else if (q.get("model") && BY[q.get("model")]) openModel(BY[q.get("model")]);

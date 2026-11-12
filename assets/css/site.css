@@ -76,7 +76,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   background: radial-gradient(600px 300px at 12% 0%, rgba(168, 58, 82, .07), transparent 70%), radial-gradient(700px 320px at 92% 8%, rgba(44, 106, 168, .07), transparent 70%); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 56px; align-items: start; }
 .hero-logo { margin: 0 0 24px; }
-.hero-logo img { display: block; width: min(100%, 452px); height: auto; }
+.hero-logo svg { display: block; max-width: 100%; height: auto; overflow: visible; cursor: pointer; outline: none; }
 h1 { font: 400 clamp(32px, 3.3vw, 46px)/1.06 var(--display); letter-spacing: -.015em; margin: 0; color: var(--ink); }
 h1 em { font-style: italic; color: var(--cap); }
 h1 em.r { color: var(--rel); }
@@ -564,4 +564,21 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
   .lb .mcell small { white-space: normal; }
   .search { width: 100%; } .search input { width: 100%; }
   .lb td.c-n .rcell .meter { display: none; }
+}
+
+/* ---- animated logo ---- */
+/* At rest "SO-Arena"; .open: the O turns once while "ystem" and "ne" unfold out of it. One easing for every part. */
+.logo-anim { --ease: cubic-bezier(.65, 0, .35, 1); --t: .9s; }
+.logo-anim g { transform-box: view-box; transition: transform var(--t) var(--ease), opacity calc(var(--t) * .55) var(--ease); }
+.logo-anim .lg-ring-pos { transform: translateX(var(--ring-dx)); }
+.logo-anim .lg-arena { transform: translateX(var(--arena-dx)); }
+.logo-anim .lg-ystem { opacity: 0; transform: translateX(var(--ystem-dx)) scaleX(.4); }
+.logo-anim .lg-ne { opacity: 0; transform: translateX(var(--ne-dx)) scaleX(.4); }
+.logo-anim.open .lg-ring-pos, .logo-anim.open .lg-arena, .logo-anim.open .lg-ystem, .logo-anim.open .lg-ne { transform: none; opacity: 1; }
+.logo-anim.open .lg-ystem, .logo-anim.open .lg-ne { transition-delay: 0s, calc(var(--t) * .28); }
+.logo-anim.open .lg-ring-rot { transform: rotate(360deg); }
+.logo-anim:focus-visible { outline: 2px solid var(--rel); outline-offset: 6px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .logo-anim g { transition: opacity .2s linear; }
+  .logo-anim.open .lg-ring-rot { transform: none; }
 }

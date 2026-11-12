@@ -689,3 +689,5 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .kres { margin-top: 40px; }
 .run pre { font-size: 12px; }
 
+/* race: one speed for both bars, so each ends at its time; System One's bar stays a short stub */
+.race .r1 .trk i { width: calc(100% * 113 / 2698); min-width: 5px; }

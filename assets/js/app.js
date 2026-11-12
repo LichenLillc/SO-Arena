@@ -112,8 +112,9 @@
       <ol class="board-list">${list.map(m => `<li><span class="rk">${rk.get(m.key)}</span>${logo(m, 26)}
         <button type="button" class="who" data-model="${slug(m)}"><b>${esc(m.name)}</b><span>${meta(m)}</span></button>
         <span class="mx"><span class="track"><span class="meter" aria-hidden="true"><i style="--w:${(100 * val(m) / BMAX).toFixed(1)}%;--c:${c}"></i></span>${cap ? refBand : ""}</span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span>
-          <span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span></span><span class="chev" aria-hidden="true">›</span></li>`).join("")}</ol>
-      <div class="board-foot"><span class="keys">${cap ? `<span><i class="k-ref"></i>GPT-6 Luna ${f1(LUNA.score)} (System Two)</span>` : ""}<span><i class="k-lat"></i>Latency per task</span></span><a href="#leaderboard">Full leaderboard →</a></div>`;
+          ${cap ? `<span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span>`
+            : `<span class="meter thin" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:var(--cap)"></i></span><span class="v lat" title="Score">${f2(m.score)}</span>`}</span><span class="chev" aria-hidden="true">›</span></li>`).join("")}</ol>
+      <div class="board-foot"><span class="keys">${cap ? `<span><i class="k-ref"></i>GPT-6 Luna ${f1(LUNA.score)} (System Two)</span>` : ""}${cap ? `<span><i class="k-lat"></i>Latency per task</span>` : `<span><i class="k-lat" style="background:var(--cap)"></i>Score</span>`}</span><a href="#leaderboard">Full leaderboard →</a></div>`;
     host.dataset.anim = "0";
     requestAnimationFrame(() => setTimeout(() => { host.dataset.anim = "1"; }, 60));
   }

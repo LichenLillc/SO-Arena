@@ -1162,3 +1162,10 @@ section[id] { scroll-margin-top: -87px; }
 /* the whole word is centred: the drawing shifts between the resting and the open centre with the letters (user) */
 .logo-anim .lg-all { transform-box: view-box; transform: translateX(var(--c-rest, 0px)); transition: transform var(--t) var(--move); }
 .logo-anim.open .lg-all { transform: translateX(var(--c-open, 0px)); }
+/* the unfolding letters: no masks; each fades in as the moving S or "-Arena" passes it (--d from the builder) and
+   fades out at once on closing; the centring shift keeps the letters' timing (user) */
+.logo-anim .lg-l { opacity: 0; transition: opacity .14s ease; }
+.logo-anim.open .lg-l { opacity: 1; transition: opacity .2s ease var(--d, 0ms); }
+.logo-anim .lg-all { transition: transform calc(var(--t) * 1.15) var(--turn); }
+.logo-anim:not(.open) .lg-all { transition: transform calc(var(--t) * .95) var(--turn) .09s; }
+@media (prefers-reduced-motion: reduce) { .logo-anim .lg-l, .logo-anim .lg-all { transition: none !important; } }

@@ -738,6 +738,16 @@
     } else {
       gap(host, LG, insKey);
     }
+    host._w = Math.round(host.clientWidth);                  // the width this chart was drawn for
+  }
+  // A chart is drawn for its box's width. If the box changes width afterwards (the window resizes, or, after a
+  // reload, the stylesheet applies only after the first draw, as Safari can do), that chart is drawn again.
+  function watchPanels() {
+    if (!("ResizeObserver" in window)) { let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(insights, 150); }); return; }
+    const ro = new ResizeObserver(es => es.forEach(e => { const h = e.target, P = PANELS.find(q => $(q.host) === h), w = Math.round(e.contentRect.width);
+      if (!P || !w || Math.abs(w - (h._w || 0)) <= 2) return;
+      clearTimeout(h._rt); h._rt = setTimeout(() => drawPanel(P), 80); }));
+    PANELS.forEach(P => ro.observe($(P.host)));
   }
   // least squares y = a x² + b x + c (centred x, for a well-conditioned solve)
   function quad(X, Y) {
@@ -1275,7 +1285,7 @@
       $$(".rv").forEach(n => io.observe(n));
       setTimeout(() => $$(".rv:not(.in)").forEach(n => { if (n.getBoundingClientRect().top < innerHeight * 1.2) n.classList.add("in"); }), 2000);
     } else $$(".rv").forEach(n => n.classList.add("in"));
-    let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(insights, 150); });
+    watchPanels();
     // chart labels are measured: draw again once the web font has loaded, so the measured widths are the real ones
     if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(() => insights());
   }

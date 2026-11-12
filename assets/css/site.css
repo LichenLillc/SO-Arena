@@ -712,3 +712,108 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
   .hero .kr, .hero .kr:nth-child(2n) { padding: 16px 0; border-left: 0; }
   .hero .kr + .kr { border-top: 1px solid var(--line); }
 }
+
+/* ---- round 5: hero board reorder (FLIP), sliding toggle thumb ---- */
+.board-list { position: relative; }
+.board-list li.enter { opacity: 0; transform: translateY(8px); }
+.board-list li.enter.in { opacity: 1; transform: none; transition: opacity .3s ease .18s, transform .35s cubic-bezier(.2, .8, .2, 1) .18s; }
+.board-list li.ghost { position: absolute; left: 0; right: 0; pointer-events: none; transition: opacity .2s ease; }
+.board-list li.ghost.out { opacity: 0; }
+.seg2 { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; isolation: isolate; }
+.seg2 button { position: relative; z-index: 1; transition: color .2s; }
+.seg2 button[aria-pressed="true"] { background: transparent; box-shadow: none; }
+.seg2::before { content: ""; position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 4px); border-radius: 6px; background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); transition: transform .22s cubic-bezier(.2, .8, .2, 1); }
+.seg2[data-on="rel"]::before { transform: translateX(calc(100% + 2px)); }
+.arr { display: inline-block; transition: transform .12s ease; }
+a:hover > .arr, .krl:hover .arr { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) { .seg2::before { transition: none; } }
+
+/* ---- round 5: the leaderboard row shows its results as bars across the full width ---- */
+.lb .c-m { width: 236px; }
+.lb .c-score { width: auto; min-width: 250px; padding-right: 20px; }
+.lb .scell { justify-content: flex-start; gap: 14px; }
+.lb .scell .bt { flex: 1; min-width: 110px; max-width: 340px; }
+.lb .scell .bt .meter { width: 100%; height: 6px; }
+.lb .scell .bt .ref { top: -4px; bottom: -4px; width: 2px; opacity: .75; }
+.lb .scell .num { min-width: 50px; text-align: right; }
+.lb .c-prof { width: 200px; padding: 0 20px 0 10px; }
+.lb .c-prof .dprof { height: 26px; max-width: 176px; gap: 7px; }
+.lb thead th.c-score, .lb thead th.c-prof { text-align: left; }
+.lb thead th.c-score button { justify-content: flex-start; }
+.lb .rcell, .lb .lcell { display: inline-flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.lb .rcell .meter { width: 84px; height: 5px; }
+.lb .lcell .meter { width: 72px; height: 5px; }
+.lb .num { display: inline-block; min-width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
+.lb .lcell .num { min-width: 58px; }
+.lb .meter.over { position: relative; }
+.lb .meter.over::after { content: ""; position: absolute; top: 0; bottom: 0; right: 14px; width: 3px; background: #fff; transform: skewX(-30deg); }
+.lb-keys { margin: 0; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; font-size: 12.5px; color: var(--muted); }
+.lb-keys > span, .lb-keys .fk > span { display: inline-flex; align-items: center; gap: 6px; }
+.lb-keys .fk { gap: 12px; }
+.lb-keys .fk i { width: 8px; height: 8px; border-radius: 2px; }
+.lb-keys .k-ref { width: 2px; height: 12px; border-radius: 1px; background: var(--s2); }
+@media (max-width: 1000px) { .lb-keys .fk { display: none; } .lb .c-m { width: auto; } }
+@media (max-width: 1080px) { .lb .scell .bt { max-width: 220px; } .lb .rcell .meter { width: 60px; } .lb .lcell .meter { width: 52px; } }
+@media (max-width: 760px) {
+  .lb .scell .bt, .lb td.c-n .lcell .meter { display: none; }
+  .lb .c-score { min-width: 0; padding-right: 0; }
+  .lb .num { min-width: 0; }
+  .lb-keys { display: none; }
+}
+
+/* ---- round 5: System One popover: lighter dim, quick shared exit, steady "thinking" ---- */
+.s1 { transition: background-size .14s ease-in, text-decoration-color .14s; }
+.s1.on { transition: background-size .4s cubic-bezier(.65, 0, .35, 1), text-decoration-color .3s; }
+.spot { transition: opacity .12s ease-in;
+  background: radial-gradient(ellipse var(--rx, 260px) var(--ry, 120px) at var(--x, 50%) var(--y, 30%), transparent 55%, rgba(12, 14, 18, .11) 100%); }
+.spot.on { transition: opacity .2s ease-out; }
+.s1pop { transform: translateY(4px); transition: opacity .12s ease-in, transform .12s ease-in; }
+.s1pop.on { transition: opacity .18s ease-out, transform .18s ease-out; }
+.race .t.wait::after { width: 1em; animation: dots2 1s steps(4) infinite; }
+@keyframes dots2 { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+/* ---- round 5: the logo closes in reverse order: ring words fade first, then the letters fold back ---- */
+.logo-anim .lg-words { transition: opacity .1s ease-in; }
+.logo-anim:not(.open) .lg-s, .logo-anim:not(.open) .lg-arena, .logo-anim:not(.open) .lg-cy, .logo-anim:not(.open) .lg-cn { transition: transform calc(var(--t) * .8) var(--move) .09s; }
+.logo-anim:not(.open) .lg-ring { transition: transform calc(var(--t) * .95) var(--turn) .09s; }
+@media (prefers-reduced-motion: reduce) {
+  .logo-anim:not(.open) .lg-s, .logo-anim:not(.open) .lg-arena, .logo-anim:not(.open) .lg-cy, .logo-anim:not(.open) .lg-cn, .logo-anim:not(.open) .lg-ring { transition: none; }
+}
+
+/* ---- round 5: copy buttons keep their width and confirm with a check; readable selection on dark code ---- */
+.copy-code, .bib .copy { min-width: 78px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: color .12s, border-color .12s, background .12s; }
+.copy-code svg, .bib .copy svg { width: 13px; height: 13px; }
+.copy-code.ok, .bib .copy.ok { color: #2f7d57; border-color: #a9d3bb; }
+.code ::selection { background: rgba(255, 255, 255, .28); color: #fff; }
+/* quick, quiet hover transitions */
+.btn, .chip, .seg button, .nav-links a, .board-foot a, .krl h3 { transition: color .12s, background-color .12s, border-color .12s; }
+/* ---- round 5: phone menu: the icon turns into a cross; the menu drops over the page instead of pushing it down ---- */
+.burger span { transition: transform .2s cubic-bezier(.2, .8, .2, 1), opacity .15s; transform-origin: center; }
+.burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(5.6px) rotate(45deg); }
+.burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-5.6px) rotate(-45deg); }
+@media (max-width: 1080px) {
+  .sheet-nav { display: grid !important; position: absolute; top: 100%; left: 0; right: 0; width: auto; margin: 0; padding: 8px 24px 14px; grid-template-columns: 1fr 1fr; gap: 2px;
+    background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 16px 30px -18px rgba(15, 18, 22, .25);
+    opacity: 0; transform: translateY(-6px); visibility: hidden; pointer-events: none; transition: opacity .18s ease, transform .22s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .22s; }
+  .sheet-nav.open { opacity: 1; transform: none; visibility: visible; pointer-events: auto; transition: opacity .18s ease, transform .22s cubic-bezier(.2, .8, .2, 1); }
+}
+@media (prefers-reduced-motion: reduce) { .burger span, .sheet-nav { transition: none !important; } }
+/* the board's reliability bar and value sit in fixed slots */
+.lb td.c-n .rcell .num { min-width: 34px; }
+/* ---- round 5: the drawer slides out as it closes; the sticky head names the model once scrolled ---- */
+dialog.drawer[open] { animation: slide .26s cubic-bezier(.32, .72, 0, 1); }
+dialog.drawer.out { animation: slideout .18s ease-in forwards; }
+dialog.drawer.out::backdrop { animation: fadeout .18s ease-in forwards; }
+@keyframes slideout { to { transform: translateX(24px); opacity: 0; } }
+@keyframes fadeout { to { opacity: 0; } }
+.dr-head { background: #fff; }
+#dr-kicker.named { font: 650 15px/1.2 var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink); }
+.s1pop { top: 0; left: 0; }             /* parked at the top while hidden, so it adds no blank space under the footer */
+/* chart labels get a white halo, so lines, whiskers and frontiers never run through the text */
+.chart text.lbl, .chart text.tick { paint-order: stroke; stroke: #fff; stroke-width: 3.5px; stroke-linejoin: round; }
+@media (max-width: 900px) and (min-width: 761px) {
+  .lb .c-score { min-width: 0; padding-right: 10px; } .lb .scell .bt { min-width: 60px; max-width: 120px; }
+  .lb .rcell .meter, .lb .lcell .meter { display: none; } .lb .c-m { min-width: 180px; }
+}

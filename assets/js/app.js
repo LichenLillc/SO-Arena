@@ -128,16 +128,16 @@
     const dots = `<div class="mini"><div class="mr one"><span class="ml">−50</span><span class="mt dots big"><b style="left:${gx(0).toFixed(1)}%"></b>${D.domains.map((d, i) =>
         `<i style="left:${gx(gaps[i]).toFixed(1)}%;background:${FAM[d.family].color}" title="${esc(d.short)}: ${sg(gaps[i])}"></i>`).join("")}</span><span class="mv">+10</span></div></div>`;
     const tiles = [
-      ["leaderboard", "", `${f1(best.score)}<small>&nbsp;vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna, our System Two reference, by about ten points.",
+      ["leaderboard", "", `${f1(best.score)}<small>&nbsp;vs ${f1(LUNA.score)}</small>`, "System Two still leads", "The best System One models trail GPT-6 Luna by about ten points. Luna is strong enough to serve as the System Two reference, and one reference keeps the charts clear; GPT-6 Sol scores 82.3.",
         mini([[esc(best.name), best.score, "var(--cap)"], ["GPT-6 Luna", LUNA.score, "var(--s2)"]], 100, f1)],
       ["results", "speed", "&lt;&thinsp;0.3<small> s</small>", "System One is fast", "Every open System One model answers within 0.3 s per task on one H100; GPT-6 is timed through its API.",
         mini([["Slowest open", slow.latency.mean_ms, "var(--lat)"], ["GPT-6 Luna", LUNA.latency.mean_ms, "var(--s2)"]], 3000, sec)],
       ["reliability", "rel", `${ord(RANK_R.get(best.key))}`, "Top score ≠ most reliable", `${esc(best.name)}, the top scorer, is ${ord(RANK_R.get(best.key))} in reliability.`,
         mini([[esc(r1.name), R_(r1), "var(--rel)"], [esc(r2.name), R_(r2), "var(--rel)"], [esc(best.name), R_(best), "var(--rel)"]], 100, f1)],
-      ["results", "gap", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each of the 11 domains (leaderboard tier); dots coloured by domain family.`, dots],
+      ["leaderboard", "view:t-domains", `${sg(lo)}<small>&nbsp;to ${sg(hi)}</small>`, "The gap depends on the domain", `${esc(best.name)} minus GPT-6 Luna in each of the 11 domains (leaderboard tier); dots coloured by domain family.`, dots],
     ];
     const CAP = ["Score", "Mean time per task", "Reliability R", "Per domain, by family"];
-    $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz], i) => `<div class="kr"><a class="krl" href="#${sec_}"${k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3></a>
+    $("#kres").innerHTML = tiles.map(([sec_, k, big, h, p, viz], i) => `<div class="kr"><a class="krl" href="#${sec_}"${k.startsWith("view:") ? ` data-view="${k.slice(5)}"` : k ? ` data-chart="${k}"` : ""}><div class="big">${big}</div><h3>${h}</h3></a>
       <button class="info" type="button" data-info="${esc(p)}">i</button>${viz}<span class="kcap">${CAP[i]}</span></div>`).join("");
   }
 
@@ -200,10 +200,10 @@
       if (typeof va === "string") return T.dir * va.localeCompare(vb);
       return T.dir * (va - vb) || b.score - a.score;
     });
-    const refs = order(M.filter(m => m.group === "s2" && pass(m))), s1 = order(M.filter(m => m.group !== "s2" && pass(m)));
+    const refs = order(M.filter(m => m.group === "s2" && pass(m))), s1 = order(M.filter(m => isS1(m) && pass(m))), hy = order(M.filter(m => m.group === "auto" && pass(m)));
     const grp = (label, list) => list.length ? `<tbody><tr class="grp"><th colspan="${COLS.length}" scope="rowgroup">${label}</th></tr>${list.map(row).join("")}</tbody>` : "";
-    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) +
-      (refs.length + s1.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`);
+    $("#lb").innerHTML = head + grp("System Two reference", refs) + grp("System One", s1) + grp("Hybrid: switches to System Two, not ranked", hy) +
+      (refs.length + s1.length + hy.length ? "" : `<tbody><tr><td colspan="${COLS.length}" class="l empty">No model matches.</td></tr></tbody>`);
   }
   function dgrid() {
     const ids = D.domains.map(d => d.id), t3 = top(S1, o => o.score, 3);
@@ -606,13 +606,13 @@
     const steps = [
       ["Sources and quality control", "40", "established sources",
         "",
-        ['<span>review: people + LLM</span>→<span class="ok">kept</span>or<span class="no">dropped</span>']],
+        ['<span>reviewed by people and an LLM</span>→<span class="ok">kept</span>/<span class="no">dropped</span>']],
       ["Organization and formulation", "11", "domains in five families",
         "",
         [`<span>${t.static.toLocaleString("en-US")} static</span><span>${(t.tools + t.web).toLocaleString("en-US")} sandbox</span>`, "<span>Easy</span>→<span>Medium</span>→<span>Hard</span>"]],
       ["Evaluation", t.leaderboard_tasks.toLocaleString("en-US"), "leaderboard tasks (hardest tier per domain)",
         "",
-        ["<span>scored vs. verified label</span>", "<span>A B C → C A B</span><span>A ▢ C → Null</span>"]],
+        ["<span>scored against the verified label</span>", "<span>then shuffled and with the answer removed</span>"]],
     ];
     $("#steps").innerHTML = steps.map(([h, big, cap, p, flow], i) => `<div class="step"><span class="n">STEP 0${i + 1}</span><div class="big">${big}</div><div class="big-cap">${cap}</div><h3>${h}</h3>${p ? `<p>${p}</p>` : ""}${flow.map(f => `<div class="flow">${f}</div>`).join("")}</div>`).join("");
     const rows = D.families.map(f => {

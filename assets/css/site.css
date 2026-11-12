@@ -586,7 +586,7 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 }
 
 /* ---- "System One" in the title: a quiet underline; hover: highlighter sweep, spotlight, popover with a speed race ---- */
-.s1 { position: relative; z-index: 61; cursor: help; outline: none; border-radius: 4px;
+.s1 { position: relative; cursor: help; outline: none; border-radius: 4px;
   text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: .16em; text-decoration-color: rgba(15, 18, 22, .22);
   background: linear-gradient(transparent 58%, #ffe38a 58%, #ffe38a 92%, transparent 92%) no-repeat 0 0 / 0% 100%;
   transition: background-size .45s cubic-bezier(.65, 0, .35, 1), text-decoration-color .3s; }
@@ -681,3 +681,10 @@ dialog.drawer::backdrop { background: rgba(15, 18, 22, .28); animation: fade .28
 .blk2.gone { transform: none; opacity: 1; border-style: dashed; border-color: #c4c8cd; color: #c4c8cd; background: transparent; animation: drop .5s ease; }
 @keyframes drop { 0% { transform: translateY(0); opacity: 1; } 45% { transform: translateY(18px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 .hero-grid { align-items: center; }
+
+/* ---- round 4 ---- */
+.s1.on { z-index: 61; }                 /* above the spotlight only while open, so it never covers the sticky nav */
+.hero { padding-top: 48px; }
+.hero-logo { margin-bottom: 26px; }
+.kres { margin-top: 40px; }
+.run pre { font-size: 12px; }

@@ -324,12 +324,13 @@
     if (closed(m)) { const k = r * 1.22; S("path", { class: "mk", d: `M${x} ${y - k}L${x + k} ${y}L${x} ${y + k}L${x - k} ${y}Z`, fill: colorOf(m), stroke: "#fff", "stroke-width": 1.5 }, g); }
     else S("circle", { class: "mk", cx: x, cy: y, r, fill: m.group === "auto" ? "#fff" : colorOf(m), stroke: m.group === "auto" ? colorOf(m) : "#fff", "stroke-width": m.group === "auto" ? 2.2 : 1.5 }, g);
   }
-  function labels(svg, items, bounds) {
+  function labels(svg, items, bounds, only) {
     const boxes = items.map(it => ({ x0: it.x - 7, x1: it.x + 7, y0: it.y - 7, y1: it.y + 7 }));
     const hit = b => boxes.some(o => b.x0 < o.x1 && o.x0 < b.x1 && b.y0 < o.y1 && o.y0 < b.y1) || b.x0 < bounds.x0 || b.x1 > bounds.x1 || b.y0 < bounds.y0 || b.y1 > bounds.y1;
     const g = S("g", {}, svg);
     // Highest points first: they are the strongest models, the ones a reader looks for in a crowded corner.
     for (const it of [...items].sort((a, b) => a.y - b.y)) {
+      if (only && !only.has(it.m.key)) continue;              // on narrow screens: label the points that carry the story
       const w = it.label.length * 6.3 + 2, h = 14, gp = 9, dg = 5, far = 24;
       // Next to the point first; if all eight spots are taken, one ring further out with a thin leader line.
       const near = [[it.x + gp, it.y - h / 2, "start"], [it.x - gp - w, it.y - h / 2, "end"], [it.x - w / 2, it.y - gp - h, "middle"], [it.x - w / 2, it.y + gp, "middle"],
@@ -395,7 +396,7 @@
       S("path", { d: fr.map((o, i) => `${i ? "L" : "M"}${xs(o.latency.mean_ms)} ${ys(o.score)}`).join(""), fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.6, "stroke-dasharray": "5 4", "stroke-linejoin": "round", opacity: .7 }, svg);
       const pts = M.map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
       points(svg, pts, o => mtip(o, `<br><span class="m">${ms(o.latency.mean_ms)}</span> <span class="s">mean latency (${o.latency.timing}${o.key === "SII-Decision-4B" ? ", with flash-linear-attention" : ""})</span>`));
-      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b });
+      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 560 ? new Set([...fr, ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null);
       LG.innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
     } else if (insKey === "rel" || insKey === "sn") {
       const { svg, W, H } = frame(host, .56, 340, 520), m = { l: 44, r: 20, t: 30, b: 40 };
@@ -417,7 +418,7 @@
         pts = RL.map(o => ({ m: o, x: xs(o.reliability.S), y: ys(o.reliability.N), label: o.name, aria: `S ${o.reliability.S.toFixed(2)}, N ${o.reliability.N.toFixed(2)}` }));
       }
       points(svg, pts, o => mtip(o, `<br><span class="m">${f1(o.reliability.R)}</span> <span class="s">R · #${RANK_R.get(o.key)} of 18 · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)}</span>`));
-      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b });
+      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 560 ? new Set([...top(RL, R_, 3), ...top(RL, o => o.score, 3), ...RL.filter(closed), ...top(RL, o => -R_(o), 2)].map(o => o.key)) : null);
       LG.innerHTML = sizeLegend(false);
     } else if (insKey === "order") {
       orderChart(host, LG);

@@ -27,7 +27,9 @@
   const M = D.models;
   const FAM = Object.fromEntries(D.families.map(f => [f.id, f]));
   const DOM = Object.fromEntries(D.domains.map(d => [d.id, d]));
-  const isS1 = m => m.group === "open" || m.group === "api";
+  // System One models of the paper; a model added after the paper (m.added) is listed but not ranked, so every
+  // published rank, median and band stays as in the paper
+  const isS1 = m => (m.group === "open" || m.group === "api") && !m.added;
   const S1 = M.filter(isS1);
   const REFS = M.filter(m => m.group === "s2").sort((a, b) => b.score - a.score);
   const LUNA = M.find(m => m.name === "GPT-6 Luna");
@@ -85,7 +87,7 @@
   const TOUCH = matchMedia("(hover: none)").matches;
   const HINT = `<span class="tip-cta"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.2 2.6v8.6l2.2-2 1.5 3.4 1.6-.7-1.5-3.3 3-.2z" fill="currentColor"/></svg>${TOUCH ? "Tap" : "Click"} for details</span>`;
   const mtip = (m, extra = "") => `<b>${esc(m.name)}</b> <span class="s">${meta(m)}</span><br>` +
-    `<span class="m">${f2(m.score)}</span> <span class="s">${RANK.has(m.key) ? `score · #${RANK.get(m.key)} of 18` : m.group === "s2" ? "score · System Two" : "score · not ranked"}</span>${extra}${HINT}`;
+    `<span class="m">${f2(m.score)}</span> <span class="s">${RANK.has(m.key) ? `score · #${RANK.get(m.key)} of 18` : m.group === "s2" ? "score · System Two" : m.added ? "score · added after the paper, not ranked" : "score · not ranked"}</span>${extra}${HINT}`;
 
   // ---- navigation --------------------------------------------------------------------------------------------------
   function nav() {
@@ -239,7 +241,7 @@
     const ref = m.group === "s2";
     return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
       <td class="c-rk">${rankOf(m)}</td>
-      <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}</small></div></div></td>
+      <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}${m.added ? '<span class="tag new" title="Evaluated after the paper (' + m.added + ') on the paper-version release; not ranked among the paper\'s 18 System One models">New</span>' : ""}</small></div></div></td>
       <td class="c-score l${T.sort === "score" ? " sorted" : ""}" data-l="Score"><div class="scell"><span class="track bt"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span>${ref ? "" : refBand}</span><span class="num">${f2(m.score)}</span></div></td>
       <td class="c-prof l${DSORT() ? " sorted" : ""}"><div class="pwrap">${prof(m)}${dbar(m)}</div></td>
       <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? `<span class="rcell"><span class="meter" aria-hidden="true"><i style="--w:${R_(m)}%;--c:var(--rel)"></i></span><span class="num">${f1(R_(m))}</span></span>` : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
@@ -507,12 +509,12 @@
     const tg = D.domains.map(d => { const t = m.tiers[d.id];
       return `<tr><th>${esc(d.short)}</th>${t.All != null ? `<td colspan="4" style="background:${heat(t.All)}">${t.All} <span style="color:var(--muted)">(all tasks)</span></td>` : ["E", "M", "H", "V"].map(k => t[k] == null ? "<td></td>" : `<td style="background:${heat(t[k])}">${t[k]}</td>`).join("")}</tr>`; }).join("");
     openDrawer(m.group === "s2" ? "System Two reference" : m.group === "auto" ? "Hybrid model" : closed(m) ? "Decision API" : "Open-weight model", `
-      <div style="display:flex;gap:14px;align-items:center">${logo(m, 52)}<div><h2 id="dr-title">${esc(m.name)}</h2></div></div>
+      <div style="display:flex;gap:14px;align-items:center">${logo(m, 52)}<div><h2 id="dr-title">${esc(m.name)}${m.added ? '<span class="tag new">New</span>' : ""}</h2></div></div>
       <p class="dr-sub">${meta(m)} · ${closed(m) ? "closed API" : "open weights"} · reasoning: ${esc(m.reasoning.toLowerCase())} · ${m.release_url ? `<a href="${m.release_url}" target="_blank" rel="noopener">${esc(m.release)} ↗</a>` : `<span class="mono">${esc(m.release)}</span>`}</p>
       <div class="kv">
-        <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · <i class="nw">#${rk} of 18</i>` : m.group === "s2" ? " · System Two" : " · not ranked"}</span></div>
-        <div><b class="num">${r ? f1(r.R) : "—"}</b><span><i class="nw">Reliability R</i>${rr ? ` · <i class="nw">#${rr} of 18</i>` : " · measured for System One models only"}</span></div>
-        <div><b class="num">${l ? ms(l.mean_ms) : "—"}</b><span>Mean latency · <i class="nw">${l ? l.timing : ""}</i></span></div>
+        <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · <i class="nw">#${rk} of 18</i>` : m.group === "s2" ? " · System Two" : m.added ? " · added after the paper" : " · not ranked"}</span></div>
+        <div><b class="num">${r ? f1(r.R) : "—"}</b><span><i class="nw">Reliability R</i>${rr ? ` · <i class="nw">#${rr} of 18</i>` : m.added ? " · not measured" : " · measured for System One models only"}</span></div>
+        <div><b class="num">${l ? ms(l.mean_ms) : "—"}</b><span>Mean latency · <i class="nw">${l ? l.timing : m.added ? "not measured" : ""}</i></span></div>
         <div><b class="num">${r ? `${r.S.toFixed(2)} · ${r.N.toFixed(2)}` : l && l.p99_ms ? ms(l.p99_ms) : "—"}</b><span>${r ? "Option-order stability S · null discrimination N" : "99th percentile latency"}</span></div>
       </div>
       <h4 class="label">Domain scores <span style="text-transform:none;letter-spacing:0;font-family:var(--sans)">· leaderboard tier; tick = System One median</span></h4>
@@ -532,7 +534,7 @@
     const counts = d.tiers ? Object.entries(d.tiers).map(([k, v]) => `${({ E: "easy", M: "medium", H: "hard", V: "very hard" })[k]} ${v}`).join(", ") : "no tiers";
     const bars = list.map(m => { const ref = m.group === "s2", a = m.group === "auto";
       return `<li class="${ref ? "ref" : a ? "auto" : ""}"><span class="rk">${isS1(m) ? rk.get(m.key) : ref ? "ref" : "–"}</span>${logo(m, 22)}<button type="button" class="n" data-model="${slug(m)}">${esc(m.name)}</button>
-        <span class="bar"><i style="width:${val(m)}%;--bc:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span class="v">${f1(val(m))}</span><span class="ms">${ms(m.latency.mean_ms)}</span></li>`; }).join("");
+        <span class="bar"><i style="width:${val(m)}%;--bc:${ref ? "var(--s2)" : "var(--cap)"}"></i></span><span class="v">${f1(val(m))}</span><span class="ms">${m.latency ? ms(m.latency.mean_ms) : "—"}</span></li>`; }).join("");
     openDrawer(f.name, `<h2 id="dr-title">${esc(d.name)}</h2>
       <p class="dr-lead">${DESC[id]}</p>
       <p class="dr-sub">${d.tasks} tasks (${counts}). The leaderboard uses ${d.leaderboard_tier === "All tasks" ? "all tasks" : id === "math" ? "the hard and very hard tiers" : "the hard tier"} (${d.leaderboard_tasks} tasks).
@@ -692,9 +694,9 @@
       const fr = []; let best = -1;
       for (const o of [...S1].sort((a, b) => a.latency.mean_ms - b.latency.mean_ms || b.score - a.score)) if (o.score > best) { fr.push(o); best = o.score; }
       S("path", { d: fr.map((o, i) => `${i ? "L" : "M"}${xs(o.latency.mean_ms)} ${ys(o.score)}`).join(""), fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.6, "stroke-dasharray": "5 4", "stroke-linejoin": "round", opacity: .7 }, svg);
-      const pts = M.map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
+      const pts = M.filter(o => o.latency).map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
       points(svg, pts, o => mtip(o, `<br><span class="m">${ms(o.latency.mean_ms)}</span> <span class="s">mean latency (${o.latency.timing}${o.key === "SII-Decision-4B" ? ", with flash-linear-attention" : ""})</span>`));
-      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...fr.filter((o, i) => !i || i === fr.length - 1 || o.key === "StartLux-4B-Instant"), ...top(S1, o => o.score, 3), ...M.filter(o => closed(o) || o.group === "auto")].map(o => o.key)) : null,
+      labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...fr.filter((o, i) => !i || i === fr.length - 1 || o.key === "StartLux-4B-Instant"), ...top(S1, o => o.score, 3), ...M.filter(o => o.latency && (closed(o) || o.group === "auto"))].map(o => o.key)) : null,
         lineBoxes(fr.map(o => [xs(o.latency.mean_ms), ys(o.score)])));
       LG.innerHTML = sizeLegend(true, `<span><i class="ln dash"></i>Pareto frontier</span>`);
     } else if (insKey === "null" || insKey === "sn") {

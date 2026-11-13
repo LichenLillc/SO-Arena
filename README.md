@@ -27,6 +27,11 @@ generated from the paper's sources by `build_site_data.py` in the authors' worki
 overall scores against the paper's figure data, every domain score against the paper's tier table, and
 `R = sqrt(S N)`. The page shows results only; it contains no benchmark items.
 
+Models evaluated after the paper are marked `added` in the data file and "New" on the page: they are listed by
+score but not ranked, so every rank, median and band stays as published. Gemini Decision 1 (Google,
+`gemini-decision-1`, 2026-11-13) was run on the paper-version release with the released evaluator (`jev run` /
+`jev score`); its leaderboard, domain and tier scores are shown, while reliability and latency were not measured.
+
 ## Preview locally
 
 ```sh

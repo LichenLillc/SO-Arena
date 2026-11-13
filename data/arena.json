@@ -2510,6 +2510,89 @@
     "min": 64.67,
     "max": 67.57
    }
+  },
+  {
+   "key": "Gemini Decision 1",
+   "name": "Gemini Decision 1",
+   "developer": "Google",
+   "size": null,
+   "group": "api",
+   "reasoning": "Not disclosed",
+   "release": "gemini-decision-1",
+   "release_url": null,
+   "logo": null,
+   "score": 61.2497,
+   "domains": {
+    "sentiment": 82.25,
+    "intent": 49.5242,
+    "math": 58.0,
+    "code": 72.8571,
+    "science": 61.25,
+    "knowledge": 92.0,
+    "safety": 65.1899,
+    "retrieval": 63.0,
+    "verification": 30.0,
+    "tools": 59.6154,
+    "web": 40.0596
+   },
+   "tiers": {
+    "sentiment": {
+     "All": 82
+    },
+    "intent": {
+     "E": 99,
+     "M": 80,
+     "H": 50
+    },
+    "math": {
+     "E": 98,
+     "M": 94,
+     "H": 66,
+     "V": 40
+    },
+    "code": {
+     "E": 92,
+     "M": 70,
+     "H": 73
+    },
+    "science": {
+     "E": 96,
+     "M": 91,
+     "H": 61
+    },
+    "knowledge": {
+     "All": 92
+    },
+    "safety": {
+     "E": 83,
+     "M": 75,
+     "H": 65
+    },
+    "retrieval": {
+     "E": 97,
+     "M": 76,
+     "H": 63
+    },
+    "verification": {
+     "E": 90,
+     "M": 89,
+     "H": 30
+    },
+    "tools": {
+     "E": 94,
+     "M": 84,
+     "H": 60
+    },
+    "web": {
+     "E": 100,
+     "M": 77,
+     "H": 40
+    }
+   },
+   "reliability": null,
+   "latency": null,
+   "note": "Added after the paper (2026-11-13): run on the paper-version release with the released evaluator; reliability and latency not measured.",
+   "added": "2026-11-13"
   }
  ],
  "analysis": [
@@ -2736,7 +2819,8 @@
   "leaderboard_tasks": 1232,
   "domains": 11,
   "families": 5,
-  "models": 21
+  "models": 21,
+  "added_models": 1
  },
  "provenance": {
   "ranking": {

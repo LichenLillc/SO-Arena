@@ -1016,7 +1016,7 @@ section[id] { scroll-margin-top: -87px; }
 }
 .hlpop .vd.ok { color: #1f6b47; }
 @media (max-width: 520px) {
-  .hero .cta { display: grid; grid-template-columns: 1fr 1fr; }
+  .hero .cta { display: grid; grid-template-columns: 1fr 1fr 1fr; }
   .hero .cta .btn { justify-content: center; } .hero .cta .btn-dark { grid-column: 1 / -1; }
   .board-head .label { white-space: nowrap; font-size: 10px; letter-spacing: .05em; }
 }
@@ -1169,3 +1169,7 @@ section[id] { scroll-margin-top: -87px; }
 .logo-anim .lg-all { transition: transform calc(var(--t) * 1.15) var(--turn); }
 .logo-anim:not(.open) .lg-all { transition: transform calc(var(--t) * .95) var(--turn) .09s; }
 @media (prefers-reduced-motion: reduce) { .logo-anim .lg-l, .logo-anim .lg-all { transition: none !important; } }
+
+/* the Paper link makes four header items: keep the name on one line on the smallest phones */
+.brand { white-space: nowrap; }
+@media (max-width: 360px) { .ext { padding: 7px 6px; } }

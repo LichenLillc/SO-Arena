@@ -653,10 +653,10 @@
   const INS = {
     speed: { title: "Score against latency", sub: "Dashed line: the best score reachable at each speed.",
       note: "Mean latency per task: open weights on one H100 GPU, APIs end to end." },
-    rrank: { title: "Reliability ranking", sub: "The " + NR + " System One models with reliability measured, by R, with each model's rank by score: the most reliable are not the top scorers.",
+    rrank: { title: "Reliability ranking", sub: "The " + NR + " System One models by reliability R, with each model's rank by score: the most reliable are not the top scorers.",
       note: "R = √(S·N) × 100. S: option-order stability; N: null discrimination; both from the reliability runs. Score rank: the leaderboard." },
     null: { title: "Noticing a missing answer, against score", sub: "Models with similar scores differ widely in N; the score says little about it. Dashed: trend; band: 90% of the models.",
-      note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the 16 System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
+      note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the " + (NR - 2) + " System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
     sn: { title: "Decision reliability", sub: "Option-order stability S against null discrimination N; dashed curves mark constant R.", note: "Jeva-4B's S is 1 by construction (its option cache)." },
     scale: { title: "Does a larger, more capable backbone close the gap?", sub: "Gain from the smaller model (on Qwen3.5) to the 27B model (on the newer Qwen3.8-27B) of the same family, mean of four families, on the medium and hard tiers.",
       note: "The four families released in a smaller and a 27B size: every smaller model builds on Qwen3.5, every larger one on Qwen3.8-27B." },
@@ -708,7 +708,7 @@
       if (insKey === "null") {
         const xs = v => m.l + (v - 28) / 46 * (W - m.l - m.r), ys = v => H - m.b - v / .9 * (H - m.t - m.b);
         axes(svg, W, H, m, xs, ys, [30, 40, 50, 60, 70].map(v => [v, v]), [0, .2, .4, .6, .8].map(v => [v, v.toFixed(1)]), "Score →", "↑ Null discrimination N");
-        // trend and band as in the paper: quadratic fit over the 16 models other than Laya and Jeva-4B; the band's
+        // trend and band as in the paper: quadratic fit over the models other than Laya and Jeva-4B (16 in the paper); the band's
         // half-width is the 90th percentile of the absolute residuals
         const F = RL.filter(o => o.name !== "Laya" && o.name !== "Jeva-4B"), fit = quad(F.map(o => o.score), F.map(o => o.reliability.N));
         const res = F.map(o => Math.abs(o.reliability.N - fit.f(o.score))).sort((a, b) => a - b), q = .9 * (res.length - 1), hw = res[Math.floor(q)] + (q % 1) * (res[Math.ceil(q)] - res[Math.floor(q)]);

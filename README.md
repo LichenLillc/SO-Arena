@@ -31,7 +31,8 @@ overall scores against the paper's figure data, every domain score against the p
 Models evaluated after the paper are marked `added` in the data file and "New" on the page, and are ranked with
 the paper's models (so ranks below them, and System One medians and bands, differ from the paper's). Gemini Decision 1 (Google,
 `gemini-decision-1`, 2026-11-13) was run on the paper-version release with the released evaluator (`jev run` /
-`jev score`); its leaderboard, domain and tier scores are shown, while reliability and latency were not measured.
+`jev score`), the released reliability runner (`reliability/run_variants.py`, 4 requests in flight) and the
+paper's latency protocol for closed APIs (end-to-end time per request on the 1,109 latency tasks, 4 in flight).
 
 ## Preview locally
 

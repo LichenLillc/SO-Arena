@@ -1993,23 +1993,23 @@
    "note": "Order stability is 1 by construction (option cache); latency with a warm option cache.",
    "order_acc": {
     "n": 939,
-    "original": 48.78,
+    "original": 67.41,
     "runs": [
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78,
-     48.78
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41,
+     67.41
     ],
-    "min": 48.78,
-    "max": 48.78
+    "min": 67.41,
+    "max": 67.41
    }
   },
   {
@@ -2589,10 +2589,37 @@
      "H": 40
     }
    },
-   "reliability": null,
-   "latency": null,
-   "note": "Added after the paper (2026-11-13): run on the paper-version release with the released evaluator; reliability and latency not measured.",
-   "added": "2026-11-13"
+   "reliability": {
+    "R": 75.04,
+    "S": 0.863,
+    "N": 0.6524
+   },
+   "latency": {
+    "mean_ms": 607.6,
+    "timing": "end-to-end API"
+   },
+   "note": "Added after the paper (2026-11-13): run on the paper-version release with the released evaluator and reliability runner; latency end to end through the API with 4 requests in flight, as the paper's APIs (the API's own speed varies: the same tasks averaged 0.37 s in the morning's evaluation run).",
+   "added": "2026-11-13",
+   "order_acc": {
+    "n": 939,
+    "original": 80.19,
+    "runs": [
+     79.02,
+     79.66,
+     79.66,
+     79.66,
+     79.98,
+     78.38,
+     80.3,
+     80.62,
+     80.83,
+     80.19,
+     81.36,
+     80.09
+    ],
+    "min": 78.38,
+    "max": 81.36
+   }
   }
  ],
  "analysis": [

@@ -27,9 +27,9 @@
   const M = D.models;
   const FAM = Object.fromEntries(D.families.map(f => [f.id, f]));
   const DOM = Object.fromEntries(D.domains.map(d => [d.id, d]));
-  // System One models of the paper; a model added after the paper (m.added) is listed but not ranked, so every
-  // published rank, median and band stays as in the paper
-  const isS1 = m => (m.group === "open" || m.group === "api") && !m.added;
+  // System One models, ranked; a model added after the paper (m.added) is ranked too (user, 2026-11-13) and may lack
+  // the latency or reliability measurements
+  const isS1 = m => m.group === "open" || m.group === "api";
   const S1 = M.filter(isS1);
   const REFS = M.filter(m => m.group === "s2").sort((a, b) => b.score - a.score);
   const LUNA = M.find(m => m.name === "GPT-6 Luna");
@@ -52,7 +52,8 @@
     for (const m of list) { const v = val(m); if (v != null) out.set(m.key, 1 + list.filter(o => val(o) != null && val(o) > v + 1e-9).length); }
     return out;
   }
-  const RANK = ranksOf(S1, m => m.score), RANK_R = ranksOf(S1, R_), RANK_L = ranksOf(S1, m => -m.latency.mean_ms);
+  const RANK = ranksOf(S1, m => m.score), RANK_R = ranksOf(S1, R_), RANK_L = ranksOf(S1, m => m.latency ? -m.latency.mean_ms : null);
+  const N1 = S1.length, NR = S1.filter(m => m.reliability).length;    // ranked models; those with reliability measured
   const top = (list, val, n) => list.filter(m => val(m) != null).sort((a, b) => val(b) - val(a)).slice(0, n);
 
   function initials(m) {
@@ -87,7 +88,7 @@
   const TOUCH = matchMedia("(hover: none)").matches;
   const HINT = `<span class="tip-cta"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.2 2.6v8.6l2.2-2 1.5 3.4 1.6-.7-1.5-3.3 3-.2z" fill="currentColor"/></svg>${TOUCH ? "Tap" : "Click"} for details</span>`;
   const mtip = (m, extra = "") => `<b>${esc(m.name)}</b> <span class="s">${meta(m)}</span><br>` +
-    `<span class="m">${f2(m.score)}</span> <span class="s">${RANK.has(m.key) ? `score · #${RANK.get(m.key)} of 18` : m.group === "s2" ? "score · System Two" : m.added ? "score · added after the paper, not ranked" : "score · not ranked"}</span>${extra}${HINT}`;
+    `<span class="m">${f2(m.score)}</span> <span class="s">${RANK.has(m.key) ? `score · #${RANK.get(m.key)} of ${N1}` : m.group === "s2" ? "score · System Two" : m.added ? "score · added after the paper, not ranked" : "score · not ranked"}</span>${extra}${HINT}`;
 
   // ---- navigation --------------------------------------------------------------------------------------------------
   function nav() {
@@ -111,7 +112,7 @@
 
   // ---- hero board and stats ------------------------------------------------------------------------------------------
   let boardMode = "cap";
-  const LATMAX = Math.max(...S1.map(m => m.latency.mean_ms));     // thin latency bars: linear, slowest System One model = full
+  const LATMAX = Math.max(...S1.filter(m => m.latency).map(m => m.latency.mean_ms));     // thin latency bars: linear, slowest System One model = full
   const BMAX = 100;                                                 // score and R bars: 0-100, as everywhere on the page
   const refBand = `<b class="ref" style="left:calc(${(100 * LUNA.score / BMAX).toFixed(2)}% - 1.5px)"></b>`;   // GPT-6 Luna, the System Two reference
   function board() {
@@ -131,7 +132,8 @@
     ol.innerHTML = list.map(m => `<li data-k="${slug(m)}"><span class="rk">${rk.get(m.key)}</span>${logo(m, 26)}
         <button type="button" class="who" data-model="${slug(m)}"><b>${esc(m.name)}</b><span>${meta(m)}</span></button>
         <span class="mx"><span class="track"><span class="meter" aria-hidden="true"><i style="--w:${(100 * val(m) / BMAX).toFixed(1)}%;--c:${c}"></i></span>${cap ? refBand : ""}</span><span class="v">${cap ? f2(val(m)) : f1(val(m))}</span>
-          ${cap ? `<span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span>`
+          ${cap ? (m.latency ? `<span class="meter thin" aria-hidden="true"><i style="--w:${(100 * m.latency.mean_ms / LATMAX).toFixed(1)}%;--c:var(--lat)"></i></span><span class="v lat" title="Mean latency per task">${ms(m.latency.mean_ms)}</span>`
+              : `<span class="meter thin" aria-hidden="true"><i style="--w:0%;--c:var(--lat)"></i></span><span class="v lat dim" title="Latency not measured">—</span>`)
             : `<span class="meter thin" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:var(--cap)"></i></span><span class="v lat" title="Score">${f2(m.score)}</span>`}</span><span class="chev" aria-hidden="true">›</span></li>`).join("");
     $(".board-foot", host).innerHTML = `<span class="keys">${cap ? `<span><i class="k-ref"></i>GPT-6 Luna ${f1(LUNA.score)} (System Two)</span>` : ""}${cap ? `<span><i class="k-lat"></i>Latency per task</span>` : `<span><i class="k-lat" style="background:var(--cap)"></i>Score</span>`}</span><a href="#leaderboard">Full leaderboard <span class="arr">→</span></a>`;
     if (!morph) { host.dataset.anim = "0"; requestAnimationFrame(() => setTimeout(() => { host.dataset.anim = "1"; }, 60)); return; }
@@ -205,7 +207,7 @@
     return hit;
   };
   const COLS = [
-    { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true, title: "Rank among the 18 System One models, by the sorted column" },
+    { id: "rank", label: "#", cls: "c-rk", val: m => RANK.get(m.key) ?? null, asc: true, title: `Rank among the ${N1} System One models, by the sorted column` },
     { id: "model", label: "Model", cls: "c-m l", val: m => m.name, asc: true },
     { id: "score", label: "Score", cls: "c-score l", val: m => m.score, title: "Mean of the 11 domain scores" },
     { id: "prof", label: "By domain", cls: "c-prof l", title: "One bar per domain, grouped by family; the height is the domain score. Point at the bars for all 11 scores and ranks." },
@@ -241,7 +243,7 @@
     const ref = m.group === "s2";
     return `<tr class="${ref ? "ref" : ""}" tabindex="0" data-model="${slug(m)}" aria-label="${esc(m.name)}: open profile">
       <td class="c-rk">${rankOf(m)}</td>
-      <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}${m.added ? '<span class="tag new" title="Evaluated after the paper (' + m.added + ') on the paper-version release; not ranked among the paper\'s 18 System One models">New</span>' : ""}</small></div></div></td>
+      <td class="c-m"><div class="mcell">${logo(m, 28)}<div><b>${esc(m.name)}</b><small>${meta(m)}${m.added ? '<span class="tag new" title="Evaluated after the paper (' + m.added + ') on the paper-version release with the released evaluator">New</span>' : ""}</small></div></div></td>
       <td class="c-score l${T.sort === "score" ? " sorted" : ""}" data-l="Score"><div class="scell"><span class="track bt"><span class="meter" aria-hidden="true"><i style="--w:${m.score.toFixed(1)}%;--c:${ref ? "var(--s2)" : "var(--cap)"}"></i></span>${ref ? "" : refBand}</span><span class="num">${f2(m.score)}</span></div></td>
       <td class="c-prof l${DSORT() ? " sorted" : ""}"><div class="pwrap">${prof(m)}${dbar(m)}</div></td>
       <td class="c-n${T.sort === "R" ? " sorted" : ""}" data-l="Reliability">${R_(m) != null ? `<span class="rcell"><span class="meter" aria-hidden="true"><i style="--w:${R_(m)}%;--c:var(--rel)"></i></span><span class="num">${f1(R_(m))}</span></span>` : '<span class="dim" title="Reliability is measured for System One models only">—</span>'}</td>
@@ -304,7 +306,7 @@
     function table() {
     const did = DSORT(), cmp = cmpRows(), order = list => list.sort(cmp);
     // One ranked list by default; grouped (the toggle) as in the paper's score table: the System Two references, the
-    // closed APIs, then open weights by size. # is always the rank among the 18 System One models; the GPT-6 rows are
+    // closed APIs, then open weights by size. # is always the rank among the System One models; the GPT-6 rows are
     // references without a rank. StartLux Auto (hybrid) is listed among the 4B models without a rank (user, 2026-11-12).
     const refs = order(M.filter(m => m.group === "s2" && pass(m))), apis = order(M.filter(m => m.group === "api" && pass(m)));
     const opens = ["31B", "27B", "9B", "4B", "0.4B"].map(z => [z, order(M.filter(m => (m.group === "open" || m.group === "auto") && m.size === z && pass(m)))]);
@@ -502,7 +504,7 @@
   function openModel(m) {
     if (!m) return;
     const r = m.reliability, l = m.latency, rk = RANK.get(m.key), rr = RANK_R.get(m.key);
-    const med = id => { const v = S1.map(o => o.domains[id]).sort((a, b) => a - b); return (v[8] + v[9]) / 2; };
+    const med = id => { const v = S1.map(o => o.domains[id]).sort((a, b) => a - b), h = v.length >> 1; return v.length % 2 ? v[h] : (v[h - 1] + v[h]) / 2; };
     const prof = D.domains.map(d => { const v = m.domains[d.id], md = med(d.id), f = FAM[d.family];
       return `<li><i class="sw" style="--fc:${f.color}" title="${esc(f.name)}"></i><span class="n" style="font-weight:500">${esc(d.short)}</span><span class="bar"><i style="width:${v}%;--bc:${m.group === "s2" ? "var(--s2)" : "var(--cap)"}"></i><u style="left:calc(${md}% - 1px)" title="System One median ${f1(md)}"></u></span><span class="v">${f1(v)}</span></li>`; }).join("");
     const heat = v => `rgba(${m.group === "s2" ? "176,101,45" : "168,58,82"},${(.05 + .5 * Math.pow(Math.max(0, v - 10) / 90, 1.4)).toFixed(3)})`;
@@ -512,8 +514,8 @@
       <div style="display:flex;gap:14px;align-items:center">${logo(m, 52)}<div><h2 id="dr-title">${esc(m.name)}${m.added ? '<span class="tag new">New</span>' : ""}</h2></div></div>
       <p class="dr-sub">${meta(m)} · ${closed(m) ? "closed API" : "open weights"} · reasoning: ${esc(m.reasoning.toLowerCase())} · ${m.release_url ? `<a href="${m.release_url}" target="_blank" rel="noopener">${esc(m.release)} ↗</a>` : `<span class="mono">${esc(m.release)}</span>`}</p>
       <div class="kv">
-        <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · <i class="nw">#${rk} of 18</i>` : m.group === "s2" ? " · System Two" : m.added ? " · added after the paper" : " · not ranked"}</span></div>
-        <div><b class="num">${r ? f1(r.R) : "—"}</b><span><i class="nw">Reliability R</i>${rr ? ` · <i class="nw">#${rr} of 18</i>` : m.added ? " · not measured" : " · measured for System One models only"}</span></div>
+        <div><b class="num">${f2(m.score)}</b><span>Score${rk ? ` · <i class="nw">#${rk} of ${N1}</i>` : m.group === "s2" ? " · System Two" : m.added ? " · added after the paper" : " · not ranked"}</span></div>
+        <div><b class="num">${r ? f1(r.R) : "—"}</b><span><i class="nw">Reliability R</i>${rr ? ` · <i class="nw">#${rr} of ${NR}</i>` : m.added ? " · not measured" : " · measured for System One models only"}</span></div>
         <div><b class="num">${l ? ms(l.mean_ms) : "—"}</b><span>Mean latency · <i class="nw">${l ? l.timing : m.added ? "not measured" : ""}</i></span></div>
         <div><b class="num">${r ? `${r.S.toFixed(2)} · ${r.N.toFixed(2)}` : l && l.p99_ms ? ms(l.p99_ms) : "—"}</b><span>${r ? "Option-order stability S · null discrimination N" : "99th percentile latency"}</span></div>
       </div>
@@ -540,7 +542,7 @@
       <p class="dr-sub">${d.tasks} tasks (${counts}). The leaderboard uses ${d.leaderboard_tier === "All tasks" ? "all tasks" : id === "math" ? "the hard and very hard tiers" : "the hard tier"} (${d.leaderboard_tasks} tasks).
         Sources${d.sources_by_tier ? ", easy to hard" : ""}: ${esc(d.sources.join(d.sources_by_tier ? " → " : ", "))}.</p>
       <h4 class="label" style="margin-top:24px">Ranking</h4><ul class="bars">${bars}</ul>
-      <p class="dr-note"># ranks the 18 System One models; “ref” marks the System Two references; StartLux Auto (hybrid) is not ranked. Right column: mean latency per task.</p>
+      <p class="dr-note"># ranks the ${N1} System One models; “ref” marks the System Two references; StartLux Auto (hybrid) is not ranked. Right column: mean latency per task.</p>
       ${d.tiers ? `<h4 class="label" style="margin-top:28px">By difficulty tier</h4><div class="chart" id="dr-tier"></div><div class="legend" id="dr-tier-lg"></div>` : ""}`,
       `?domain=${id}`, d.name);
     if (d.tiers) requestAnimationFrame(() => tierChart($("#dr-tier"), id, $("#dr-tier-lg"), true));
@@ -651,7 +653,7 @@
   const INS = {
     speed: { title: "Score against latency", sub: "Dashed line: the best score reachable at each speed.",
       note: "Mean latency per task: open weights on one H100 GPU, APIs end to end." },
-    rrank: { title: "Reliability ranking", sub: "The 18 System One models by reliability R, with each model's rank by score: the most reliable are not the top scorers.",
+    rrank: { title: "Reliability ranking", sub: "The " + NR + " System One models with reliability measured, by R, with each model's rank by score: the most reliable are not the top scorers.",
       note: "R = √(S·N) × 100. S: option-order stability; N: null discrimination; both from the reliability runs. Score rank: the leaderboard." },
     null: { title: "Noticing a missing answer, against score", sub: "Models with similar scores differ widely in N; the score says little about it. Dashed: trend; band: 90% of the models.",
       note: "N = 2·AUC − 1 of the model's 'no option is correct' probability, items with against without their correct option; 0 is chance. Trend: quadratic fit over the 16 System One models other than Laya and Jeva-4B; the band holds 90% of them (as in the paper)." },
@@ -661,7 +663,7 @@
     think: { title: "Does thinking before answering close the gap?", sub: "Gain of StartLux Auto with thinking always on over never on, on the medium and hard tiers.",
       note: "StartLux Auto can think before it answers; the two settings are compared on the same tasks." },
     tier: { title: "How scores fall with difficulty", sub: "In every tiered domain, the median System One model scores lower on each harder tier. Tiers are defined within each domain.",
-      note: "Lines: the domain's best System One model, StartLux Instant (the best 4B model) and GPT-6 Luna. The band spans all 18 System One models; point at it for any model's line." },
+      note: "Lines: the domain's best System One model, StartLux Instant (the best 4B model) and GPT-6 Luna. The band spans all " + N1 + " System One models; point at it for any model's line." },
     order: { title: "How accuracy moves with the option order", sub: "Each dot: one of 12 shuffles, against the original order. Ranked by the range over all 13 orders, most stable first.", note: "Range: points between a model's best and worst accuracy over the 13 orders (the original and 12 shuffles); ties go to the higher option-order stability S. Accuracy from the reliability runs, separate from the leaderboard score. Jeva-4B scores each option on its own, so order cannot change its answer." },
     gap: { title: "How big is the gap to System Two, and where is it largest?", sub: "Score difference from GPT-6 Luna on the medium and hard tiers, for the best System One models of two sizes, with 95% confidence intervals.", note: "Medium and hard tiers, not only the leaderboard tier, so the gaps differ from the leaderboard's domain scores. Domains are grouped by how the gap behaves. Smaller models build on Qwen3.5, larger ones on Qwen3.8-27B." },
   };
@@ -692,7 +694,7 @@
       const xs = v => m.l + (lx(v) - X0) / (X1 - X0) * (W - m.l - m.r), ys = v => H - m.b - (v - 25) / 65 * (H - m.t - m.b);
       axes(svg, W, H, m, xs, ys, [[10, "10 ms"], [100, "100 ms"], [1000, "1 s"]], [30, 40, 50, 60, 70, 80, 90].map(v => [v, v]), "Mean latency per task (log scale) →", "↑ Score");
       const fr = []; let best = -1;
-      for (const o of [...S1].sort((a, b) => a.latency.mean_ms - b.latency.mean_ms || b.score - a.score)) if (o.score > best) { fr.push(o); best = o.score; }
+      for (const o of S1.filter(o => o.latency).sort((a, b) => a.latency.mean_ms - b.latency.mean_ms || b.score - a.score)) if (o.score > best) { fr.push(o); best = o.score; }
       S("path", { d: fr.map((o, i) => `${i ? "L" : "M"}${xs(o.latency.mean_ms)} ${ys(o.score)}`).join(""), fill: "none", stroke: "var(--ink-2)", "stroke-width": 1.6, "stroke-dasharray": "5 4", "stroke-linejoin": "round", opacity: .7 }, svg);
       const pts = M.filter(o => o.latency).map(o => ({ m: o, x: xs(o.latency.mean_ms), y: ys(o.score), label: o.name, aria: `score ${f2(o.score)}, ${ms(o.latency.mean_ms)}` }));
       points(svg, pts, o => mtip(o, `<br><span class="m">${ms(o.latency.mean_ms)}</span> <span class="s">mean latency (${o.latency.timing}${o.key === "SII-Decision-4B" ? ", with flash-linear-attention" : ""})</span>`));
@@ -731,7 +733,7 @@
         }
         pts = RL.map(o => ({ m: o, x: xs(o.reliability.S), y: ys(o.reliability.N), label: o.name, aria: `S ${o.reliability.S.toFixed(2)}, N ${o.reliability.N.toFixed(2)}` }));
       }
-      points(svg, pts, o => mtip(o, `<br><span class="m">${f1(o.reliability.R)}</span> <span class="s">R · #${RANK_R.get(o.key)} of 18 · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)}</span>`));
+      points(svg, pts, o => mtip(o, `<br><span class="m">${f1(o.reliability.R)}</span> <span class="s">R · #${RANK_R.get(o.key)} of ${NR} · S ${o.reliability.S.toFixed(2)} · N ${o.reliability.N.toFixed(2)}</span>`));
       labels(svg, pts, { x0: m.l, x1: W - m.r + 14, y0: m.t - 4, y1: H - m.b }, W < 460 ? new Set([...top(RL, R_, 3), ...top(RL, o => o.score, 3), ...RL.filter(closed), ...top(RL, o => -R_(o), 2)].map(o => o.key)) : null, rb);
       LG.innerHTML = sizeLegend(false);
     } else if (insKey === "order") {
@@ -837,7 +839,7 @@
     const tops = top(S1, val, compact ? 3 : 1), hi = new Set([...tops.map(o => o.key), ...(compact ? [] : ["StartLux-4B-Instant"]), LUNA.key]);
     const SHADES = ["#8e2c43", "#c4687c", "#e2a7b4"];
     const lineCol = o => o.group === "s2" ? "var(--s2)" : tops.includes(o) ? SHADES[tops.indexOf(o)] : colorOf(o);
-    // all 18 System One models as a band (range, and the middle half darker) with their median, instead of 18 lines;
+    // all System One models as a band (range, and the middle half darker) with their median, instead of 18 lines;
     // a model's own line appears when the pointer is on it
     const qs = (a, q) => { const v = [...a].sort((x, y) => x - y), i = q * (v.length - 1), lo = Math.floor(i); return v[lo] + (i - lo) * (v[Math.ceil(i)] - v[lo]); };
     const st = ks.map(k => { const v = S1.map(o => o.tiers[id][k]); return [0, .25, .5, .75, 1].map(q => qs(v, q)); });
@@ -861,7 +863,7 @@
     ends.sort((a, b) => a.y - b.y);
     for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
     for (const e of ends) S("text", { class: "lbl", x: e.x + 9, y: e.y + 4 }, svg).textContent = e.label;
-    if (lgHost) lgHost.innerHTML = [...tops, ...M.filter(o => hi.has(o.key) && !tops.includes(o))].map(o => `<span><i class="${o.group === "s2" ? "dash" : ""}" style="${o.group === "s2" ? "" : `background:${lineCol(o)}`}"></i>${esc(o.name)}</span>`).join("") + `<span><i class="band"></i>All 18 System One models (darker: the middle half; dotted: the median)</span>`;
+    if (lgHost) lgHost.innerHTML = [...tops, ...M.filter(o => hi.has(o.key) && !tops.includes(o))].map(o => `<span><i class="${o.group === "s2" ? "dash" : ""}" style="${o.group === "s2" ? "" : `background:${lineCol(o)}`}"></i>${esc(o.name)}</span>`).join("") + `<span><i class="band"></i>All ${N1} System One models (darker: the middle half; dotted: the median)</span>`;
   }
   const showChart = k => { const t = document.getElementById("k-" + k); if (t) t.closest('[role="tablist"]')._sel(t.id); };
   function insightsControls() {

@@ -2520,7 +2520,7 @@
    "reasoning": "Not disclosed",
    "release": "gemini-decision-1",
    "release_url": null,
-   "logo": null,
+   "logo": "assets/logos/gemini-decision.png",
    "score": 61.2497,
    "domains": {
     "sentiment": 82.25,

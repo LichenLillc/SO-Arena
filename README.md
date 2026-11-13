@@ -12,7 +12,8 @@ A static page with no build step and no external dependencies:
   the reliability demo, the findings, the benchmark overview, and the model and domain detail drawers. Links of the
   form `?model=<id>` and `?domain=<id>` open a drawer directly.
 - `assets/js/data.js` and `data/arena.json`: the results, in the same form; `data/arena.json` is also offered for download.
-- `assets/logos/`: model logos (they belong to the models' developers).
+- `assets/logos/`: model logos (they belong to the models' developers; Gemini Decision 1 uses Google's Gemini
+  product logo, as shown on the Decisions API docs page).
 - `assets/fonts/`: Inter, Instrument Serif and JetBrains Mono, self-hosted (SIL Open Font License 1.1, see
   `assets/fonts/LICENSE.txt`).
 - `assets/img/`: a static logo (`logo.svg`), the favicon (the logo's ring) and the link-preview image (`og.png`,
@@ -27,8 +28,8 @@ generated from the paper's sources by `build_site_data.py` in the authors' worki
 overall scores against the paper's figure data, every domain score against the paper's tier table, and
 `R = sqrt(S N)`. The page shows results only; it contains no benchmark items.
 
-Models evaluated after the paper are marked `added` in the data file and "New" on the page: they are listed by
-score but not ranked, so every rank, median and band stays as published. Gemini Decision 1 (Google,
+Models evaluated after the paper are marked `added` in the data file and "New" on the page, and are ranked with
+the paper's models (so ranks below them, and System One medians and bands, differ from the paper's). Gemini Decision 1 (Google,
 `gemini-decision-1`, 2026-11-13) was run on the paper-version release with the released evaluator (`jev run` /
 `jev score`); its leaderboard, domain and tier scores are shown, while reliability and latency were not measured.
 
